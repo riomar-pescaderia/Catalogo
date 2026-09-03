@@ -688,8 +688,8 @@
    ============================================================ */
 
 const SHEET_CONFIG = {
-  sheetId: "1Bmyy7ZV2jf3fUjLBaXvoCQcIPa-G8KOTMrDAchfLFd0",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
-  gid: "0"        // ej: "1847362951"
+  sheetId: "",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
+  gid: ""        // ej: "1847362951"
 };
 
 const BUSINESS = {
@@ -4025,9 +4025,20 @@ document.getElementById("contactBtn").addEventListener("click", ()=>{
 });
 
 /* ---------------- grilla de categorías ---------------- */
+let catGridExpanded = false;
+
+function setCatGridExpanded(expanded){
+  if(catGridToggle.hidden) return;
+  catGridExpanded = expanded;
+  [...catGrid.children].slice(CAT_GRID_VISIBLE).forEach(btn=>{ btn.hidden = !catGridExpanded; });
+  catGridToggle.classList.toggle("open", catGridExpanded);
+  catGridToggle.querySelector(".label").textContent = catGridExpanded ? "Ver menos" : "Más categorías";
+  requestAnimationFrame(syncStickyOffsets);
+}
+
 function buildCatGrid(categories){
   catGrid.innerHTML = "";
-  let catGridExpanded = false;
+  catGridExpanded = false;
 
   categories.forEach((cat, idx)=>{
     const id = "cat-" + slug(cat.nombre);
@@ -4051,17 +4062,25 @@ function buildCatGrid(categories){
     catGridToggle.classList.remove("open");
     catGridToggle.querySelector(".label").textContent = "Más categorías";
     catGridToggle.onclick = ()=>{
-      catGridExpanded = !catGridExpanded;
-      [...catGrid.children].slice(CAT_GRID_VISIBLE).forEach(btn=>{ btn.hidden = !catGridExpanded; });
-      catGridToggle.classList.toggle("open", catGridExpanded);
-      catGridToggle.querySelector(".label").textContent = catGridExpanded ? "Ver menos" : "Más categorías";
-      requestAnimationFrame(syncStickyOffsets);
+      setCatGridExpanded(!catGridExpanded);
     };
   } else {
     catGridToggle.hidden = true;
     catGridToggle.onclick = null;
   }
 }
+
+/* Si la grilla de categorías está desplegada ("Más categorías") y el
+   cliente desliza la página hacia abajo con el dedo, la plegamos sola
+   para liberar espacio — sin que tenga que tocar "Ver menos". */
+let lastScrollYForGrid = window.scrollY;
+window.addEventListener("scroll", ()=>{
+  const currentY = window.scrollY;
+  if(catGridExpanded && currentY > lastScrollYForGrid + 4){
+    setCatGridExpanded(false);
+  }
+  lastScrollYForGrid = currentY;
+}, { passive: true });
 
 function openCategory(id, scrollTo, exclusive){
   const section = sectionByCat[id];
