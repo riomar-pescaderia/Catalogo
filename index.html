@@ -62,10 +62,12 @@
 
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   @media (prefers-reduced-motion: no-preference){ html{ scroll-behavior:smooth; } }
+  html{ overflow-anchor:none; }
   body{
     background:var(--bg);
     color:var(--ink);
     font-family:'Manrope', system-ui, -apple-system, sans-serif;
+    overflow-anchor:none;
   }
   /* Nota: centramos con margin:auto en vez de flex en el body a
      propósito — un body con display:flex rompe position:sticky en
@@ -688,8 +690,8 @@
    ============================================================ */
 
 const SHEET_CONFIG = {
-  sheetId: "1Bmyy7ZV2jf3fUjLBaXvoCQcIPa-G8KOTMrDAchfLFd0",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
-  gid: "0"        // ej: "1847362951"
+  sheetId: "",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
+  gid: ""        // ej: "1847362951"
 };
 
 const BUSINESS = {
@@ -4026,10 +4028,12 @@ document.getElementById("contactBtn").addEventListener("click", ()=>{
 
 /* ---------------- grilla de categorías ---------------- */
 let catGridExpanded = false;
+let catGridExpandedAt = 0;
 
 function setCatGridExpanded(expanded){
   if(catGridToggle.hidden) return;
   catGridExpanded = expanded;
+  if(expanded) catGridExpandedAt = Date.now();
   [...catGrid.children].slice(CAT_GRID_VISIBLE).forEach(btn=>{ btn.hidden = !catGridExpanded; });
   catGridToggle.classList.toggle("open", catGridExpanded);
   catGridToggle.querySelector(".label").textContent = catGridExpanded ? "Ver menos" : "Más categorías";
@@ -4071,15 +4075,20 @@ function buildCatGrid(categories){
 }
 
 /* Si la grilla de categorías está desplegada ("Más categorías") y el
-   cliente desliza la página hacia abajo con el dedo, la plegamos sola
-   para liberar espacio — sin que tenga que tocar "Ver menos". */
-let lastScrollYForGrid = window.scrollY;
+   cliente llega al final de la página (ya no puede bajar más), la
+   plegamos sola para que no moleste la vista — sin que tenga que
+   tocar "Ver menos". */
 window.addEventListener("scroll", ()=>{
-  const currentY = window.scrollY;
-  if(catGridExpanded && currentY > lastScrollYForGrid + 4){
+  if(!catGridExpanded) return;
+  // Ignoramos el reacomodo de scroll que puede disparar el navegador
+  // justo al desplegar (por ejemplo si ya estábamos abajo del todo),
+  // para que "Más categorías" no se cierre solo apenas se abre.
+  if(Date.now() - catGridExpandedAt < 400) return;
+  const scrolledToBottom =
+    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+  if(scrolledToBottom){
     setCatGridExpanded(false);
   }
-  lastScrollYForGrid = currentY;
 }, { passive: true });
 
 function openCategory(id, scrollTo, exclusive){
