@@ -194,12 +194,29 @@
     font-size:1.7rem;
     line-height:1;
   }
+  .cat-card-icon svg{
+    width:1.7rem;
+    height:1.7rem;
+    display:block;
+  }
   .cat-card-name{
     font-size:.74rem;
     font-weight:700;
     color:var(--ink);
     line-height:1.25;
   }
+  .cat-grid-extra-wrap{
+    overflow:hidden;
+    max-height:0;
+    opacity:0;
+    pointer-events:none;
+    transition:max-height .32s ease, opacity .22s ease;
+  }
+  .cat-grid-extra-wrap.open{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .cat-grid-extra-wrap .cat-grid{ margin-top:10px; }
   .cat-grid-toggle{
     display:flex;
     align-items:center;
@@ -261,6 +278,13 @@
     font-variant-numeric:tabular-nums;
     white-space:nowrap;
   }
+  .cat-count-selected{
+    font-size:.74rem;
+    font-weight:700;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+  }
   .cat-chevron{
     flex:none;
     font-size:.9rem;
@@ -275,6 +299,24 @@
     overflow:hidden;
   }
   ul.items{ list-style:none; margin:0; padding:0; }
+  .cat-collapse-btn{
+    all:unset;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    width:100%;
+    padding:12px;
+    cursor:pointer;
+    background:var(--surface-alt);
+    border-top:1px solid var(--line);
+    color:var(--blue);
+    font-family:'Manrope', sans-serif;
+    font-weight:700;
+    font-size:.86rem;
+  }
+  .cat-collapse-btn .cat-chevron{ transform:rotate(180deg); }
   .item{
     display:flex;
     flex-direction:column;
@@ -313,8 +355,35 @@
     gap:6px;
     flex:none;
   }
+  .item-qty-stepper{
+    display:flex;
+    align-items:center;
+    gap:3px;
+    flex:none;
+  }
+  .item-qty-step{
+    width:24px;
+    height:30px;
+    flex:none;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font:inherit;
+    font-size:.9rem;
+    font-weight:700;
+    line-height:1;
+    color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:0;
+    cursor:pointer;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .item-qty-step:active{ background:var(--surface-alt); }
   .item-qty{
-    width:42px;
+    width:38px;
     height:30px;
     flex:none;
     text-align:center;
@@ -527,15 +596,46 @@
     color:var(--ink-faint);
     line-height:1.3;
   }
-  .cart-payment{
+  .cart-details{
     margin:0 0 12px;
-    padding:10px 12px;
+    padding:10px 12px 12px;
     border:1px solid var(--line);
     border-radius:12px;
     background:var(--surface-alt);
   }
-  .cart-payment-label{
-    margin:0 0 6px;
+  .cart-details-title{
+    margin:0 0 8px;
+    font-size:.85rem;
+    font-weight:800;
+    color:var(--ink);
+  }
+  .cart-field{
+    display:block;
+    margin:0 0 8px;
+  }
+  .cart-field-label{
+    display:block;
+    margin:0 0 4px;
+    font-size:.76rem;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+  .cart-field input[type="text"]{
+    width:100%;
+    height:36px;
+    padding:0 10px;
+    font:inherit;
+    font-size:.86rem;
+    color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .cart-field.is-hidden{ display:none; }
+  .cart-subsection-label{
+    margin:10px 0 4px;
     font-size:.8rem;
     font-weight:700;
     color:var(--ink);
@@ -563,6 +663,13 @@
     font-weight:400;
     line-height:1.3;
   }
+  .cart-field-error{
+    margin:-4px 0 8px;
+    font-size:.74rem;
+    color:#e5484d;
+    font-weight:700;
+  }
+  .cart-field-error.is-hidden{ display:none; }
   .cart-send{
     display:flex;
     align-items:center;
@@ -603,6 +710,9 @@
 
   <div class="cat-grid-wrap" id="catGridWrap">
     <div class="cat-grid" id="catGrid"></div>
+    <div class="cat-grid-extra-wrap" id="catGridExtraWrap">
+      <div class="cat-grid cat-grid-extra" id="catGridExtra"></div>
+    </div>
     <button type="button" class="cat-grid-toggle" id="catGridToggle" hidden>
       <span class="label">Más categorías</span>
       <span class="chev">⌄</span>
@@ -636,8 +746,35 @@
     <div class="cart-drawer-foot">
       <p class="cart-total" id="cartTotal"></p>
       <p class="cart-note" id="cartNote"></p>
-      <div class="cart-payment" id="cartPayment">
-        <p class="cart-payment-label">Forma de pago</p>
+      <div class="cart-details" id="cartPayment">
+        <p class="cart-details-title">Datos a completar</p>
+
+        <label class="cart-field">
+          <span class="cart-field-label">Nombre y apellido</span>
+          <input type="text" id="custName" autocomplete="name">
+        </label>
+        <p class="cart-field-error is-hidden" id="custNameError">Completá tu nombre y apellido.</p>
+
+        <p class="cart-subsection-label">Forma de entrega</p>
+        <label class="cart-payment-option">
+          <input type="radio" name="deliveryMethod" value="envio" id="deliveryEnvio" checked>
+          <span class="cart-payment-option-text">
+            Envío
+            <span class="cart-payment-hint">Consultar precio de envío</span>
+          </span>
+        </label>
+        <label class="cart-payment-option">
+          <input type="radio" name="deliveryMethod" value="retiro" id="deliveryRetiro">
+          <span class="cart-payment-option-text">Retiro del local</span>
+        </label>
+
+        <label class="cart-field" id="custAddressField">
+          <span class="cart-field-label">Dirección</span>
+          <input type="text" id="custAddress" autocomplete="street-address">
+        </label>
+        <p class="cart-field-error is-hidden" id="custAddressError">Completá la dirección para el envío.</p>
+
+        <p class="cart-subsection-label">Forma de pago</p>
         <label class="cart-payment-option">
           <input type="radio" name="paymentMethod" value="transferencia" id="payTransferencia" checked>
           <span class="cart-payment-option-text">Transferencia</span>
@@ -690,8 +827,8 @@
    ============================================================ */
 
 const SHEET_CONFIG = {
-  sheetId: "1Bmyy7ZV2jf3fUjLBaXvoCQcIPa-G8KOTMrDAchfLFd0",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
-  gid: "0"        // ej: "1847362951"
+  sheetId: "",   // ej: "1AbCDefGhIjKLmNoPQRstuVWxyz1234567890abcd"
+  gid: ""        // ej: "1847362951"
 };
 
 const BUSINESS = {
@@ -712,242 +849,302 @@ const CATALOG_CATEGORIES = [
     "nombre": "Pescados",
     "productos": [
       {
+        "cod": "1001",
         "nombre": "FILET MERO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1002",
         "nombre": "FILET MERLUZA PREMIUM X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1003",
         "nombre": "FILET DE MERLUZA X KG",
         "precio": "13.890"
       },
       {
+        "cod": "1004",
         "nombre": "FILET DE SURUBI CULTIVO DORADO X KG",
         "precio": "35.990"
       },
       {
+        "cod": "1005",
         "nombre": "FILET DE BOGA X KG",
         "precio": "15.770"
       },
       {
+        "cod": "1006",
         "nombre": "FILET LOMO ATUN X KG",
         "precio": "18.770"
       },
       {
+        "cod": "1007",
         "nombre": "FILET DE LENGUADO X KG",
         "precio": "32.880"
       },
       {
+        "cod": "1008",
         "nombre": "FILET DE ABADEJO X KG",
         "precio": "31.100"
       },
       {
+        "cod": "1010",
         "nombre": "PACU DESESPINADO MARIPOSA CULTIVO DORADO X KG",
         "precio": "19.880"
       },
       {
+        "cod": "1016",
         "nombre": "SALMON ROSADO FILET X KG",
         "precio": "45.540"
       },
       {
+        "cod": "1017",
         "nombre": "POLLO DE MAR X KG",
         "precio": "12.890"
       },
       {
+        "cod": "1018",
         "nombre": "SALMON BLANCO FILET X KG",
         "precio": "26.660"
       },
       {
+        "cod": "1026",
         "nombre": "ATUN ROJO LOMO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1029",
         "nombre": "BOGA EVISCERADO CULTIVO DORADO X KG",
         "precio": "12.890"
       },
       {
+        "cod": "1030",
         "nombre": "TRUCHA FILET X KG",
         "precio": "35.430"
       },
       {
+        "cod": "1031",
         "nombre": "CORNALITOS X KG",
         "precio": "18.660"
       },
       {
+        "cod": "1032",
         "nombre": "TRUCHA DESPINADA MARIPOSA X KG",
         "precio": "29.880"
       },
       {
+        "cod": "1037",
         "nombre": "SALMON AHUMADO FETEADO x 200g",
         "precio": "15.330"
       },
       {
+        "cod": "1038",
         "nombre": "SABALO FILETE CULTIVO DORADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1042",
         "nombre": "ATUN ROJO LOMO TROZADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1051",
         "nombre": "SURUBI CARNE DESMENUZADA CULTIVO DORADO X KG",
         "precio": "21.220"
       },
       {
+        "cod": "1052",
         "nombre": "SALMON DE RIO EVISCERADO CULTIVO DORADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1053",
         "nombre": "PACU EVISCERADO CULTIVO DORADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1054",
         "nombre": "SALMON ROSADO AHUMADO PENCA FETEADA X KG",
         "precio": "74.420"
       },
       {
+        "cod": "1059",
         "nombre": "SURUBI EN RODAJAS X KG",
         "precio": "26.660"
       },
       {
+        "cod": "1060",
         "nombre": "PEJERREY DESPINADO X KG",
         "precio": "19.220"
       },
       {
+        "cod": "1061",
         "nombre": "SARDINAS ESPAÑOLAS ENTERAS X KG",
         "precio": "25.220"
       },
       {
+        "cod": "1062",
         "nombre": "BESUGO ENTERO X KG",
         "precio": "10.000"
       },
       {
+        "cod": "1063",
         "nombre": "CORTES SURUBI PARA CHUPIN X KG",
         "precio": "14.220"
       },
       {
+        "cod": "1064",
         "nombre": "SURUBI ENTERO SIN CABEZA X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1067",
         "nombre": "SALMON ROSADO ENTERO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1069",
         "nombre": "SABALO EVISCERADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1071",
         "nombre": "SALMON AHUMADO FETEADO ARTICO 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "1074",
         "nombre": "SALMON BLANCO PENCA C/PIEL X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1076",
         "nombre": "BOGA EVISCERADA X KG",
         "precio": "17.550"
       },
       {
+        "cod": "1077",
         "nombre": "PORCIONES DE ATUN ROJO AL VACIO X KG",
         "precio": "51.990"
       },
       {
+        "cod": "1081",
         "nombre": "PACU ENTERO TEKO X KG",
         "precio": "16.660"
       },
       {
+        "cod": "1082",
         "nombre": "BOGA DESPINADA MARIPOSA X KG",
         "precio": "20.880"
       },
       {
+        "cod": "1084",
         "nombre": "PACU EN MITADES FILET CULTIVO DORADO X KG",
         "precio": "25.990"
       },
       {
+        "cod": "1085",
         "nombre": "CORNALITO A LA MARINERA X KG",
         "precio": "16.000"
       },
       {
+        "cod": "1087",
         "nombre": "TILAPIA FILET X KG",
         "precio": "23.990"
       },
       {
+        "cod": "1089",
         "nombre": "FILET DE BOGA CULTIVO DORADO XKG",
         "precio": "27.440"
       },
       {
+        "cod": "1091",
         "nombre": "MOLIDA DE PACU X KG",
         "precio": "18.770"
       },
       {
+        "cod": "1094",
         "nombre": "SURUBI PARRILLERO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1095",
         "nombre": "PACU EN MITADES FILET TEKO X KG",
         "precio": "22.440"
       },
       {
+        "cod": "1096",
         "nombre": "SABALO EVISCERADO CULTIVO DORADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1097",
         "nombre": "MERO TROZADO X KG",
         "precio": "8.550"
       },
       {
+        "cod": "1098",
         "nombre": "ANCHOITAS X KG",
         "precio": "10.660"
       },
       {
+        "cod": "1099",
         "nombre": "SALMON BLANCO EN TROZOS X KG",
         "precio": "22.440"
       },
       {
+        "cod": "1100",
         "nombre": "SALMON BLANCO EN RODAJAS X KG",
         "precio": "23.660"
       },
       {
+        "cod": "1102",
         "nombre": "PANGASIUS FILET X KG",
         "precio": "21.770"
       },
       {
+        "cod": "1103",
         "nombre": "CACHETE DE ABADEJO X KG",
         "precio": "15.000"
       },
       {
+        "cod": "1104",
         "nombre": "SALMON AHUMADO SUPERBE X 200G",
         "precio": "17.220"
       },
       {
+        "cod": "1105",
         "nombre": "FILET DE GALLO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1106",
         "nombre": "CORVINA ENTERA X KG",
         "precio": "7.660"
       },
       {
+        "cod": "1107",
         "nombre": "LOMO DE SURUBI X KG",
         "precio": "30.660"
       },
       {
+        "cod": "1112",
         "nombre": "PASTA DE SALMON ROSADO X 500G",
         "precio": "Consultar"
       },
       {
+        "cod": "1116",
         "nombre": "CABALLA ENTERA",
         "precio": "12.220"
       },
       {
+        "cod": "1118",
         "nombre": "MOLIDA DE BOGA X KG",
         "precio": "12.330"
       },
       {
+        "cod": "1119",
         "nombre": "SALMON ROSADO FILET OFERTA X KG",
         "precio": "19.990"
       }
@@ -957,130 +1154,162 @@ const CATALOG_CATEGORIES = [
     "nombre": "Mariscos",
     "productos": [
       {
+        "cod": "1013",
         "nombre": "MEJILLON PELADO X KG",
         "precio": "17.990"
       },
       {
+        "cod": "1014",
         "nombre": "PULPITO ESPAÑOL ENTERO X KG",
         "precio": "53.980"
       },
       {
+        "cod": "1015",
         "nombre": "CAMARON PELADO COCIDO X KG",
         "precio": "31.770"
       },
       {
+        "cod": "1019",
         "nombre": "TUBO DE CALAMAR TIERNIZADO X KG",
         "precio": "28.330"
       },
       {
+        "cod": "1020",
         "nombre": "LANGOSTINO PELADO X KG",
         "precio": "28.660"
       },
       {
+        "cod": "1021",
         "nombre": "LANGOSTINO ENTERO X KG",
         "precio": "35.660"
       },
       {
+        "cod": "1022",
         "nombre": "LANGOSTINO COLA GRANDE SIN CABEZA X KG",
         "precio": "27.100"
       },
       {
+        "cod": "1023",
         "nombre": "BERBERECHO PELADO X KG",
         "precio": "34.320"
       },
       {
+        "cod": "1024",
         "nombre": "MARISCOS MIX X KG",
         "precio": "23.330"
       },
       {
+        "cod": "1025",
         "nombre": "VIEYRAS 1/2 VALVA X KG (CON POLLERA)",
         "precio": "33.440"
       },
       {
+        "cod": "1027",
         "nombre": "KANIKAMA AHUMADO x 250g",
         "precio": "11.110"
       },
       {
+        "cod": "1034",
         "nombre": "CALAMAR ANILLAS TIERNIZADAS X KG",
         "precio": "29.210"
       },
       {
+        "cod": "1036",
         "nombre": "PULPO ESPAÑOL ENTERO MEDIANO X KG",
         "precio": "47.990"
       },
       {
+        "cod": "1044",
         "nombre": "CALAMAR ALETA X KG",
         "precio": "12.440"
       },
       {
+        "cod": "1045",
         "nombre": "CALAMAR ENTERO X KG",
         "precio": "18.110"
       },
       {
+        "cod": "1046",
         "nombre": "CALAMAR TENTACULO X KG",
         "precio": "28.330"
       },
       {
+        "cod": "1047",
         "nombre": "VIEYRAS CALLOS X KG",
         "precio": "51.320"
       },
       {
+        "cod": "1049",
         "nombre": "SIMIL CAVIAR NEGRO X 92G",
         "precio": "14.440"
       },
       {
+        "cod": "1050",
         "nombre": "SIMIL CAVIAR ROJO X 92G",
         "precio": "14.880"
       },
       {
+        "cod": "1055",
         "nombre": "CAMARON PELADO CRUDO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1066",
         "nombre": "LANGOSTINO PELADO DEVENADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1068",
         "nombre": "SIMIL CAVIAR NEGRO X 320G",
         "precio": "36.210"
       },
       {
+        "cod": "1070",
         "nombre": "TINTA CALAMAR SOBRE 2g",
         "precio": "2.110"
       },
       {
+        "cod": "1086",
         "nombre": "ALMEJA 1/2 VALVA",
         "precio": "17.770"
       },
       {
+        "cod": "1088",
         "nombre": "PATAS DE CENTOLLA",
         "precio": "76.870"
       },
       {
+        "cod": "1090",
         "nombre": "MEJILLON ENTERO JUGOZON X KG",
         "precio": "30.880"
       },
       {
+        "cod": "1092",
         "nombre": "ALMEJA ENTERA X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1093",
         "nombre": "MEJILLON 1/2 VALVA X KG",
         "precio": "27.660"
       },
       {
+        "cod": "1111",
         "nombre": "KANIKAMA X KG",
         "precio": "23.330"
       },
       {
+        "cod": "1113",
         "nombre": "OSTRAS 1/2 VALVA X KG",
         "precio": "15.000"
       },
       {
+        "cod": "1114",
         "nombre": "KANIKAMA X 600G",
         "precio": "17.330"
       },
       {
+        "cod": "1117",
         "nombre": "ALMEJA PELADA X KG",
         "precio": "19.440"
       }
@@ -1090,94 +1319,117 @@ const CATALOG_CATEGORIES = [
     "nombre": "Rebozados",
     "productos": [
       {
+        "cod": "1009",
         "nombre": "FILET DE MERLUZA REBOZADO X KG",
         "precio": "16.110"
       },
       {
+        "cod": "1011",
         "nombre": "MEDALLON DE MERLUZA X KG",
         "precio": "8.780"
       },
       {
+        "cod": "1012",
         "nombre": "MEDALLON DE MERLUZA CON ESPINACA X KG",
         "precio": "11.550"
       },
       {
+        "cod": "1028",
         "nombre": "BASTONES DE MERLUZA REBOZADOS X KG",
         "precio": "8.660"
       },
       {
+        "cod": "1033",
         "nombre": "HAMBURGUESA DE SALMON X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1035",
         "nombre": "ANILLAS DE CALAMAR REBOZADAS X KG",
         "precio": "35.210"
       },
       {
+        "cod": "1039",
         "nombre": "PAPAS NOISETTE X KG",
         "precio": "12.550"
       },
       {
+        "cod": "1040",
         "nombre": "FILET DE MERLUZA REBOZADO FINAS HIERBAS X KG",
         "precio": "17.660"
       },
       {
+        "cod": "1041",
         "nombre": "MEDALLON DE MERLUZA PRIMAVERA X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1043",
         "nombre": "LANGOSTINOS REBOZADOS X KG",
         "precio": "59.430"
       },
       {
+        "cod": "1048",
         "nombre": "MEDALLON DE MERLUZA FINAS HIERBAS X KG",
         "precio": "11.660"
       },
       {
+        "cod": "1056",
         "nombre": "PAPAS CORTE RUSTICO X 500G",
         "precio": "Consultar"
       },
       {
+        "cod": "1058",
         "nombre": "MEDALLONES DE QUINOA VEGGIE VARIOS SABORES NUTREE X 4U",
         "precio": "Consultar"
       },
       {
+        "cod": "1065",
         "nombre": "MEDALLON DE MERLUZA CON JAMON Y QUESO X KG",
         "precio": "12.440"
       },
       {
+        "cod": "1072",
         "nombre": "MEDALLON VEGGIE LENTEJA Y ARROZ ARTICO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1073",
         "nombre": "PAELLA MARISCOS ARTICO X 400g",
         "precio": "8.330"
       },
       {
+        "cod": "1078",
         "nombre": "FILET DE MERLUZA A LA ROMANA X KG",
         "precio": "16.880"
       },
       {
+        "cod": "1079",
         "nombre": "RABAS ANILLAS CALAMAR A LA ROMANA X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1080",
         "nombre": "HAMBURGUSA PACU TEKO CAJA 4U",
         "precio": "2.890"
       },
       {
+        "cod": "1083",
         "nombre": "MILANESA DE PACU X KG",
         "precio": "24.330"
       },
       {
+        "cod": "1108",
         "nombre": "FORMITAS DE MERLUZA X KG",
         "precio": "8.660"
       },
       {
+        "cod": "1109",
         "nombre": "MEDALLON DE SALMON REBOZADO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1110",
         "nombre": "RABAS A LA ROMANA ARTICO X 300G",
         "precio": "Consultar"
       }
@@ -1187,722 +1439,902 @@ const CATALOG_CATEGORIES = [
     "nombre": "Sushi y cocina asiática",
     "productos": [
       {
+        "cod": "2000",
         "nombre": "SALSA DE SOJA SAKANASHI x 450ml",
         "precio": "8.440"
       },
       {
+        "cod": "2001",
         "nombre": "SALSA DE SOJA SAKANASHI X 970ml",
         "precio": "13.750"
       },
       {
+        "cod": "2002",
         "nombre": "SALSA DE SOJA SIN SAL GELL SINGH x 180cc",
         "precio": "Consultar"
       },
       {
+        "cod": "2003",
         "nombre": "SALSA DE SOJA RECETAS DE ENTONCES x 180cc",
         "precio": "Consultar"
       },
       {
+        "cod": "2005",
         "nombre": "PANKO VALLE IMPERIAL X 250G",
         "precio": "Consultar"
       },
       {
+        "cod": "2006",
         "nombre": "ALGAS PARA SUSHI VALLE IMPERIAL x 10 LAMINAS",
         "precio": "Consultar"
       },
       {
+        "cod": "2007",
         "nombre": "ARROZ PARA SUSHI VALLE IMPERIAL x 1KG",
         "precio": "Consultar"
       },
       {
+        "cod": "2014",
         "nombre": "WASABI VALLE IMPERIAL X 50g",
         "precio": "Consultar"
       },
       {
+        "cod": "2019",
         "nombre": "HONGOS SHITAKE LAMINADOS VALLARES X 25G",
         "precio": "3.645"
       },
       {
+        "cod": "2026",
         "nombre": "RAMEN SHIN RAMYUN NOODLE CUP X 68G",
         "precio": "4.845"
       },
       {
+        "cod": "2027",
         "nombre": "HONGO DE PINO POTE x 100g",
         "precio": "6.730"
       },
       {
+        "cod": "2029",
         "nombre": "RAMEN NISSIN CUP NOODLES VARIOS SABORES X 69G",
         "precio": "5.685"
       },
       {
+        "cod": "2030",
         "nombre": "SALSA TERIYAKI LEE KUM KEE X 250ML",
         "precio": "18.285"
       },
       {
+        "cod": "2038",
         "nombre": "RAMEN SAMYANG CUP X 65G",
         "precio": "5.700"
       },
       {
+        "cod": "2052",
         "nombre": "SALSA DE SOJA HINOMOTO LIGHT X 150ML",
         "precio": "7.820"
       },
       {
+        "cod": "2053",
         "nombre": "SALSA DE SOJA HINOMOTO PREMIUM X 150ML",
         "precio": "7.820"
       },
       {
+        "cod": "2054",
         "nombre": "SALSA DE SOJA HASHI 250cc",
         "precio": "6.845"
       },
       {
+        "cod": "2055",
         "nombre": "SALSA TERIYAKI HASHI 250cc",
         "precio": "8.585"
       },
       {
+        "cod": "2056",
         "nombre": "SALSA TONKATSU HASHI 250cc",
         "precio": "8.585"
       },
       {
+        "cod": "2058",
         "nombre": "RAMEN SHIN RAMYUN BIG SPICY NOODLE X 114G",
         "precio": "8.820"
       },
       {
+        "cod": "2059",
         "nombre": "ARROZ PARA SUSHI KOSHIHIKARI x KG",
         "precio": "Consultar"
       },
       {
+        "cod": "2060",
         "nombre": "TINTA DE CALAMAR SAN GIORGIO 2 X 4G",
         "precio": "10.175"
       },
       {
+        "cod": "2070",
         "nombre": "WASABI YUAN YUAN EN POLVO SOBRE 100G",
         "precio": "3.020"
       },
       {
+        "cod": "2082",
         "nombre": "HONGO SHITAKE FILETEADO VALLE IMPERIAL x 50g",
         "precio": "Consultar"
       },
       {
+        "cod": "2084",
         "nombre": "SALSA TERIYAKI PAMPAGOURMET X 285 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2087",
         "nombre": "SALSA DE OSTRAS LEE KUM KEE x 225g",
         "precio": "15.540"
       },
       {
+        "cod": "2099",
         "nombre": "SALSA CHILE HABANERO VERDE YUCATECO 120 ML",
         "precio": "12.340"
       },
       {
+        "cod": "2100",
         "nombre": "SALSA CHILE HABANERO ROJO YUCATECO X 120ML",
         "precio": "17.130"
       },
       {
+        "cod": "2112",
         "nombre": "FIDEO DE ARROZ SCHAR X 250G",
         "precio": "Consultar"
       },
       {
+        "cod": "2148",
         "nombre": "FIDEO PARA RAMEN TASSYA X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2149",
         "nombre": "PANKO BLANCO VALLE IMPERIAL X 200 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2150",
         "nombre": "ARROZ PARA PAELLA SAN GIORGIO X 500G",
         "precio": "Consultar"
       },
       {
+        "cod": "2154",
         "nombre": "AJINOMOTO VALLE IMPERIAL X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2172",
         "nombre": "SALSA DE SOJA BITARWAN X 500CC",
         "precio": "6.820"
       },
       {
+        "cod": "2176",
         "nombre": "CHOPSTICK PALITOS PARA SUSHI X 23CM",
         "precio": "155"
       },
       {
+        "cod": "2201",
         "nombre": "SALSA DE SOJA LEE KUM KEE PREMIUM X 150ML",
         "precio": "17.040"
       },
       {
+        "cod": "2204",
         "nombre": "FIDEO DE ARROZ INSTANT RICE MAMA X 225G",
         "precio": "Consultar"
       },
       {
+        "cod": "2207",
         "nombre": "SALSA AGRIDULCE HASHI X 250ML",
         "precio": "8.110"
       },
       {
+        "cod": "2211",
         "nombre": "CALDO DE PESCADO HONDASHI X 10G",
         "precio": "1.000"
       },
       {
+        "cod": "2219",
         "nombre": "SALSA AGRIDULCE LEE KUM KEE X 240 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2220",
         "nombre": "SALSA DE SOJA REDUCIDA EN SODIO LEE KUM KEE X 500 ML",
         "precio": "Consultar"
       },
       {
+        "cod": "2225",
         "nombre": "CONDIMENTO ARROCERO CON AZAFRAN EL CASTILLO X25 G",
         "precio": "5.110"
       },
       {
+        "cod": "2250",
         "nombre": "SALSA DE OSTRAS HE SHUN YUAN X 280G OYSTER SAUCE",
         "precio": "8.940"
       },
       {
+        "cod": "2252",
         "nombre": "SALSA DE SOJA PREMIUM HADAY X 380CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2253",
         "nombre": "SALSA CHILE HABANERO NEGRO YUCATECO",
         "precio": "Consultar"
       },
       {
+        "cod": "2254",
         "nombre": "SALSA CHILE CHIPOTLE YUCATECO X 150ML",
         "precio": "12.275"
       },
       {
+        "cod": "2255",
         "nombre": "SALSA KUTBIL-K YUCATECO",
         "precio": "Consultar"
       },
       {
+        "cod": "2258",
         "nombre": "LAM. DE JENGIBRE SUSHI YUANYUAN ROSA X 250G",
         "precio": "35"
       },
       {
+        "cod": "2259",
         "nombre": "LAM. DE JENGIBRE SUSHI YUANYUAN NATURAL X 250G",
         "precio": "35"
       },
       {
+        "cod": "2261",
         "nombre": "SALSA DE SOJA BITARWAN X 1 LTS",
         "precio": "12.895"
       },
       {
+        "cod": "2262",
         "nombre": "SALSA DE SOJA BITARWAN LIGHT X 1 LTS",
         "precio": "8.610"
       },
       {
+        "cod": "2268",
         "nombre": "FIDEOS DE ARROZ STAR LION VERMICELLI X 200G",
         "precio": "5.745"
       },
       {
+        "cod": "2269",
         "nombre": "FIDEOS DE ARROZ STAR LION VERMICELLI INTEGRAL X 200G",
         "precio": "5.920"
       },
       {
+        "cod": "2282",
         "nombre": "FIDEOS DE ARROZ SOYARROZ TRADICIONAL X 300 G",
         "precio": "4.945"
       },
       {
+        "cod": "2283",
         "nombre": "FIDEOS DE ARROZ SOYARROZ MORRON X 300 G",
         "precio": "4.945"
       },
       {
+        "cod": "2284",
         "nombre": "FIDEOS DE ARROZ SOYARROZ ESPINACA X 300 G",
         "precio": "4.965"
       },
       {
+        "cod": "2293",
         "nombre": "ALGA NORI YAKI JIANGSU X 10 LAMINAS",
         "precio": "10.175"
       },
       {
+        "cod": "2303",
         "nombre": "FIDEOS DE ARROZ ESPINACA OROX X 400G",
         "precio": "Consultar"
       },
       {
+        "cod": "2304",
         "nombre": "FIDEOS DE ARROZ MORRON OROX X 400G",
         "precio": "Consultar"
       },
       {
+        "cod": "2305",
         "nombre": "FIDEOS DE ARROZ CABELLO ANGEL OROX X 400G",
         "precio": "Consultar"
       },
       {
+        "cod": "2312",
         "nombre": "ARROZ PARA SUSHI KOSHIKARI YING YANG X 500 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2328",
         "nombre": "LA PARMESANA SALSA DE SOJA X 300ML",
         "precio": "Consultar"
       },
       {
+        "cod": "2329",
         "nombre": "LA PARMESANA SALSA DE SOJA LIGHT X 300ML",
         "precio": "Consultar"
       },
       {
+        "cod": "2340",
         "nombre": "SALSA DE PESCADO HE SHUN YUAN X 150ML",
         "precio": "7.840"
       },
       {
+        "cod": "2344",
         "nombre": "AJINOMOTO X 100G",
         "precio": "6.145"
       },
       {
+        "cod": "2345",
         "nombre": "RAMEN NEOGUIRI SEAFOOD & MILD X 120G",
         "precio": "6.145"
       },
       {
+        "cod": "2346",
         "nombre": "SALSA DE PESCADO PHOENIX X 340ML FENG QIU MAI",
         "precio": "9.140"
       },
       {
+        "cod": "2352",
         "nombre": "RAMEN BIBIM MEN PALDO X 130G",
         "precio": "4.730"
       },
       {
+        "cod": "2353",
         "nombre": "CURRY GOLDEN SUAVE X 92G",
         "precio": "12.375"
       },
       {
+        "cod": "2356",
         "nombre": "RAMEN SAPPORO ICHIBAN CAMARONES X 100G",
         "precio": "8.510"
       },
       {
+        "cod": "2357",
         "nombre": "GALLETAS DE LA FORTUNA KIDS X 12U",
         "precio": "4.330"
       },
       {
+        "cod": "2358",
         "nombre": "RAMEN SAMYANG BULDAK CHEESE PICANTE X 140G",
         "precio": "7.230"
       },
       {
+        "cod": "2360",
         "nombre": "CALDO DE GAMBAS CALNORT X 8U",
         "precio": "3.710"
       },
       {
+        "cod": "2361",
         "nombre": "CALDO DE PESCADO CALNORT X 8U",
         "precio": "3.700"
       },
       {
+        "cod": "2362",
         "nombre": "RAMEN JJAMBBONG MOLUSCOS Y PESCADO PICANTE X 120G",
         "precio": "7.140"
       },
       {
+        "cod": "2363",
         "nombre": "WASABI MATSUI EN SOBRE X 5G",
         "precio": "335"
       },
       {
+        "cod": "2365",
         "nombre": "RAMEN NOGSHIM KIMCHI SHIN NOODLE X 120G",
         "precio": "7.010"
       },
       {
+        "cod": "2377",
         "nombre": "RECIPIENTE PARA SALSA DE SOJA 7CM",
         "precio": "9.585"
       },
       {
+        "cod": "2380",
         "nombre": "PLATO PARA SUSHI DE CERAMICA CON APOYA PALITOS 16,5CM",
         "precio": "13.195"
       },
       {
+        "cod": "2384",
         "nombre": "AZAFRAN EN BLISTER Y CONDIMENTO PAELLERO EL RUEDO",
         "precio": "8.130"
       },
       {
+        "cod": "2386",
         "nombre": "PAELLERO CARMENCITA (MARINERA Y VALENCIANA)X 12G",
         "precio": "19.150"
       },
       {
+        "cod": "2387",
         "nombre": "RAMEN BIG CUP MR HOO VARIOS SABORES X 92G",
         "precio": "8.475"
       },
       {
+        "cod": "2388",
         "nombre": "PANKO NARANJA SUSHI EN CASAX 750G",
         "precio": "10.995"
       },
       {
+        "cod": "2389",
         "nombre": "PANKO NARANJA SUSHI EN CASA X 250G",
         "precio": "4.175"
       },
       {
+        "cod": "2390",
         "nombre": "PANKO BLANCO SUSHI EN CASA X 250G",
         "precio": "4.730"
       },
       {
+        "cod": "2394",
         "nombre": "ALGAS NORI YSN X 10 LAMINAS",
         "precio": "12.875"
       },
       {
+        "cod": "2395",
         "nombre": "SALSA DE SOJA ESTILO JAPONES FUMEIGA X 500ML",
         "precio": "8.375"
       },
       {
+        "cod": "2396",
         "nombre": "SALSA DE SOJA FUMEIGA X 1L",
         "precio": "12.940"
       },
       {
+        "cod": "2397",
         "nombre": "SALSA DE SOJA FUMEIGA X 500ML",
         "precio": "6.900"
       },
       {
+        "cod": "2399",
         "nombre": "SALSA DE SOJA CREMOSA FUMEIGA X 500ML",
         "precio": "6.720"
       },
       {
+        "cod": "2400",
         "nombre": "GALLETAS DE LA FORTUNA X 12U",
         "precio": "4.200"
       },
       {
+        "cod": "2405",
         "nombre": "RAMEN JIN MILD X 120 GR",
         "precio": "5.210"
       },
       {
+        "cod": "2406",
         "nombre": "RAMEN CHAPAGUETTI CUP X 114G",
         "precio": "8.610"
       },
       {
+        "cod": "2407",
         "nombre": "RAMEN ASUNG NOODLE SOUP X 125G",
         "precio": "5.545"
       },
       {
+        "cod": "2408",
         "nombre": "ARROZ PARA SUSHI DOS HERMANOS X 500G",
         "precio": "5.265"
       },
       {
+        "cod": "2409",
         "nombre": "PANKO NARANJA GOCHISO X 500G",
         "precio": "13.805"
       },
       {
+        "cod": "2415",
         "nombre": "RAMEN NISSIN CUP NOODLES SABOR VERDURAS X 69G",
         "precio": "6.685"
       },
       {
+        "cod": "2417",
         "nombre": "MIRIN TAKARA JAPONES X 300ML",
         "precio": "23.540"
       },
       {
+        "cod": "2419",
         "nombre": "RAMEN SHIN BLACK CUP X 101G",
         "precio": "9.165"
       },
       {
+        "cod": "2420",
         "nombre": "RAMEN NEOGUIRI SEAFOOD & SPICY X 120G",
         "precio": "5.420"
       },
       {
+        "cod": "2421",
         "nombre": "FIDEOS DE ARROZ SPAGHETTI STAR LION x 200G",
         "precio": "7.600"
       },
       {
+        "cod": "2422",
         "nombre": "RAMEN NISSIN SABOR POLLO x 85G",
         "precio": "3.190"
       },
       {
+        "cod": "2423",
         "nombre": "RAMEN NONGSHIM KIMCHI SHIN NOODLE SOUP x 120G",
         "precio": "5.785"
       },
       {
+        "cod": "2424",
         "nombre": "RAMEN ANSUNG NODDLE SOUP x 125G",
         "precio": "6.885"
       },
       {
+        "cod": "2425",
         "nombre": "RAMEN QUESO OTOGGI x 111G",
         "precio": "6.220"
       },
       {
+        "cod": "2426",
         "nombre": "SET DE SUSHI PARA DOS CERÁMICA",
         "precio": "26.215"
       },
       {
+        "cod": "2429",
         "nombre": "SALSA TERIYAKI AHUMADA EN BLISTER SUSHI EN CASA",
         "precio": "800"
       },
       {
+        "cod": "2430",
         "nombre": "SALSA DE SOJA BLISTER SUSHI EN CASA X 40ML",
         "precio": "680"
       },
       {
+        "cod": "2434",
         "nombre": "HONGOS SHITAKE VILLARES ENTEROS X 25G",
         "precio": "3.390"
       },
       {
+        "cod": "2436",
         "nombre": "PANKO BLANCO GOCHISO X250G",
         "precio": "6.730"
       },
       {
+        "cod": "2437",
         "nombre": "SALSA TAHINE RECETA DE ENTONCES X 175G",
         "precio": "19.250"
       },
       {
+        "cod": "2438",
         "nombre": "PANKO BLANCO TAKUMI X 2KG",
         "precio": "22.560"
       },
       {
+        "cod": "2439",
         "nombre": "PANKO NARANJA TAKUMI X 2KG",
         "precio": "23.170"
       },
       {
+        "cod": "2440",
         "nombre": "PANKO BLANCO SUSHI EN CASA X 750G",
         "precio": "9.330"
       },
       {
+        "cod": "2441",
         "nombre": "MAQUINA PARA SUSHI BLANCA",
         "precio": "9.410"
       },
       {
+        "cod": "2445",
         "nombre": "RAMEN SEAFOOD RAMYUN X 125G",
         "precio": "5.955"
       },
       {
+        "cod": "2446",
         "nombre": "SALSA DE SOJA PREMIUM FUMEIGA X 500ML",
         "precio": "6.210"
       },
       {
+        "cod": "2452",
         "nombre": "RAMEN UDON TEMPURA NOODLE SOUP X 111G",
         "precio": "9.665"
       },
       {
+        "cod": "2453",
         "nombre": "ALGAS BOHSI X 10U",
         "precio": "9.710"
       },
       {
+        "cod": "2454",
         "nombre": "RAMEN CHAPAGURI NONG SHIM X 140G",
         "precio": "7.400"
       },
       {
+        "cod": "2455",
         "nombre": "ARROZ PARA SUSHI ASAHI X 1K",
         "precio": "10.695"
       },
       {
+        "cod": "2456",
         "nombre": "ALGA 100 LAMINAS",
         "precio": "42.175"
       },
       {
+        "cod": "2457",
         "nombre": "RAMEN DE QUESO PICANTE OTOGGI X 111G",
         "precio": "7.230"
       },
       {
+        "cod": "2458",
         "nombre": "RAMEN JUMBO BOWL NOODLE HOT X 110G",
         "precio": "8.165"
       },
       {
+        "cod": "2459",
         "nombre": "ALGAS KOMBU KIMWAYA",
         "precio": "5.965"
       },
       {
+        "cod": "2463",
         "nombre": "KATSUO BUSHI 4 X 2,5G",
         "precio": "13.785"
       },
       {
+        "cod": "2464",
         "nombre": "ARROZ PARA SUSHI DOS HERMANOS X 5KG",
         "precio": "35.910"
       },
       {
+        "cod": "2466",
         "nombre": "RAMEN JIN PICANTE X 120G",
         "precio": "5.155"
       },
       {
+        "cod": "2467",
         "nombre": "RAMEN PALDO SABOR LANGOSTA X 120G",
         "precio": "4.810"
       },
       {
+        "cod": "2468",
         "nombre": "MISO VARIOS SABORES HINOMOTO X 500G",
         "precio": "13.895"
       },
       {
+        "cod": "2471",
         "nombre": "PANKO BLANCO X 500G GOCHISO",
         "precio": "13.165"
       },
       {
+        "cod": "2472",
         "nombre": "LECHE DE COCO MAIS COCO X 200ML",
         "precio": "8.265"
       },
       {
+        "cod": "2473",
         "nombre": "WASABI YUAN YUAN POLVO X 1KG",
         "precio": "28.290"
       },
       {
+        "cod": "2476",
         "nombre": "RAMEN NOGSHIM SUPER SPICY SHIN RED X 120G",
         "precio": "6.720"
       },
       {
+        "cod": "2477",
         "nombre": "SALSA DE OSTRAS FENG QIU MAI X 250G",
         "precio": "8.610"
       },
       {
+        "cod": "2486",
         "nombre": "VINAGRE LISTO PARA SUSHI SAN GIORGIO 250ML",
         "precio": "9.165"
       },
       {
+        "cod": "2487",
         "nombre": "RAMEN SUAVE 96GR PULMUONE SPICY",
         "precio": "8.120"
       },
       {
+        "cod": "2491",
         "nombre": "WASABI PASTA SUN GROWING x 43G",
         "precio": "6.500"
       },
       {
+        "cod": "2493",
         "nombre": "RAMEN NONGSHIM POLLO PICANTE BOWL x 100G",
         "precio": "9.410"
       },
       {
+        "cod": "2494",
         "nombre": "RAMEN NISSIN CUP NOODLES SABOR POLLO PICANTE X 68G",
         "precio": "6.275"
       },
       {
+        "cod": "2496",
         "nombre": "RAMEN BOWL NOODLE SOUP KIMCHI FLAVOR 86GR",
         "precio": "8.065"
       },
       {
+        "cod": "2497",
         "nombre": "RAMEN NONGSHIM TOMY PICANTE Y CITRICO SALTEADO103GR",
         "precio": "10.075"
       },
       {
+        "cod": "2499",
         "nombre": "CURRY GOLDEN S&B- SABOR MEDIO220GR",
         "precio": "22.225"
       },
       {
+        "cod": "2502",
         "nombre": "RAMEN SHRIMP BIG CUP 115GR",
         "precio": "10.510"
       },
       {
+        "cod": "2503",
         "nombre": "RAMEN CUP SHIN KIMCHI BIG NONGSHIM 112G",
         "precio": "9.665"
       },
       {
+        "cod": "2508",
         "nombre": "SALSA MARACUYA EN BLISTERSUSHI EN CASA30CC",
         "precio": "1.120"
       },
       {
+        "cod": "2516",
         "nombre": "SALSA DE SOJA LIGTH FUMEIGA 500ML",
         "precio": "6.930"
       },
       {
+        "cod": "2517",
         "nombre": "PANKO NARANJA TAKUMI 500GR",
         "precio": "8.940"
       },
       {
+        "cod": "2518",
         "nombre": "PASTA DE AJIES PICANTES GOCHUJAN BUMIL 250G",
         "precio": "7.910"
       },
       {
+        "cod": "2519",
         "nombre": "PASTA DE AJIES PICANTES GOCHUJAN BUMIL 500G",
         "precio": "14.540"
       },
       {
+        "cod": "2520",
         "nombre": "PANKO NARANJA GOCHISO X 250G",
         "precio": "7.000"
       },
       {
+        "cod": "2525",
         "nombre": "CURRY GOLDEN S&B- SABOR HOT220GR",
         "precio": "25.005"
       },
       {
+        "cod": "2531",
         "nombre": "HONGOS SHITAKE VILLARES ENTEROS X 50G",
         "precio": "6.620"
       },
       {
+        "cod": "2532",
         "nombre": "ARROZ DOBLE CAROLINA PARA SUSHI ASAHI 1K",
         "precio": "8.230"
       },
       {
+        "cod": "2533",
         "nombre": "SALSA DE OSTRAS HONGOS Y VEGETALES WAN JA SHAN 300ML",
         "precio": "15.085"
       },
       {
+        "cod": "2534",
         "nombre": "FIDEO DE RAMEN GRUESOS X 1K- ORIGEN TAIWAN",
         "precio": "21.370"
       },
       {
+        "cod": "2535",
         "nombre": "RAMEN MR. KIMCHI PALDO",
         "precio": "6.710"
       },
       {
+        "cod": "2536",
         "nombre": "RAMEN AGRIDULCE BIBIMMEN PALDO 130GR",
         "precio": "6.445"
       },
       {
+        "cod": "2542",
         "nombre": "SAMYANG SALSA 2BL 200GR BOTELLA ROJO",
         "precio": "20.805"
       },
       {
+        "cod": "2543",
         "nombre": "SAMYANG SALSA 2BL 200GR BOTELLA NEGRO",
         "precio": "20.805"
       },
       {
+        "cod": "2548",
         "nombre": "LECHE DE COCO LATA 400ML",
         "precio": "9.075"
       },
       {
+        "cod": "2549",
         "nombre": "RICE VERMICELLI MAMA GLU 400GR",
         "precio": "11.540"
       },
       {
+        "cod": "2550",
         "nombre": "PANKO NARANJA SIN GLUTEN 300GR",
         "precio": "5.110"
       },
       {
+        "cod": "2551",
         "nombre": "RAMEN POTE KIM CHOO CHILI 67GR",
         "precio": "5.300"
       },
       {
+        "cod": "2552",
         "nombre": "RAMEN DE VERDURAS 85GR",
         "precio": "3.210"
       },
       {
+        "cod": "2553",
         "nombre": "FIDEOS CINTA RAMEN 400GR",
         "precio": "13.050"
       },
       {
+        "cod": "2555",
         "nombre": "VERMICCELI SABOR CARNE",
         "precio": "11.920"
       },
       {
+        "cod": "2562",
         "nombre": "SALSA DE SOJA BLISTER BITARWAN TRADICIONAL",
         "precio": "1.665"
       },
       {
+        "cod": "2565",
         "nombre": "RAMEN NOGSHIM STIR CHEESE SPICY 135 GR",
         "precio": "7.575"
       },
       {
+        "cod": "2566",
         "nombre": "RAMEN SHIN RAMYUN BOWL SPICY NONGSHIM 86 GR",
         "precio": "6.410"
       },
       {
+        "cod": "2571",
         "nombre": "LECHE DE COCO LATA 400ML KERALA",
         "precio": "9.810"
       },
       {
+        "cod": "2575",
         "nombre": "RAMEN CUP CARBONARA POLLO PICANTE SAMYANG 105GR",
         "precio": "14.120"
       },
       {
+        "cod": "2584",
         "nombre": "FIDEOS DE ARROZ RICE STICK GOLDEN LION 400GR",
         "precio": "6.500"
       },
       {
+        "cod": "2585",
         "nombre": "FIDEO DE ARROZ FINOS GOLDEN LION 200GR VERMICELLI",
         "precio": "4.255"
       },
       {
+        "cod": "2586",
         "nombre": "RAMEN SAMYANG BULDAK 70GR",
         "precio": "10.985"
       },
       {
+        "cod": "2587",
         "nombre": "PANKO BLANCO SIN GLUTEN 300GR",
         "precio": "6.500"
       },
       {
+        "cod": "2588",
         "nombre": "CHUBANG SALSA DE SOJA DIETETICA 360GR",
         "precio": "9.865"
       },
       {
+        "cod": "2590",
         "nombre": "TOPOKKI DE POLLO PICANTE 120GR",
         "precio": "14.565"
       },
       {
+        "cod": "2591",
         "nombre": "PASTA DE CURRY MILD OTOKI 100GR",
         "precio": "8.740"
       },
       {
+        "cod": "2594",
         "nombre": "RAMEN DE SOJA 100GR SAPPORO",
         "precio": "8.940"
       }
@@ -1912,186 +2344,232 @@ const CATALOG_CATEGORIES = [
     "nombre": "Conservas y encurtidos",
     "productos": [
       {
+        "cod": "1057",
         "nombre": "ANCHOA ENTERO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1075",
         "nombre": "BACALAO FILET NORUEGA X KG",
         "precio": "42.770"
       },
       {
+        "cod": "1115",
         "nombre": "ANCHOA EN ACEITE FRASCO 90G",
         "precio": "Consultar"
       },
       {
+        "cod": "2028",
         "nombre": "TOMATES SECOS x 150g",
         "precio": "Consultar"
       },
       {
+        "cod": "2033",
         "nombre": "HORTALIZAS ASADAS DE LA TORRE x 300g",
         "precio": "Consultar"
       },
       {
+        "cod": "2101",
         "nombre": "SALSA CHILE JALAPEÑO YUCATECO X 150ML",
         "precio": "16.060"
       },
       {
+        "cod": "2110",
         "nombre": "ALCAPARRAS EN VINAGRE Y SAL SIETE LAGOS X 100G",
         "precio": "6.055"
       },
       {
+        "cod": "2111",
         "nombre": "JALAPEÑO VERDE PICANTE KOSHER X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2206",
         "nombre": "FILET DE ANCHOA EN ACEITE MARBELLA X 90G",
         "precio": "Consultar"
       },
       {
+        "cod": "2215",
         "nombre": "JALAPEÑO AHUMADO RDE X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2216",
         "nombre": "JALAPEÑO ROJO PICANTE KOSHER X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2217",
         "nombre": "JALAPEÑO ROJO RDE X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2235",
         "nombre": "ACEITUNAS VERDES DESCAROZADAS SAN NICOLAS X 250G",
         "precio": "Consultar"
       },
       {
+        "cod": "2236",
         "nombre": "ALCAUCILES AL NATURAL KOSHER X 310CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2239",
         "nombre": "JALAPEÑO AHUMADO PICANTE KOSHER X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2240",
         "nombre": "JALAPEÑO VERDE RECETA DE ENTRONCES X 180G",
         "precio": "Consultar"
       },
       {
+        "cod": "2244",
         "nombre": "HUMMUS MOSHO & PAPUZ X 170G",
         "precio": "35"
       },
       {
+        "cod": "2256",
         "nombre": "JALAPEÑO ROJO PICANTE RDE X 180 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2257",
         "nombre": "JALAPEÑO AHUMADO PICANTE RDE X 180 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2260",
         "nombre": "FILETES DE ANCHOAS CARACAS X 90G",
         "precio": "35"
       },
       {
+        "cod": "2265",
         "nombre": "LOMO DE ATUN GOMES DA COSTA NAT. X170G BAJO SODIO",
         "precio": "35"
       },
       {
+        "cod": "2266",
         "nombre": "LOMO DE ATUN GOMES DA COSTA AC. X170G BAJO SODIO",
         "precio": "35"
       },
       {
+        "cod": "2267",
         "nombre": "PIMENTON ESPAÑOL DULCE ZORAIDA EN LATA X 75G",
         "precio": "14.165"
       },
       {
+        "cod": "2321",
         "nombre": "LA PARMESANA SALA PICANTE JALAPEÑO VERDE X 180G",
         "precio": "4.255"
       },
       {
+        "cod": "2337",
         "nombre": "PIMENTON ESPAÑOL AHUMADO ZORAIDA EN LATA X 75G",
         "precio": "12.395"
       },
       {
+        "cod": "2339",
         "nombre": "TOMATE DESHIDRATADO EN ACEITE SIETE LAGOS X 200G",
         "precio": "Consultar"
       },
       {
+        "cod": "2347",
         "nombre": "ALMEJAS BLANCAS AL NATURAL DANI X 111G",
         "precio": "13.595"
       },
       {
+        "cod": "2348",
         "nombre": "ATUN CLARO EN ACEITE DE OLIVA DANI X 106G",
         "precio": "11.465"
       },
       {
+        "cod": "2349",
         "nombre": "BACALAO A LA VIZCAINA DANI X 106G",
         "precio": "9.675"
       },
       {
+        "cod": "2350",
         "nombre": "TROZOS DE CALAMAR EN SU TINTA DANI X 106G",
         "precio": "9.165"
       },
       {
+        "cod": "2354",
         "nombre": "PIMENTON ESPAÑOL PICANTE ZORAIDA EN LATA X 75G",
         "precio": "8.875"
       },
       {
+        "cod": "2528",
         "nombre": "PEPINILLOS AGRIDULCE CRISTO DE LOS CERROS 300GR",
         "precio": "8.485"
       },
       {
+        "cod": "2530",
         "nombre": "PICKLES MIX EN VINAGRE CRISTO DE LOS CERROS 300GR",
         "precio": "5.255"
       },
       {
+        "cod": "2537",
         "nombre": "AJO CON LIMON Y ALBAHACA MARINADOS X226G",
         "precio": "13.440"
       },
       {
+        "cod": "2538",
         "nombre": "AJO Y PEREJIL MARINADOS X266G",
         "precio": "13.440"
       },
       {
+        "cod": "2556",
         "nombre": "AJI EN CONSERVA X425GR",
         "precio": "12.295"
       },
       {
+        "cod": "2563",
         "nombre": "AJO Y AJI MARINADOS X226 BADIA",
         "precio": "17.605"
       },
       {
+        "cod": "2567",
         "nombre": "AJO PICADO C/ MIEL Y LIMON. 200GR PRINCIPE LUJAN",
         "precio": "7.855"
       },
       {
+        "cod": "2568",
         "nombre": "BERENJENA AL ESCABECHE CRISTO DE LOS CERROS 300GR",
         "precio": "10.755"
       },
       {
+        "cod": "2569",
         "nombre": "HUMMUS SESAMO Y LIMON 175GR",
         "precio": "10.065"
       },
       {
+        "cod": "2574",
         "nombre": "AJO PICADO EN ACEITE DE OLIVA 200GR PRINCIPE LUJAN",
         "precio": "7.565"
       },
       {
+        "cod": "2589",
         "nombre": "CHOCLITOS EN CONSERVA 425G",
         "precio": "15.240"
       },
       {
+        "cod": "2602",
         "nombre": "PURE DE BERENJENA ASADAS 300G CRISTO DE LOS CERROS",
         "precio": "12.220"
       },
       {
+        "cod": "2603",
         "nombre": "PIMIENTO AGRIDULCE 300G CRISTO DE LOS CERROS",
         "precio": "12.675"
       },
       {
+        "cod": "2604",
         "nombre": "PIMIENTO MORRONES ENTEROS 300G CRISTO DE LOS CERROS",
         "precio": "13.275"
       },
       {
+        "cod": "2605",
         "nombre": "CASA DE LA TORRE HORTOLIZAS ASADAS 300G",
         "precio": "15.605"
       }
@@ -2101,138 +2579,172 @@ const CATALOG_CATEGORIES = [
     "nombre": "Salsas y aderezos",
     "productos": [
       {
+        "cod": "2043",
         "nombre": "SALSA TABASCO Mc ILHENNY PEPPER SAUCEx 60cc",
         "precio": "14.805"
       },
       {
+        "cod": "2051",
         "nombre": "SALSA INGLESA RECETA DE ENTONCES 180cc",
         "precio": "6.220"
       },
       {
+        "cod": "2086",
         "nombre": "MOSTAZA DIJON CLOVIS x 200g",
         "precio": "Consultar"
       },
       {
+        "cod": "2096",
         "nombre": "MAYONESA AHUMADA ARYTZA X 360G",
         "precio": "Consultar"
       },
       {
+        "cod": "2097",
         "nombre": "MAYONESA CLASICA ARYTZA X 360G",
         "precio": "Consultar"
       },
       {
+        "cod": "2098",
         "nombre": "MOSTAZA DIJON ARYTZA X 360G",
         "precio": "11.095"
       },
       {
+        "cod": "2145",
         "nombre": "ADHEREZO MOSTARDA TASTE X 350G",
         "precio": "Consultar"
       },
       {
+        "cod": "2147",
         "nombre": "ADHEREZO PARA ENSALADAS ITALIANO TASTE X 300CC",
         "precio": "15.485"
       },
       {
+        "cod": "2159",
         "nombre": "MOSTAZA AMARILLA MOLIDA VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2160",
         "nombre": "MOSTAZA NEGRA EN GRANO VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2205",
         "nombre": "SALSA HABANERO TABASCO x 60cc",
         "precio": "Consultar"
       },
       {
+        "cod": "2208",
         "nombre": "SALSA MOSTAZA Y MIEL PAMPA GOURMET X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2209",
         "nombre": "ADEREZO CAESAR PAMPAGOURMET X 250 ML",
         "precio": "Consultar"
       },
       {
+        "cod": "2218",
         "nombre": "MOSTAZA A LA ANTIGUA ARYTZA X 360 G",
         "precio": "35"
       },
       {
+        "cod": "2223",
         "nombre": "BARBACOA ARYTZA X 370 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2242",
         "nombre": "SALSA AJO AHUMADO PAMPA GOURMET X 285G",
         "precio": "Consultar"
       },
       {
+        "cod": "2243",
         "nombre": "SALSA SRIRACHA HASHI X 250G",
         "precio": "9.610"
       },
       {
+        "cod": "2249",
         "nombre": "SALSA CRIOLLA ARYTZA X 360G",
         "precio": "Consultar"
       },
       {
+        "cod": "2298",
         "nombre": "MAYONESA CON AJO ARYTZA X 360 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2299",
         "nombre": "MAYONESA ORGANICA PAMPAGOURMET X 290 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2300",
         "nombre": "MAYOV ALBAHACA X 270 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2301",
         "nombre": "SALSA SRIRACHA CHILI SAUCE PAMPA GOURMET X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2322",
         "nombre": "LA PARMESANA SALSA DE CEBOLLA X 180G",
         "precio": "3.690"
       },
       {
+        "cod": "2335",
         "nombre": "LA PARMESANA SALSA PICANTE CAYENA ROJA X 180G",
         "precio": "3.300"
       },
       {
+        "cod": "2341",
         "nombre": "SALSA SWEET CHILLI PAMPAGOURMET X 310G",
         "precio": "10.620"
       },
       {
+        "cod": "2351",
         "nombre": "SALSA TABASCO CHOVI X 60G",
         "precio": "7.940"
       },
       {
+        "cod": "2364",
         "nombre": "SALSA DE OSTRA HADAY X 260G",
         "precio": "5.210"
       },
       {
+        "cod": "2470",
         "nombre": "ADHEREZO KANSAS VARIOS SABORES X 295G",
         "precio": "5.930"
       },
       {
+        "cod": "2474",
         "nombre": "SALSA BUENOS AIRES EN BLISTER 40CC",
         "precio": "765"
       },
       {
+        "cod": "2489",
         "nombre": "SALSA CHILLI PICANTE TAILANDESA MAE POY x 350G",
         "precio": "3.030"
       },
       {
+        "cod": "2521",
         "nombre": "SALSA ENSALADA CAESAR X PAMPAGOURMET 250G",
         "precio": "13.620"
       },
       {
+        "cod": "2564",
         "nombre": "MOSTAZA 0 CALORIAS X 350",
         "precio": "21.815"
       },
       {
+        "cod": "2579",
         "nombre": "PASTA DE AJO RECETAS DE ENTONCES 85GR",
         "precio": "7.820"
       },
       {
+        "cod": "2580",
         "nombre": "PESTO DE ALBAHACA RECETAS DE ENTONCES 85GR",
         "precio": "11.410"
       }
@@ -2242,730 +2754,912 @@ const CATALOG_CATEGORIES = [
     "nombre": "Especias y condimentos",
     "productos": [
       {
+        "cod": "2013",
         "nombre": "PAPRIKA CONDIMENTO VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2015",
         "nombre": "FINAS HIERBAS VALLE IMPERIAL",
         "precio": "Consultar"
       },
       {
+        "cod": "2016",
         "nombre": "TAJIN CLASICO EN POLVO X 142G",
         "precio": "23.270"
       },
       {
+        "cod": "2017",
         "nombre": "PIMIENTA CAYENA MOLIDA VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2021",
         "nombre": "TAJIN CLASICO EN POLVO X 45G",
         "precio": "11.250"
       },
       {
+        "cod": "2022",
         "nombre": "AZAFRAN PARA ARROZ INDO DELI X20G",
         "precio": "5.310"
       },
       {
+        "cod": "2035",
         "nombre": "MOSTAZA FINAS HIERBAS ARYTZA x 190g",
         "precio": "Consultar"
       },
       {
+        "cod": "2047",
         "nombre": "CURRY INDIA VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2048",
         "nombre": "SAL MARINA VALLE IMPERIAL x 200g",
         "precio": "Consultar"
       },
       {
+        "cod": "2049",
         "nombre": "SAL HIMALAYA VALLE IMPERIAL x 200g",
         "precio": "Consultar"
       },
       {
+        "cod": "2057",
         "nombre": "REBOZADOR PDK SIN TACC x 500g",
         "precio": "Consultar"
       },
       {
+        "cod": "2063",
         "nombre": "MIX ESPECIAS CHIMICHURRI 1854",
         "precio": "Consultar"
       },
       {
+        "cod": "2066",
         "nombre": "CONDIMENTO PARA ARROZ VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2067",
         "nombre": "CEBOLLA DESHIDRATADA AHUMADA VALLE IM. x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2068",
         "nombre": "CHIMICHURRI AHUMADO VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2069",
         "nombre": "JENGIBRE EN POLVO VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2075",
         "nombre": "AJO GRANULADO VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2076",
         "nombre": "CONDIMENTO PARA PAELLA VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2077",
         "nombre": "HINOJO EN SEMILLAS VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2078",
         "nombre": "PEREJIL DESHIDRATADO VALLE IMPERIAL x 80g",
         "precio": "Consultar"
       },
       {
+        "cod": "2079",
         "nombre": "ROMERO VALLE IMPERIAL x 100g",
         "precio": "Consultar"
       },
       {
+        "cod": "2080",
         "nombre": "VERDEO DESHIDRATADO VALLE IMPERIAL x 50g",
         "precio": "Consultar"
       },
       {
+        "cod": "2085",
         "nombre": "REBOZADOR DELICEL SIN TACC x 500g",
         "precio": "5.485"
       },
       {
+        "cod": "2094",
         "nombre": "CHIMI RECETAS DE ENTONCES X 250CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2095",
         "nombre": "CHIMI PICANTE RECETA DE ENTRONCES X 250CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2104",
         "nombre": "7 ESPECIAS BAHARAT VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2105",
         "nombre": "AJO EN POLVO BADIA X 28G",
         "precio": "Consultar"
       },
       {
+        "cod": "2106",
         "nombre": "AJO EN POLVO BADIA X 85G",
         "precio": "13.150"
       },
       {
+        "cod": "2107",
         "nombre": "CEBOLLA EN POLVO BADIA X 78G",
         "precio": "Consultar"
       },
       {
+        "cod": "2108",
         "nombre": "CHILE Y LIME BADIA X 85G",
         "precio": "17.585"
       },
       {
+        "cod": "2109",
         "nombre": "CURRY BADIA X 56G",
         "precio": "9.285"
       },
       {
+        "cod": "2114",
         "nombre": "AJO ASADO BADIA X 170G",
         "precio": "Consultar"
       },
       {
+        "cod": "2115",
         "nombre": "AJO EN POLVO BADIA X 155G",
         "precio": "Consultar"
       },
       {
+        "cod": "2116",
         "nombre": "AJO Y PEREJIL BADIA X 141G",
         "precio": "Consultar"
       },
       {
+        "cod": "2117",
         "nombre": "CEBOLLA EN POLVO BADIA X 141G",
         "precio": "Consultar"
       },
       {
+        "cod": "2118",
         "nombre": "CHILE Y LIME BADIA X 184G",
         "precio": "25.080"
       },
       {
+        "cod": "2119",
         "nombre": "GARAM MASALA BADIA X 120,5G",
         "precio": "5.800"
       },
       {
+        "cod": "2120",
         "nombre": "MEZCLA PIMIENTAS CON MOLINILLO BADIA X 56G",
         "precio": "Consultar"
       },
       {
+        "cod": "2121",
         "nombre": "NUEZ MOSCADA BADIA X 14G",
         "precio": "Consultar"
       },
       {
+        "cod": "2122",
         "nombre": "NUEZ MOSCADA BADIA X 56G",
         "precio": "Consultar"
       },
       {
+        "cod": "2123",
         "nombre": "NUEZ MOSCADA MOLIDA BADIA X 56G",
         "precio": "9.285"
       },
       {
+        "cod": "2124",
         "nombre": "ORANGE PEPPER BADIA X 184G",
         "precio": "Consultar"
       },
       {
+        "cod": "2125",
         "nombre": "PAPRIKA AHUMADA BADIA X 106G",
         "precio": "Consultar"
       },
       {
+        "cod": "2126",
         "nombre": "PAPRIKA BADIA X 113G",
         "precio": "Consultar"
       },
       {
+        "cod": "2127",
         "nombre": "PAPRIKA BADIA X 28G",
         "precio": "Consultar"
       },
       {
+        "cod": "2128",
         "nombre": "PAPRIKA AHUMADA BADIA X 56G",
         "precio": "13.150"
       },
       {
+        "cod": "2129",
         "nombre": "PEREJIL BADIA X 14G",
         "precio": "Consultar"
       },
       {
+        "cod": "2130",
         "nombre": "PIMIENTA LIMA BADIA X 184G",
         "precio": "24.470"
       },
       {
+        "cod": "2131",
         "nombre": "PIMIENTA NEGRA EN GRANO BADIA X 56G",
         "precio": "Consultar"
       },
       {
+        "cod": "2132",
         "nombre": "PIMIENTA ROJA CAYENNE BADIA X 49G",
         "precio": "Consultar"
       },
       {
+        "cod": "2133",
         "nombre": "SAL DE AJO CON PEREJIL BADIA X 311G",
         "precio": "Consultar"
       },
       {
+        "cod": "2134",
         "nombre": "PIMIENTA ROJA TRITURADA BADIA X 35G",
         "precio": "Consultar"
       },
       {
+        "cod": "2135",
         "nombre": "SAZON COMPLETA BADIA X 70G",
         "precio": "8.640"
       },
       {
+        "cod": "2136",
         "nombre": "SAZON BARBACOA BADIA X 99G",
         "precio": "18.415"
       },
       {
+        "cod": "2137",
         "nombre": "SAZON PARA POLLO BADIA X 155G",
         "precio": "Consultar"
       },
       {
+        "cod": "2138",
         "nombre": "SAZON TROPICAL BADIA X 99G",
         "precio": "14.220"
       },
       {
+        "cod": "2139",
         "nombre": "STEAK SEASONING BADIA X 184G",
         "precio": "Consultar"
       },
       {
+        "cod": "2140",
         "nombre": "SUMAC BADIA X 134G",
         "precio": "Consultar"
       },
       {
+        "cod": "2141",
         "nombre": "SAZONADOR FAJITA BADIA X 78G",
         "precio": "13.150"
       },
       {
+        "cod": "2142",
         "nombre": "PIMIENTA Y LIMA BADIA X 184G",
         "precio": "17.705"
       },
       {
+        "cod": "2143",
         "nombre": "CEBOLLA FINAMENTE PICADA BADIA X 113G",
         "precio": "Consultar"
       },
       {
+        "cod": "2146",
         "nombre": "ADHEREZO PARA ENSALADAS FINAS HIERBAS TASTE X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2152",
         "nombre": "SAL MARINA ESPECIADA MAYADEVI IMPORTADA X 250G CAJA",
         "precio": "Consultar"
       },
       {
+        "cod": "2153",
         "nombre": "AJI MOLIDO MERKEN VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2155",
         "nombre": "AJO EN POLVO VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2156",
         "nombre": "ANIS ESTRELLADO VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2157",
         "nombre": "CARDAMOMO EN GRANO VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2158",
         "nombre": "CEBOLLA EN POLVO VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2161",
         "nombre": "NUEZ MOSCADA MOLIDA VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2162",
         "nombre": "PAPRIKA VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2163",
         "nombre": "PIMENTON DULCE VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2164",
         "nombre": "PIMIENTA CAYENA EN ESCAMAS VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2165",
         "nombre": "PIMIENTA JAMAICA VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2166",
         "nombre": "PIMIENTA JAMAICA MOLIDA VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2167",
         "nombre": "PIMIENTA MIX EN GRANO VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2168",
         "nombre": "PIMIENTA NEGRA EN GRANO VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2169",
         "nombre": "PIMIENTA ROSA EN GRANO VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2170",
         "nombre": "PIMIENTA VERDE EN GRANO VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2171",
         "nombre": "PIMIENTA VERDE EN GRANO VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2173",
         "nombre": "MIX DE ESPECIAS MAYADEVI FRASCO X 70G",
         "precio": "Consultar"
       },
       {
+        "cod": "2174",
         "nombre": "PIMIENTA BLANCA EN GRANO VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2177",
         "nombre": "HARLEM GARLIC BADIA X 170G",
         "precio": "Consultar"
       },
       {
+        "cod": "2178",
         "nombre": "MOJO RUB BADIA X 141G",
         "precio": "Consultar"
       },
       {
+        "cod": "2179",
         "nombre": "7 ESPECIAS (BAHARAT) VALLE IMPERIAL X 50 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2180",
         "nombre": "AZAFRAN EN HEBRAS EL CONQUISTADOR X 0,2 GR",
         "precio": "17.630"
       },
       {
+        "cod": "2181",
         "nombre": "AZAFRAN EN POLVO EL CONQUISTADOR X 0,2 GR",
         "precio": "4.675"
       },
       {
+        "cod": "2212",
         "nombre": "CURCUMA BADIA X 56G",
         "precio": "Consultar"
       },
       {
+        "cod": "2213",
         "nombre": "CANELA EN POLVO BADIA X 56G",
         "precio": "Consultar"
       },
       {
+        "cod": "2214",
         "nombre": "5 ESPECIAS VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2222",
         "nombre": "AZAFRAN EN HEBRAS CARMENCITA SAN GIORGIO X 0,375 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2224",
         "nombre": "CLAVO DE OLOR MOLIDO VALLE IMPERIAL X 50 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2226",
         "nombre": "COMINO EN GRANO VALLE IMPERIAL X 100 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2227",
         "nombre": "CONDIMENTO PARA PESCADO VALLE IMPERIAL X 100 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2228",
         "nombre": "PIMENTON DULCE AHUMADO VALLE IMPERIAL X 100 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2237",
         "nombre": "CHIMICHURRY ARYTZA X 360G",
         "precio": "Consultar"
       },
       {
+        "cod": "2238",
         "nombre": "CLAVO DE OLOR VALLE IMPERIAL X 25G",
         "precio": "Consultar"
       },
       {
+        "cod": "2241",
         "nombre": "NUEZ MOSCADA ENTERA VALLE IMPERIAL X 30G",
         "precio": "Consultar"
       },
       {
+        "cod": "2245",
         "nombre": "CANELA EN RAMA VALLE IMPERIAL X 50G",
         "precio": "Consultar"
       },
       {
+        "cod": "2246",
         "nombre": "CURCUMA MOLIDA VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2247",
         "nombre": "CURRY POWDER AHUMADO EL CASTILLO X 40G",
         "precio": "Consultar"
       },
       {
+        "cod": "2248",
         "nombre": "JENGIBRE MOLIDO BADIA X 42G",
         "precio": "Consultar"
       },
       {
+        "cod": "2251",
         "nombre": "PIMENTON ESPAÑOL PICANTE EL CID X25G",
         "precio": "4.500"
       },
       {
+        "cod": "2263",
         "nombre": "REBOZADOR GLUTAL X 500 G",
         "precio": "35"
       },
       {
+        "cod": "2275",
         "nombre": "CANELA EL POLVO VALLE IMPERIAL X 90 GR",
         "precio": "35"
       },
       {
+        "cod": "2276",
         "nombre": "PIMIENTON DULCE VALLE IMPERIAL X 100 GR",
         "precio": "35"
       },
       {
+        "cod": "2285",
         "nombre": "SAL MARINA FINA LIBERATO X 500 G",
         "precio": "4.610"
       },
       {
+        "cod": "2286",
         "nombre": "SAL MARINA GRUESA LIBERATO X 500 G",
         "precio": "3.790"
       },
       {
+        "cod": "2287",
         "nombre": "MERKEN ARTESANOS X 55 G",
         "precio": "35"
       },
       {
+        "cod": "2288",
         "nombre": "SAL ARTESANOS PARRILLERA X 120 G",
         "precio": "35"
       },
       {
+        "cod": "2289",
         "nombre": "MIX ESPECIAS MAYADEVI PASTAS Y ARROCES X 50 G",
         "precio": "35"
       },
       {
+        "cod": "2290",
         "nombre": "MIX ESPECIAS MAYADEVI WOK Y CACEROLA X 40 G",
         "precio": "35"
       },
       {
+        "cod": "2291",
         "nombre": "MIX ESPECIAS MAYADEVI LIMON Y FINAS HIERBAS X 50 G",
         "precio": "35"
       },
       {
+        "cod": "2292",
         "nombre": "SAL ARTESANOS AHUMADA X 120 G",
         "precio": "5.220"
       },
       {
+        "cod": "2294",
         "nombre": "SAL MARINA ENTREFINA LIBERATO X 500G",
         "precio": "4.375"
       },
       {
+        "cod": "2297",
         "nombre": "MASALA IMPERIAL SAZON COMPLETA VALLE IMPERIAL X 50 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2302",
         "nombre": "CANELA EN POLVO VALLE IMPERIAL X 90G",
         "precio": "Consultar"
       },
       {
+        "cod": "2307",
         "nombre": "LA PARRILLERA SAL ESPECIADA X 240 GR",
         "precio": "4.975"
       },
       {
+        "cod": "2308",
         "nombre": "GARLIC PEPPER AJO Y PIMIENTA V. IMPERIAL X 50GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2309",
         "nombre": "POULTRY SEASONING COND. PARA AVES V.IMPERIAL X 50 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2310",
         "nombre": "LEMON PEPPER PIMIENTA LIMON VALLE IMPERIAL X 50 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2311",
         "nombre": "SPICY MIX VALLE IMPERIAL X 50 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2323",
         "nombre": "LA PARMESANA CONDIMENTO ARROZ X 20G",
         "precio": "780"
       },
       {
+        "cod": "2324",
         "nombre": "LA PARMESANA CONDIMENTO PESCADO X 20G",
         "precio": "835"
       },
       {
+        "cod": "2325",
         "nombre": "LA PARMESANA PIMIENTA NEGRA MOLIDA EN SOBRE X 25G",
         "precio": "1.690"
       },
       {
+        "cod": "2326",
         "nombre": "LA PARMESANA PIMIENTA BLANCA MOLIDA EN SOBRE X 25G",
         "precio": "2.290"
       },
       {
+        "cod": "2327",
         "nombre": "LA PARMESANA CURRY EN SOBRE X 20G",
         "precio": "1.490"
       },
       {
+        "cod": "2330",
         "nombre": "LA PARMESANA JENGIBRE MOLIDO EN FRASCO X 40G",
         "precio": "3.075"
       },
       {
+        "cod": "2331",
         "nombre": "LA PARMESANA CURCUMA EN FRASCO X 50G",
         "precio": "3.465"
       },
       {
+        "cod": "2332",
         "nombre": "LA PARMESANA PIMIENTA BLANCA EN FRASCO X 50G",
         "precio": "8.475"
       },
       {
+        "cod": "2333",
         "nombre": "LA PARMESANA PIMIENTA NEGRA EN FRASCO X 50G",
         "precio": "6.010"
       },
       {
+        "cod": "2334",
         "nombre": "LA PARMESANA AZAFRAN MOLIDO X 2U",
         "precio": "7.640"
       },
       {
+        "cod": "2336",
         "nombre": "LA PARMESANA CANELA MOLIDA FRASCO X 50G",
         "precio": "3.965"
       },
       {
+        "cod": "2338",
         "nombre": "SAL MARINA GRUESA GELLSINGH x 500 gr",
         "precio": "Consultar"
       },
       {
+        "cod": "2343",
         "nombre": "PIMIENTA NEGRA MOLIDA VALLE IMPERIAL X 100G",
         "precio": "Consultar"
       },
       {
+        "cod": "2359",
         "nombre": "AZAFRAN EN BLISTER HEBRAS EL RUEDO X 0,35G",
         "precio": "10.995"
       },
       {
+        "cod": "2366",
         "nombre": "SAL DE CAMPO ORIGINAL",
         "precio": "3.455"
       },
       {
+        "cod": "2367",
         "nombre": "SAL DE CAMPO AHUMADA",
         "precio": "4.200"
       },
       {
+        "cod": "2381",
         "nombre": "SAL MARINA FINA MACROZEN X 500G",
         "precio": "3.910"
       },
       {
+        "cod": "2382",
         "nombre": "CONDIMENTO PESCADOS SIN SAL INDO DELI X 10G",
         "precio": "735"
       },
       {
+        "cod": "2383",
         "nombre": "SAZONADOR PARA PESCADO DEL CASTILLO X 50G",
         "precio": "7.265"
       },
       {
+        "cod": "2385",
         "nombre": "AZAFRAN EN BLISTER X 2 CAPSULAS EL RUEDO",
         "precio": "9.485"
       },
       {
+        "cod": "2393",
         "nombre": "SAL MARINA GRUESA MACROZEN X 500G",
         "precio": "3.875"
       },
       {
+        "cod": "2410",
         "nombre": "PIMIENTA VERDE CON MOLINILLO INDO DELI X 40G",
         "precio": "9.965"
       },
       {
+        "cod": "2411",
         "nombre": "PIMIENTA BLANCA CON MOLINILLO INDO DELI X 70G",
         "precio": "9.965"
       },
       {
+        "cod": "2412",
         "nombre": "PIMIENTA NEGRA CON MOLINILLO SAN GIORGIO X 45G",
         "precio": "21.960"
       },
       {
+        "cod": "2414",
         "nombre": "MIX PIMIENTAS CON MOLINILLO INDO DELI X 55G",
         "precio": "9.965"
       },
       {
+        "cod": "2418",
         "nombre": "PIMIENTA NEGRA CON MOLINILLO INDO DELI X 55G",
         "precio": "9.620"
       },
       {
+        "cod": "2427",
         "nombre": "AZAFRAN MACHACADO INDO DELI 2 X 4G",
         "precio": "8.785"
       },
       {
+        "cod": "2431",
         "nombre": "5 ESPECIAS CHINAS EL CASTILLO X 25G",
         "precio": "3.675"
       },
       {
+        "cod": "2435",
         "nombre": "MEZCLA DE ESPECIAS ENSALADAS CON MOLINILLO INDO DELI",
         "precio": "11.810"
       },
       {
+        "cod": "2485",
         "nombre": "BAHARAT 7 ESPECIAS EL CASTILLO 25GR",
         "precio": "4.845"
       },
       {
+        "cod": "2498",
         "nombre": "LA PARRILLERA SAL ESPECIADA X 150 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2504",
         "nombre": "COMINO MOLIDO BADIA X 56G",
         "precio": "9.375"
       },
       {
+        "cod": "2509",
         "nombre": "CURRY EN POLVO EL CASTILLO 25GR",
         "precio": "3.445"
       },
       {
+        "cod": "2510",
         "nombre": "PIMENTON ESPAÑOL DULCE EL CID 25GR",
         "precio": "4.375"
       },
       {
+        "cod": "2511",
         "nombre": "PIMENTON AHUMADO EL RUEDO 100GR",
         "precio": "11.920"
       },
       {
+        "cod": "2512",
         "nombre": "PIMENTON DULCE EL RUEDO 100GR",
         "precio": "9.165"
       },
       {
+        "cod": "2515",
         "nombre": "PIMENTON PICANTE EL RUEDO 100G",
         "precio": "9.165"
       },
       {
+        "cod": "2522",
         "nombre": "SAL ROSADA DEL HIMALAYA FINA X100gr POTE",
         "precio": "600"
       },
       {
+        "cod": "2523",
         "nombre": "GARAM MASALA 5G EL CASTILLO",
         "precio": "7.620"
       },
       {
+        "cod": "2539",
         "nombre": "REBOZADOR SIN TAC X 5KG DELICEL",
         "precio": "44.700"
       },
       {
+        "cod": "2540",
         "nombre": "REBOZADOR SIN TAC X 500GR SANAMUDI",
         "precio": "5.545"
       },
       {
+        "cod": "2541",
         "nombre": "JENGIBRE YUAN YUAN NATURAL 250 GR",
         "precio": "11.185"
       },
       {
+        "cod": "2557",
         "nombre": "SAL CILNATRO TOMILLO Y ESTRAGON 168GR SHIO",
         "precio": "5.345"
       },
       {
+        "cod": "2558",
         "nombre": "SAL HIERBAS 157GR SHIO",
         "precio": "5.345"
       },
       {
+        "cod": "2559",
         "nombre": "SAL HONGOS Y TRUFA 245GR SHIO",
         "precio": "5.345"
       },
       {
+        "cod": "2560",
         "nombre": "SAL JENGIBRE Y AJO 248GR SHIO",
         "precio": "5.345"
       },
       {
+        "cod": "2570",
         "nombre": "SALSA CHIMICHURRI KANSAS 280GR",
         "precio": "6.720"
       },
       {
+        "cod": "2573",
         "nombre": "PIMENTON ESPAÑOL AHUMADO EL CID 25GR",
         "precio": "6.945"
       },
       {
+        "cod": "2576",
         "nombre": "PIMENTON DULCE EL CID X80G LATITA",
         "precio": "22.315"
       },
       {
+        "cod": "2577",
         "nombre": "SAZONADOR DE CARNE EL CASTILLO 50GR",
         "precio": "6.985"
       },
       {
+        "cod": "2578",
         "nombre": "SAZONADOR DE POLLO EL CASTILLO 50GR",
         "precio": "7.265"
       },
       {
+        "cod": "2581",
         "nombre": "SAL DE AJO Y CEBOLLA SHIO 241GR",
         "precio": "6.330"
       },
       {
+        "cod": "2582",
         "nombre": "SAL DE CHIMICHURRY SHIO 197GR",
         "precio": "6.330"
       },
       {
+        "cod": "2592",
         "nombre": "JENJIBRE EN CUBOS",
         "precio": "8.740"
       },
       {
+        "cod": "2595",
         "nombre": "CHIMICHURRI ARGENTINO X 170GR - PAMPAGOURMET",
         "precio": "11.020"
       },
       {
+        "cod": "2598",
         "nombre": "NUEZ MOSCADA EN GRANO X2 - CUMANA",
         "precio": "4.120"
       },
       {
+        "cod": "2599",
         "nombre": "SAL DE AJI MOLIDO SHIO 241GR",
         "precio": "6.345"
       },
       {
+        "cod": "2601",
         "nombre": "CURRY EN POLVO X 100G",
         "precio": "4.490"
       },
       {
+        "cod": "2606",
         "nombre": "PIMIENTA PESCADOS SIN SAL CON MOLINILLO INDO DELI 50G",
         "precio": "9.985"
       },
       {
+        "cod": "2607",
         "nombre": "QSAL SAL DE MONTAÑA FINA 500G",
         "precio": "5.555"
       },
       {
+        "cod": "2608",
         "nombre": "QSAL SAL DE MONTAÑA GRUESA 500G",
         "precio": "5.000"
       }
@@ -2975,194 +3669,242 @@ const CATALOG_CATEGORIES = [
     "nombre": "Aceites y vinagres",
     "productos": [
       {
+        "cod": "2004",
         "nombre": "VINAGRE DE ARROZ CASTELO x 750cc",
         "precio": "14.930"
       },
       {
+        "cod": "2020",
         "nombre": "ACEITE DE OLIVA EXT VIRGEN SAN NICOLAS x 500cc",
         "precio": "28.415"
       },
       {
+        "cod": "2031",
         "nombre": "ACEITE DE TRUFA NEGRA SAN GIORGIO X 70ML",
         "precio": "16.360"
       },
       {
+        "cod": "2032",
         "nombre": "ACEITE DE TRUFA BLANCA SAN GIORGIO X 70ML",
         "precio": "18.630"
       },
       {
+        "cod": "2034",
         "nombre": "ACETO DE REDUCCIÓN x 250ml",
         "precio": "Consultar"
       },
       {
+        "cod": "2039",
         "nombre": "ACEITE DE SESAMO TOSTADO NUTRA SEM X 250ML",
         "precio": "13.450"
       },
       {
+        "cod": "2040",
         "nombre": "VINAGRE DE MANZANA ORGANICO PAMPA GOURMET x 250cc",
         "precio": "9.730"
       },
       {
+        "cod": "2050",
         "nombre": "HUMO SOLIDO SAN GIORGIO X 30G",
         "precio": "8.410"
       },
       {
+        "cod": "2073",
         "nombre": "ACEITE DE SESAMO KADOYA x 327cc",
         "precio": "38.535"
       },
       {
+        "cod": "2083",
         "nombre": "ACETO BALSAMICO RECETA DE ENTONCES X 250ML",
         "precio": "10.075"
       },
       {
+        "cod": "2088",
         "nombre": "ACEITE DE COCO NEUTRO EN AEROSOL CHIAGRAAL x 190g",
         "precio": "Consultar"
       },
       {
+        "cod": "2089",
         "nombre": "ACEITE DE COCO NEUTRO CHIAGRAAL x 180CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2090",
         "nombre": "ACEITE DE COCO NEUTRO CHIAGRAAL x 360CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2091",
         "nombre": "ACEITE DE COCO VIRGEN EN AEROSOL CHIAGRAAL x 190g",
         "precio": "Consultar"
       },
       {
+        "cod": "2092",
         "nombre": "ACEITE DE COCO VIRGEN CHIAGRAAL x 180CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2093",
         "nombre": "ACEITE DE COCO VIRGEN CHIAGRAAL x 360CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2113",
         "nombre": "GHEE ENTRENUTS X 300G",
         "precio": "19.950"
       },
       {
+        "cod": "2144",
         "nombre": "ACEITE DE OLIVA SAN NICOLAS X 1L PET",
         "precio": "51.765"
       },
       {
+        "cod": "2175",
         "nombre": "ACEITE DE OLIVA SAN NICOLAS X 2L PET",
         "precio": "99.170"
       },
       {
+        "cod": "2264",
         "nombre": "AC. AGUARA DE LINO ORGANICO X 250ML",
         "precio": "35"
       },
       {
+        "cod": "2270",
         "nombre": "ACEITE DE COCO NEUTRO ENTRENUTS X 1000ML",
         "precio": "24.960"
       },
       {
+        "cod": "2272",
         "nombre": "ACEITE DE COCO VIRGEN ENTRENUTS X 200 ML",
         "precio": "12.320"
       },
       {
+        "cod": "2273",
         "nombre": "ACEITE DE COCO NEUTRO ENTRENUTS X 200 ML",
         "precio": "5.120"
       },
       {
+        "cod": "2274",
         "nombre": "ACEITE DE COCO NEUTRO ENTRENUTS X 360 ML",
         "precio": "9.785"
       },
       {
+        "cod": "2277",
         "nombre": "ACEITE DE COCO VIRGEN ENTRENUTS X 360 ML",
         "precio": "23.780"
       },
       {
+        "cod": "2281",
         "nombre": "HUMO LIQUIDO SAN GIORGIO X 70 CC",
         "precio": "8.110"
       },
       {
+        "cod": "2306",
         "nombre": "ACETO BALSAMICO 7 LAGOS X 250CC",
         "precio": "7.375"
       },
       {
+        "cod": "2313",
         "nombre": "ACETO BALSAMICO MENOYO X 250ML",
         "precio": "Consultar"
       },
       {
+        "cod": "2315",
         "nombre": "ACEITE DE OLIVA SAN NICOLAS 500CC PET",
         "precio": "28.505"
       },
       {
+        "cod": "2319",
         "nombre": "ACEITE DE OLIVA VALLE DE TREIA X 1LT PET",
         "precio": "11.895"
       },
       {
+        "cod": "2320",
         "nombre": "ACEITE DE OLIVA VALLE DE TREIA X 500ML PET",
         "precio": "6.720"
       },
       {
+        "cod": "2342",
         "nombre": "ACEITE DE PEPITAS DE UVA OLIVI HNOS",
         "precio": "15.895"
       },
       {
+        "cod": "2368",
         "nombre": "ACEITE DE OLIVA IDENTIDAD VIDRIO X 500ML",
         "precio": "15.920"
       },
       {
+        "cod": "2404",
         "nombre": "ACEITE DE OLIVA A LA TRUFA SAN GIORGIO X 250ML",
         "precio": "23.670"
       },
       {
+        "cod": "2432",
         "nombre": "ACEITE DE OLIVA EL GRAN JUICIO X 500ML",
         "precio": "9.875"
       },
       {
+        "cod": "2460",
         "nombre": "ACEITE DE SESAMO TOSTADO NUTRA SEM X 500ML",
         "precio": "28.370"
       },
       {
+        "cod": "2481",
         "nombre": "GHEE ENTRENUTS X 150G",
         "precio": "9.185"
       },
       {
+        "cod": "2482",
         "nombre": "ACEITE DE OLIVA OIILOLEO VARIOS SABORES X 500ML",
         "precio": "8.975"
       },
       {
+        "cod": "2488",
         "nombre": "ACEITE DE UVA CEDRO AZUL X 250ML",
         "precio": "15.840"
       },
       {
+        "cod": "2505",
         "nombre": "ACEITE DE PALTA Y COCO CHIA GRAAL X 250ML",
         "precio": "24.725"
       },
       {
+        "cod": "2506",
         "nombre": "ACEITE DE PALTA 100% CHIA GRAAL X 250ML",
         "precio": "29.735"
       },
       {
+        "cod": "2507",
         "nombre": "ACEITE DE OLIVA EL GRAN JUICIO X 2LT",
         "precio": "25.235"
       },
       {
+        "cod": "2514",
         "nombre": "ACEITE A LA TRUFA NEGRA 250ML",
         "precio": "35.100"
       },
       {
+        "cod": "2524",
         "nombre": "ACEITE DE SESAMO TOSTADO NUTRA SEM X 100ML",
         "precio": "9.120"
       },
       {
+        "cod": "2527",
         "nombre": "ACEITE DE OLIVA EL GRAN JUICIO X 500ML VIDRIO",
         "precio": "14.720"
       },
       {
+        "cod": "2529",
         "nombre": "AJIES DULCES EN VINAGRE CRISTO DE LOS CERROS 300GR",
         "precio": "6.265"
       },
       {
+        "cod": "2561",
         "nombre": "HUMO LIQUIDO SAN GIORGIO 1 LT",
         "precio": "32.125"
       },
       {
+        "cod": "2572",
         "nombre": "ACEITE DE OLIVA OLIVARES DEL SOL 900G",
         "precio": "9.195"
       }
@@ -3172,210 +3914,262 @@ const CATALOG_CATEGORIES = [
     "nombre": "Arroces, legumbres y fideos",
     "productos": [
       {
+        "cod": "2008",
         "nombre": "ARROZ BASMATI VALLE IMPERIAL x 500g",
         "precio": "Consultar"
       },
       {
+        "cod": "2009",
         "nombre": "ARROZ CARNAROLI VALLE IMPERIAL x500g",
         "precio": "Consultar"
       },
       {
+        "cod": "2010",
         "nombre": "ARROZ MOCHI VALLE IMPERIAL x 1Kg",
         "precio": "Consultar"
       },
       {
+        "cod": "2011",
         "nombre": "ARROZ NEGRO INTEGRAL VALLE IMPERIAL x 1Kg",
         "precio": "Consultar"
       },
       {
+        "cod": "2012",
         "nombre": "ARROZ CON QUINOA VALLE IMPERIAL x 500g",
         "precio": "Consultar"
       },
       {
+        "cod": "2018",
         "nombre": "SEMILLAS PSYLLIUM VALLE IMPERIAL x 250g",
         "precio": "Consultar"
       },
       {
+        "cod": "2042",
         "nombre": "FIDEO ARROZ RICE PASTA MAMY x 250g",
         "precio": "Consultar"
       },
       {
+        "cod": "2044",
         "nombre": "SESAMO NEGRO TOSTADO VALLE IMPERIAL x 250g",
         "precio": "Consultar"
       },
       {
+        "cod": "2045",
         "nombre": "SESAMO BLANCO VALLE IMPERIAL x 250g",
         "precio": "Consultar"
       },
       {
+        "cod": "2064",
         "nombre": "ARROZ KOSHIHIKARI X 500G",
         "precio": "Consultar"
       },
       {
+        "cod": "2065",
         "nombre": "ARROZ INTEGRAL LARGO FINO VALLE IMPERIAL x 1Kg",
         "precio": "Consultar"
       },
       {
+        "cod": "2074",
         "nombre": "ARROZ FORTUNA VALLE IMPERIAL x 1Kg",
         "precio": "Consultar"
       },
       {
+        "cod": "2081",
         "nombre": "MIX DE QUINOA VALLE IMPERIAL x 300g",
         "precio": "Consultar"
       },
       {
+        "cod": "2210",
         "nombre": "SEMILLA DE CHIA VALLE IMPERIAL X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2221",
         "nombre": "AMARANTO VALLE IMPERIAL X 250G",
         "precio": "Consultar"
       },
       {
+        "cod": "2229",
         "nombre": "MIX QUINOA VALLE IMPERIAL X 300G",
         "precio": "Consultar"
       },
       {
+        "cod": "2230",
         "nombre": "QUINOA BLANCA VALLE IMPERIAL X 300 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2231",
         "nombre": "QUINOA ROJA VALLE IMPERIAL X 300 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2232",
         "nombre": "SEMILLA DE LINO VALLE IMPERIAL X 500 G",
         "precio": "Consultar"
       },
       {
+        "cod": "2233",
         "nombre": "SESAMO MIX CRUDO VALLE IMPERIAL",
         "precio": "Consultar"
       },
       {
+        "cod": "2234",
         "nombre": "SESAMO MIX CRUDO VALLE IMPERIAL",
         "precio": "Consultar"
       },
       {
+        "cod": "2271",
         "nombre": "ARROZ YAMANI MIX QUINOA X 500 GR",
         "precio": "35"
       },
       {
+        "cod": "2278",
         "nombre": "MIJO PELADO VALLE IMPERIAL X 500 GR",
         "precio": "35"
       },
       {
+        "cod": "2279",
         "nombre": "MIX SEMILLAS VALLE IMPERIAL X 300 GR",
         "precio": "35"
       },
       {
+        "cod": "2295",
         "nombre": "HARINA DE ARROZ BLANCO X 500 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2296",
         "nombre": "HARINA DE ALMENDRA VALLE IMPERIAL X 150 GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2314",
         "nombre": "SESAMO NEGRO CRUDO VALLE IMPERIAL",
         "precio": "Consultar"
       },
       {
+        "cod": "2316",
         "nombre": "FIDEOS TERAMO RIGATONI X 500GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2317",
         "nombre": "FIDEOS TERAMO PENNE RIGATE X 500GR",
         "precio": "14.885"
       },
       {
+        "cod": "2318",
         "nombre": "FIDEOS TERAMO TIRABUZON X 500GR",
         "precio": "Consultar"
       },
       {
+        "cod": "2391",
         "nombre": "ARROZ CARNAROLI DOS HERMANOS X 500G",
         "precio": "6.985"
       },
       {
+        "cod": "2392",
         "nombre": "ARROZ YAMANI DOS HERMANOS X 500G",
         "precio": "3.720"
       },
       {
+        "cod": "2398",
         "nombre": "ARROZ INTEGRAL YAMANI ASAHI X 1KG",
         "precio": "9.240"
       },
       {
+        "cod": "2401",
         "nombre": "FIDEOS PENNE RIGATE TINTA DE CALAMAR TRONCOSO X 500G",
         "precio": "16.675"
       },
       {
+        "cod": "2402",
         "nombre": "FIDEOS CASERECCE TINTA DE CALAMAR TRONCOSO X 500G",
         "precio": "16.675"
       },
       {
+        "cod": "2403",
         "nombre": "FIDEOS FUSILLONI TINTA DE CALAMAR TRONCOSO X 500G",
         "precio": "16.675"
       },
       {
+        "cod": "2413",
         "nombre": "ARROZ CORTO PULIDO PAELLA EL RUEDO X 400G",
         "precio": "11.250"
       },
       {
+        "cod": "2416",
         "nombre": "SEMILLAS DE SESAMO MIXTO 200G ZIPPER",
         "precio": "3.145"
       },
       {
+        "cod": "2428",
         "nombre": "ARROZ AROMATICO DOS HERMANOS X 500G",
         "precio": "3.910"
       },
       {
+        "cod": "2433",
         "nombre": "PASTA AL HUEVO BLUE PATNA X 500G",
         "precio": "7.265"
       },
       {
+        "cod": "2447",
         "nombre": "PAPEL DE ARROZ STAR LION 16CM X 300G 50LAMINAS",
         "precio": "14.675"
       },
       {
+        "cod": "2469",
         "nombre": "PAPEL DE ARROZ MORN X 300G",
         "precio": "13.730"
       },
       {
+        "cod": "2475",
         "nombre": "FIDEOS CONCHIGLIONI TINTA DE CALAMAR TRONCOSO X 500G",
         "precio": "14.565"
       },
       {
+        "cod": "2478",
         "nombre": "SEMILLAS DE SESAMO NEGRO POTE X 100G",
         "precio": "2.000"
       },
       {
+        "cod": "2479",
         "nombre": "SEMILLAS DE SESAMO BLANCO POTE X 100G",
         "precio": "1.420"
       },
       {
+        "cod": "2480",
         "nombre": "SEMILLAS DE SESAMO MIX POTE X 100G",
         "precio": "1.700"
       },
       {
+        "cod": "2484",
         "nombre": "PAPEL DE ARROZ HORSE 16CM 200GR",
         "precio": "11.210"
       },
       {
+        "cod": "2513",
         "nombre": "ARROZ YAMANI 1K- YIN YANG",
         "precio": "6.700"
       },
       {
+        "cod": "2554",
         "nombre": "FIDEOS FINOS SABOR CARNE",
         "precio": "14.185"
       },
       {
+        "cod": "2583",
         "nombre": "FIDEOS HARUSAME VERMICELI DE 100GR LONGKOU",
         "precio": "2.690"
       },
       {
+        "cod": "2596",
         "nombre": "PASTA LAMINADA AL HUEVO SIN TAC X300GR - EL COLOMO",
         "precio": "2.720"
       },
       {
+        "cod": "2597",
         "nombre": "PASTA LAMINADA ESPINACA SIN TAC X300GR - EL COLOMO",
         "precio": "2.720"
       }
@@ -3385,198 +4179,247 @@ const CATALOG_CATEGORIES = [
     "nombre": "Vinos y bebidas",
     "productos": [
       {
+        "cod": "2023",
         "nombre": "VINAGRE DE VINO ORGANICO PAMPA GOURMET x 250cc",
         "precio": "Consultar"
       },
       {
+        "cod": "2036",
         "nombre": "SOJU JINRO VARIOS SABORES X 360ML",
         "precio": "9.040"
       },
       {
+        "cod": "2037",
         "nombre": "SOJU JINRO CHAMISUL ORIGINAL X 360ML",
         "precio": "9.375"
       },
       {
+        "cod": "2071",
         "nombre": "SAKE HAKUTSURU DRAFT x 300cc",
         "precio": "29.525"
       },
       {
+        "cod": "2072",
         "nombre": "SAKE HAKUTSURU JUNMAI GINJO x 300cc",
         "precio": "Consultar"
       },
       {
+        "cod": "2102",
         "nombre": "VINO ORGANICO BEEPURE",
         "precio": "15.905"
       },
       {
+        "cod": "2103",
         "nombre": "VINO ORGANICO BEEPURE BLANCO",
         "precio": "15.905"
       },
       {
+        "cod": "2151",
         "nombre": "SAKE AWA YUKI X 300CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2182",
         "nombre": "VINO LOS HELECHOS MALBEC VALLE DE UCO X 750CC",
         "precio": "17.840"
       },
       {
+        "cod": "2183",
         "nombre": "VINO LOS HELECHOS CABERNET SUAV VALLE DE UCO X 750CC",
         "precio": "17.840"
       },
       {
+        "cod": "2184",
         "nombre": "VINO LOS HELECHOS CHARDONNAY VALLE DE UCO X 750CC",
         "precio": "17.840"
       },
       {
+        "cod": "2185",
         "nombre": "VINO TRUMPETER MALBEC X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2186",
         "nombre": "VINO TRUMPETER CABERNET SUAV X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2187",
         "nombre": "VINO SANTA JULIA CHENIN DULCE X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2188",
         "nombre": "VINO DON NICANOR CHARDONNAY X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2189",
         "nombre": "VINO DON NICANOR CABERNET X 750CC",
         "precio": "18.675"
       },
       {
+        "cod": "2190",
         "nombre": "VINO DON NICANOR MALBEC X 750CC",
         "precio": "18.675"
       },
       {
+        "cod": "2191",
         "nombre": "VINO COLOME ESTATE MALBEC X 750CC",
         "precio": "18.675"
       },
       {
+        "cod": "2192",
         "nombre": "VINO COLOME LOTE ESPECIAL SYRAH X 750CC",
         "precio": "20.750"
       },
       {
+        "cod": "2193",
         "nombre": "VINO LAS PERDICES SUAVIGNON BLANC X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2194",
         "nombre": "VINO LAS PERDICES RESERVA BONARDA X 750CC",
         "precio": "17.840"
       },
       {
+        "cod": "2195",
         "nombre": "VINO LAS PERDICES RESERVA MALBEC X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2196",
         "nombre": "VINO LAS PERDICES RESERVA PINOT NOIR X 750CC",
         "precio": "10.375"
       },
       {
+        "cod": "2197",
         "nombre": "VINO LAS PERDICES TORRONTES DULCE X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2198",
         "nombre": "CHAMPAGNE LAS PERDICES BRUT ROSE X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2199",
         "nombre": "VINO LAS PERDICES CHAC CHAC MALBEC ROSE X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2200",
         "nombre": "VINO LAS PERDICES TORRONTES X 750CC",
         "precio": "Consultar"
       },
       {
+        "cod": "2202",
         "nombre": "VINO SAPO DE OTRO POZO BLEND X 750CC",
         "precio": "14.520"
       },
       {
+        "cod": "2203",
         "nombre": "VINO LOS HELECHOS MALBEC X 750CC",
         "precio": "14.520"
       },
       {
+        "cod": "2280",
         "nombre": "SAINT FELICEN MALBEC",
         "precio": "13.975"
       },
       {
+        "cod": "2369",
         "nombre": "VINO EL ENEMIGO MALBEC X 750ML",
         "precio": "25.515"
       },
       {
+        "cod": "2370",
         "nombre": "VINO DV CATENA CAVERNET X 750ML",
         "precio": "20.770"
       },
       {
+        "cod": "2371",
         "nombre": "VINO SAINT FELICIEN CHARDONNAY X 750ML",
         "precio": "13.040"
       },
       {
+        "cod": "2372",
         "nombre": "VINO ANGELICA ZAPATA CHARDONNAY X 750ML",
         "precio": "27.460"
       },
       {
+        "cod": "2373",
         "nombre": "VINO DV CATENA CHARDONNAY X 750ML",
         "precio": "17.440"
       },
       {
+        "cod": "2374",
         "nombre": "VINO TILIA CHENIN ORGANICO X 750ML",
         "precio": "12.875"
       },
       {
+        "cod": "2375",
         "nombre": "VINO GATA FLORA TORRONTES X 750ML",
         "precio": "12.875"
       },
       {
+        "cod": "2376",
         "nombre": "VINO LA LINDA LUIGI BOSCA X 750ML",
         "precio": "12.875"
       },
       {
+        "cod": "2461",
         "nombre": "VINO SAUVIGNON BLANC X 750 AZUL",
         "precio": "10.620"
       },
       {
+        "cod": "2462",
         "nombre": "VINO CHARDONNAY X 750 AZUL",
         "precio": "12.240"
       },
       {
+        "cod": "2465",
         "nombre": "VASITO DE SAKE",
         "precio": "4.190"
       },
       {
+        "cod": "2483",
         "nombre": "EL ENEMIGO CABERNET",
         "precio": "26.205"
       },
       {
+        "cod": "2495",
         "nombre": "SAKE SHO CHIKU BAAI JUNMAI 180ML",
         "precio": "22.825"
       },
       {
+        "cod": "2501",
         "nombre": "SAKE CHUNG HA COOL & FRESH 300ML",
         "precio": "11.340"
       },
       {
+        "cod": "2544",
         "nombre": "SOJU DE MANGO 350ML",
         "precio": "12.295"
       },
       {
+        "cod": "2545",
         "nombre": "JINRO CHAMISUL ORIG. 360ML",
         "precio": "11.350"
       },
       {
+        "cod": "2546",
         "nombre": "SAKE SABOR FRUTILLA 360ML",
         "precio": "11.350"
       },
       {
+        "cod": "2547",
         "nombre": "SAKE SABOR DURAZNO 360ML",
         "precio": "11.350"
       },
       {
+        "cod": "2593",
         "nombre": "FANTA DE ANANA",
         "precio": "11.185"
       }
@@ -3586,82 +4429,102 @@ const CATALOG_CATEGORIES = [
     "nombre": "Carnes",
     "productos": [
       {
+        "cod": "1200",
         "nombre": "ASADO 3 COSTILLAS X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1201",
         "nombre": "VACIO X KG",
         "precio": "30.880"
       },
       {
+        "cod": "1202",
         "nombre": "ROAST BEEF X KG",
         "precio": "26.100"
       },
       {
+        "cod": "1203",
         "nombre": "COLITA DE CUADRIL X KG",
         "precio": "29.770"
       },
       {
+        "cod": "1204",
         "nombre": "BIFE DE CHORIZO X KG",
         "precio": "32.880"
       },
       {
+        "cod": "1205",
         "nombre": "COSTILLA BANDERITA X KG",
         "precio": "30.770"
       },
       {
+        "cod": "1206",
         "nombre": "BIFE PULPA X KG",
         "precio": "27.330"
       },
       {
+        "cod": "1207",
         "nombre": "COSTELETA X KG",
         "precio": "23.440"
       },
       {
+        "cod": "1208",
         "nombre": "CORTE AMERICANO X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1209",
         "nombre": "FILET DE CUADRIL X KG",
         "precio": "29.770"
       },
       {
+        "cod": "1210",
         "nombre": "LOMITO X KG",
         "precio": "33.440"
       },
       {
+        "cod": "1211",
         "nombre": "ENTRAÑA X KG",
         "precio": "36.320"
       },
       {
+        "cod": "1212",
         "nombre": "PECETO X KG",
         "precio": "27.770"
       },
       {
+        "cod": "1213",
         "nombre": "PICAÑA X KG",
         "precio": "31.990"
       },
       {
+        "cod": "1214",
         "nombre": "TOMAHAWK X KG",
         "precio": "Consultar"
       },
       {
+        "cod": "1215",
         "nombre": "NEW YORK",
         "precio": "Consultar"
       },
       {
+        "cod": "1216",
         "nombre": "PULPA CUBITO X KG",
         "precio": "25.770"
       },
       {
+        "cod": "1217",
         "nombre": "FALDA ESPECIAL X KG",
         "precio": "18.880"
       },
       {
+        "cod": "1218",
         "nombre": "COSTILLA VENTANA X KG",
         "precio": "31.990"
       },
       {
+        "cod": "1219",
         "nombre": "MOLIDA ESPECIAL",
         "precio": "26.210"
       }
@@ -3671,74 +4534,92 @@ const CATALOG_CATEGORIES = [
     "nombre": "Utensilios y accesorios",
     "productos": [
       {
+        "cod": "2024",
         "nombre": "MOLINILLO CONDIMENTOS EL CASTILLO BAHARAT X 40G",
         "precio": "Consultar"
       },
       {
+        "cod": "2025",
         "nombre": "MOLINILLO CONDIMENTOS EL CASTILLO",
         "precio": "Consultar"
       },
       {
+        "cod": "2041",
         "nombre": "ESTERILLAS DE BAMBU VARAS REDONDAS 24 X 24CM",
         "precio": "4.690"
       },
       {
+        "cod": "2046",
         "nombre": "ESTERILLAS BAMBU VARAS CHATAS 24X24",
         "precio": "5.100"
       },
       {
+        "cod": "2061",
         "nombre": "MOLINILLOS PREMIUM VARIOS SABORES 1854",
         "precio": "Consultar"
       },
       {
+        "cod": "2062",
         "nombre": "MOLINILLOS PREMIUM PIMIENTAS 1854",
         "precio": "Consultar"
       },
       {
+        "cod": "2355",
         "nombre": "PALITOS LAQUEADOS CHOPSTICK NEGRO Y CELESTE X PAR",
         "precio": "2.135"
       },
       {
+        "cod": "2378",
         "nombre": "PLATO ORIENTAL CERAMICA X 14CM",
         "precio": "9.795"
       },
       {
+        "cod": "2379",
         "nombre": "RECIPIENTE CERAMICA 8CM CON BASE DE MADERA",
         "precio": "14.520"
       },
       {
+        "cod": "2442",
         "nombre": "CUCHILLO ABRIDOR DE OSTRAS",
         "precio": "2.875"
       },
       {
+        "cod": "2443",
         "nombre": "CORTADOR DE PALTA",
         "precio": "6.075"
       },
       {
+        "cod": "2444",
         "nombre": "TIJERA PARA LANGOSTINOS",
         "precio": "4.930"
       },
       {
+        "cod": "2448",
         "nombre": "FILM FAMILIAR 30 X 15M",
         "precio": "2.655"
       },
       {
+        "cod": "2449",
         "nombre": "PAPEL ALUMINIO MIA CASA FAMILIAR",
         "precio": "3.020"
       },
       {
+        "cod": "2450",
         "nombre": "PAPEL MANTECA FAMILIA 28X 5M",
         "precio": "2.410"
       },
       {
+        "cod": "2451",
         "nombre": "AYUDA PALITOS",
         "precio": "680"
       },
       {
+        "cod": "2490",
         "nombre": "PINZA DE BAMBU PARA COCINA 30 CM",
         "precio": "2.635"
       },
       {
+        "cod": "2492",
         "nombre": "RECIPIENTE DOBLE NEGRO 8CM BASE DE MADERA",
         "precio": "28.780"
       }
@@ -3748,6 +4629,7 @@ const CATALOG_CATEGORIES = [
     "nombre": "Suplementos",
     "productos": [
       {
+        "cod": "2526",
         "nombre": "ACEITE DE PESCADO OMEGA 3 X 60 CAPSULAS STAR NUTRITION",
         "precio": "46.730"
       }
@@ -3803,10 +4685,8 @@ const CAT_GRID_VISIBLE = 6; // cuántas categorías se ven antes de "Más catego
 const CAT_ICONS = {
   "pescados": "🐟",
   "mariscos": "🦐",
-  "rebozados": "🍗",
   "sushi y cocina asiatica": "🍣",
   "conservas y encurtidos": "🥫",
-  "salsas y aderezos": "🥣",
   "especias y condimentos": "🧂",
   "aceites y vinagres": "🧴",
   "arroces, legumbres y fideos": "🍚",
@@ -3815,13 +4695,83 @@ const CAT_ICONS = {
   "utensilios y accesorios": "🍽️",
   "suplementos": "💊"
 };
+// Íconos propios (SVG) para categorías sin un emoji que las represente bien:
+// Rebozados = "patita" de pollo rebozada (una sola pieza tipo muslo, con
+// textura de rebozado); Salsas y aderezos = botella estilo salsa de soja.
+const CAT_ICONS_SVG = {
+  "rebozados":
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      // Una sola pieza tipo "muslo"/cuña (como en la foto de referencia del
+      // cliente), no una pata con dedos. Se dibuja como una cadena de
+      // círculos superpuestos que van creciendo hacia abajo, en dos capas
+      // sin trazo (una marrón, agrandada, detrás; una dorada, tamaño real,
+      // encima) para que no se vean costuras entre círculos. Encima, motas
+      // chicas simulan la textura del rebozado (pan rallado).
+      '<g fill="#8b5a2b">' +
+        '<circle cx="9.4" cy="4.7" r="2.7"/>' +
+        '<circle cx="11.1" cy="8.4" r="3.5"/>' +
+        '<circle cx="12.4" cy="12.4" r="4.1"/>' +
+        '<circle cx="12.7" cy="16.6" r="3.9"/>' +
+        '<circle cx="11.8" cy="20.1" r="3"/>' +
+      '</g>' +
+      '<g fill="#e8b466">' +
+        '<circle cx="9.4" cy="4.7" r="2.2"/>' +
+        '<circle cx="11.1" cy="8.4" r="3"/>' +
+        '<circle cx="12.4" cy="12.4" r="3.5"/>' +
+        '<circle cx="12.7" cy="16.6" r="3.3"/>' +
+        '<circle cx="11.8" cy="20.1" r="2.5"/>' +
+      '</g>' +
+      '<g fill="#a9702f">' +
+        '<circle cx="8.9" cy="3.9" r="0.4"/>' +
+        '<circle cx="10.6" cy="5.6" r="0.35"/>' +
+        '<circle cx="8.4" cy="7.6" r="0.4"/>' +
+        '<circle cx="11.9" cy="7.2" r="0.35"/>' +
+        '<circle cx="9.7" cy="10.2" r="0.4"/>' +
+        '<circle cx="13.5" cy="10.8" r="0.4"/>' +
+        '<circle cx="10.6" cy="13.2" r="0.4"/>' +
+        '<circle cx="14.2" cy="14.2" r="0.35"/>' +
+        '<circle cx="10.2" cy="16" r="0.4"/>' +
+        '<circle cx="14" cy="17.5" r="0.4"/>' +
+        '<circle cx="9.5" cy="18.8" r="0.35"/>' +
+        '<circle cx="12.5" cy="20.2" r="0.4"/>' +
+        '<circle cx="10.8" cy="21.3" r="0.35"/>' +
+      '</g>' +
+    '</svg>',
+  "salsas y aderezos":
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+      '<rect x="8.4" y="2.4" width="3.2" height="2.8" rx="0.6" fill="#c0392b"/>' +
+      '<rect x="8.7" y="4.9" width="2.6" height="2" fill="#3b2f2f"/>' +
+      '<path d="M7 8.2 C7 6.6 8 6 10 6 C12 6 13 6.6 13 8.2 L13.6 19.5 C13.6 20.8 12.6 21.5 10 21.5 C7.4 21.5 6.4 20.8 6.4 19.5 Z" fill="#3b2f2f"/>' +
+      '<rect x="7.3" y="11.5" width="5.4" height="5" rx="0.6" fill="#f5ead9"/>' +
+    '</svg>'
+};
 function catIcon(nombre){
-  return CAT_ICONS[norm(nombre)] || "🛒";
+  const key = norm(nombre);
+  return CAT_ICONS_SVG[key] || CAT_ICONS[key] || "🛒";
 }
 
 const sectionByCat = {};
+const catSelectedCountEls = {}; // categoría id -> <span> con la cuenta de seleccionados
 const itemRefs = {};
 const cart = {}; // key -> { qty, nombre, precioTexto, precioNum, categoria }
+
+function updateCatSelectedCounts(){
+  const counts = {};
+  Object.values(cart).forEach(it=>{
+    const id = "cat-" + slug(it.categoria);
+    counts[id] = (counts[id] || 0) + 1;
+  });
+  Object.entries(catSelectedCountEls).forEach(([id, el])=>{
+    const n = counts[id] || 0;
+    if(n > 0){
+      el.hidden = false;
+      el.textContent = "· " + n + (n === 1 ? " seleccionado" : " seleccionados");
+    } else {
+      el.hidden = true;
+      el.textContent = "";
+    }
+  });
+}
 
 /* ---------------- carrito ---------------- */
 const cartOverlay = document.getElementById("cartOverlay");
@@ -3835,6 +4785,11 @@ const cartSendBtn = document.getElementById("cartSend");
 const cartClose = document.getElementById("cartClose");
 const cartBadge = document.getElementById("cartBadge");
 const fabLabel = document.getElementById("bizContactLabel");
+const custNameInput = document.getElementById("custName");
+const custNameError = document.getElementById("custNameError");
+const custAddressField = document.getElementById("custAddressField");
+const custAddressInput = document.getElementById("custAddress");
+const custAddressError = document.getElementById("custAddressError");
 
 function parseQty(raw){
   if(raw === null || raw === undefined) return null;
@@ -3890,9 +4845,9 @@ function displayPrice(raw){
 function addToCart(key, qty){
   const ref = itemRefs[key];
   if(!ref) return;
-  cart[key] = { qty, nombre: ref.nombre, precioTexto: ref.precioTexto, precioNum: ref.precioNum, categoria: ref.categoria };
+  cart[key] = { qty, cod: ref.cod, nombre: ref.nombre, precioTexto: ref.precioTexto, precioNum: ref.precioNum, categoria: ref.categoria };
   ref.li.classList.add("in-cart");
-  ref.addBtn.textContent = "✓ Agregado";
+  ref.addBtn.textContent = "✕ Quitar";
   updateCartUI();
 }
 
@@ -3916,26 +4871,43 @@ function getPaymentMethod(){
   return checked ? checked.value : "transferencia";
 }
 
+function getDeliveryMethod(){
+  const checked = document.querySelector('input[name="deliveryMethod"]:checked');
+  return checked ? checked.value : "envio";
+}
+
 function buildWhatsAppMessage(){
-  const lines = ["¡Hola! Quiero hacer este pedido:", ""];
+  const lines = ["¡Hola! Quiero hacer este pedido:", "", "Cód. / Cant. / Producto / Precio", ""];
   let total = 0;
   let hasConsultar = false;
   Object.values(cart).forEach(it=>{
     const qtyTxt = formatQty(it.qty);
+    const codTxt = it.cod && String(it.cod).trim() ? String(it.cod).trim() : "s/cod";
+    let precioTxt;
     if(it.precioNum !== null){
       const subtotal = it.precioNum * it.qty;
       total += subtotal;
-      lines.push("• " + it.nombre + " — cant.: " + qtyTxt + " — " + formatMoney(subtotal));
+      precioTxt = formatMoney(subtotal);
     } else {
       hasConsultar = true;
-      lines.push("• " + it.nombre + " — cant.: " + qtyTxt + " — precio a consultar");
+      precioTxt = "Consultar";
     }
+    lines.push(codTxt + " / " + qtyTxt + " / " + it.nombre + " / " + precioTxt);
   });
   lines.push("");
   if(total > 0){
     lines.push("Total estimado: " + formatMoney(total) + (hasConsultar ? " + productos a consultar" : ""));
+    lines.push("");
   }
+  const nombre = custNameInput.value.trim();
+  const direccion = custAddressInput.value.trim();
   const payment = getPaymentMethod();
+  const delivery = getDeliveryMethod();
+  lines.push("Nombre y apellido: " + (nombre || "(no especificado)"));
+  lines.push("Forma de entrega: " + (delivery === "retiro" ? "Retiro del local" : "Envío (a consultar precio)"));
+  if(delivery === "envio"){
+    lines.push("Dirección: " + (direccion || "(no especificada)"));
+  }
   lines.push("Forma de pago: " + (payment === "efectivo" ? "Efectivo (10% de descuento)" : "Transferencia"));
   lines.push("");
   lines.push("Quedo atento/a, gracias!");
@@ -3943,6 +4915,7 @@ function buildWhatsAppMessage(){
 }
 
 function updateCartUI(){
+  updateCatSelectedCounts();
   const count = cartCount();
   if(count > 0){
     cartBadge.hidden = false;
@@ -4011,11 +4984,63 @@ function closeCart(){
 }
 cartClose.addEventListener("click", closeCart);
 cartOverlay.addEventListener("click", closeCart);
+function refreshCartSendHref(){
+  if(cartCount() === 0) return;
+  cartSendBtn.href = BUSINESS.whatsapp + "?text=" + encodeURIComponent(buildWhatsAppMessage());
+}
+
+function updateDeliveryFieldsVisibility(){
+  const isEnvio = getDeliveryMethod() === "envio";
+  custAddressField.classList.toggle("is-hidden", !isEnvio);
+  if(!isEnvio) custAddressError.classList.add("is-hidden");
+}
+updateDeliveryFieldsVisibility();
+
 cartSendBtn.addEventListener("click", (e)=>{
-  if(cartCount() === 0) e.preventDefault();
+  if(cartCount() === 0){ e.preventDefault(); return; }
+
+  let valid = true;
+  const nombre = custNameInput.value.trim();
+  if(!nombre){
+    custNameError.classList.remove("is-hidden");
+    valid = false;
+  } else {
+    custNameError.classList.add("is-hidden");
+  }
+
+  if(getDeliveryMethod() === "envio"){
+    const direccion = custAddressInput.value.trim();
+    if(!direccion){
+      custAddressError.classList.remove("is-hidden");
+      valid = false;
+    } else {
+      custAddressError.classList.add("is-hidden");
+    }
+  }
+
+  if(!valid){
+    e.preventDefault();
+    return;
+  }
+  refreshCartSendHref();
 });
+
 document.querySelectorAll('input[name="paymentMethod"]').forEach(input=>{
-  input.addEventListener("change", updateCartUI);
+  input.addEventListener("change", refreshCartSendHref);
+});
+document.querySelectorAll('input[name="deliveryMethod"]').forEach(input=>{
+  input.addEventListener("change", ()=>{
+    updateDeliveryFieldsVisibility();
+    refreshCartSendHref();
+  });
+});
+custNameInput.addEventListener("input", ()=>{
+  if(custNameInput.value.trim()) custNameError.classList.add("is-hidden");
+  refreshCartSendHref();
+});
+custAddressInput.addEventListener("input", ()=>{
+  if(custAddressInput.value.trim()) custAddressError.classList.add("is-hidden");
+  refreshCartSendHref();
 });
 
 document.getElementById("contactBtn").addEventListener("click", ()=>{
@@ -4027,21 +5052,35 @@ document.getElementById("contactBtn").addEventListener("click", ()=>{
 });
 
 /* ---------------- grilla de categorías ---------------- */
+const catGridExtra = document.getElementById("catGridExtra");
+const catGridExtraWrap = document.getElementById("catGridExtraWrap");
 let catGridExpanded = false;
-let catGridExpandedAt = 0;
 
 function setCatGridExpanded(expanded){
   if(catGridToggle.hidden) return;
   catGridExpanded = expanded;
-  if(expanded) catGridExpandedAt = Date.now();
-  [...catGrid.children].slice(CAT_GRID_VISIBLE).forEach(btn=>{ btn.hidden = !catGridExpanded; });
+  if(expanded){
+    catGridExtraWrap.classList.add("open");
+    catGridExtraWrap.style.maxHeight = catGridExtra.scrollHeight + "px";
+  } else {
+    catGridExtraWrap.classList.remove("open");
+    catGridExtraWrap.style.maxHeight = "0px";
+  }
   catGridToggle.classList.toggle("open", catGridExpanded);
   catGridToggle.querySelector(".label").textContent = catGridExpanded ? "Ver menos" : "Más categorías";
   requestAnimationFrame(syncStickyOffsets);
 }
+// Cuando termina la animación (se abre o se cierra), volvemos a medir
+// el alto real para que el scroll-margin de las categorías quede bien.
+catGridExtraWrap.addEventListener("transitionend", (e)=>{
+  if(e.propertyName === "max-height") syncStickyOffsets();
+});
 
 function buildCatGrid(categories){
   catGrid.innerHTML = "";
+  catGridExtra.innerHTML = "";
+  catGridExtraWrap.classList.remove("open");
+  catGridExtraWrap.style.maxHeight = "0px";
   catGridExpanded = false;
 
   categories.forEach((cat, idx)=>{
@@ -4052,13 +5091,12 @@ function buildCatGrid(categories){
     btn.innerHTML =
       '<span class="cat-card-icon"></span>' +
       '<span class="cat-card-name"></span>';
-    btn.querySelector(".cat-card-icon").textContent = catIcon(cat.nombre);
+    btn.querySelector(".cat-card-icon").innerHTML = catIcon(cat.nombre);
     btn.querySelector(".cat-card-name").textContent = cat.nombre;
-    if(idx >= CAT_GRID_VISIBLE) btn.hidden = true;
     btn.addEventListener("click", ()=>{
       openCategory(id, true, true);
     });
-    catGrid.appendChild(btn);
+    (idx < CAT_GRID_VISIBLE ? catGrid : catGridExtra).appendChild(btn);
   });
 
   if(categories.length > CAT_GRID_VISIBLE){
@@ -4074,21 +5112,20 @@ function buildCatGrid(categories){
   }
 }
 
-/* Si la grilla de categorías está desplegada ("Más categorías") y el
-   cliente llega al final de la página (ya no puede bajar más), la
-   plegamos sola para que no moleste la vista — sin que tenga que
-   tocar "Ver menos". */
+/* Si la grilla de categorías está desplegada ("Más categorías") y,
+   al bajar, el encabezado (fondo blanco y logo de RIOMAR) termina de
+   ocultarse arriba, plegamos la grilla sola (con la misma animación
+   suave de "Ver menos") para que no quede ocupando espacio de más —
+   sin que el cliente tenga que tocarla. */
+const appbarEl = document.querySelector(".appbar");
+let appbarWasHidden = false;
 window.addEventListener("scroll", ()=>{
-  if(!catGridExpanded) return;
-  // Ignoramos el reacomodo de scroll que puede disparar el navegador
-  // justo al desplegar (por ejemplo si ya estábamos abajo del todo),
-  // para que "Más categorías" no se cierre solo apenas se abre.
-  if(Date.now() - catGridExpandedAt < 400) return;
-  const scrolledToBottom =
-    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
-  if(scrolledToBottom){
+  if(!appbarEl) return;
+  const appbarHiddenNow = appbarEl.getBoundingClientRect().bottom <= 0;
+  if(catGridExpanded && appbarHiddenNow && !appbarWasHidden){
     setCatGridExpanded(false);
   }
+  appbarWasHidden = appbarHiddenNow;
 }, { passive: true });
 
 function openCategory(id, scrollTo, exclusive){
@@ -4110,12 +5147,17 @@ function openCategory(id, scrollTo, exclusive){
     });
   }
 }
-function closeCategory(id){
+function closeCategory(id, scrollTo){
   const section = sectionByCat[id];
   if(!section) return;
   section.classList.remove("open");
   section.querySelector(".cat-head").setAttribute("aria-expanded", "false");
   section.querySelector(".cat-card").hidden = true;
+  if(scrollTo){
+    requestAnimationFrame(()=>{
+      section.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
 }
 function toggleCategory(id){
   const section = sectionByCat[id];
@@ -4137,9 +5179,13 @@ function renderCategories(categories){
   catGrid.innerHTML = "";
   catsEl.innerHTML = "";
   Object.keys(sectionByCat).forEach(k=> delete sectionByCat[k]);
+  Object.keys(catSelectedCountEls).forEach(k=> delete catSelectedCountEls[k]);
 
   categories.forEach(cat=>{
     const id = "cat-" + slug(cat.nombre);
+    const productosOrdenados = [...cat.productos].sort((a, b)=>
+      norm(a.nombre).localeCompare(norm(b.nombre), "es")
+    );
 
     const section = document.createElement("section");
     section.className = "category";
@@ -4154,19 +5200,21 @@ function renderCategories(categories){
       '<span class="cat-head-text">' +
         '<h2 class="cat-title"></h2>' +
         '<span class="cat-count"></span>' +
+        '<span class="cat-count-selected" hidden></span>' +
       '</span>' +
       '<span class="cat-chevron">⌄</span>';
     head.querySelector(".cat-title").textContent = cat.nombre;
-    head.querySelector(".cat-count").textContent = cat.productos.length + (cat.productos.length===1 ? " producto" : " productos");
+    head.querySelector(".cat-count").textContent = productosOrdenados.length + (productosOrdenados.length===1 ? " producto" : " productos");
     head.addEventListener("click", ()=> toggleCategory(id));
     section.appendChild(head);
+    catSelectedCountEls[id] = head.querySelector(".cat-count-selected");
 
     const card = document.createElement("div");
     card.className = "cat-card";
     card.hidden = true; // plegado por defecto
     const ul = document.createElement("ul");
     ul.className = "items";
-    cat.productos.forEach((p, idx)=>{
+    productosOrdenados.forEach((p, idx)=>{
       const key = id + "__" + idx;
       const li = document.createElement("li");
       li.className = "item";
@@ -4176,7 +5224,11 @@ function renderCategories(categories){
         '<div class="item-bottom">' +
           '<span class="item-price"></span>' +
           '<div class="item-cart-row">' +
-            '<input class="item-qty" type="text" inputmode="decimal" value="1" aria-label="Cantidad en kg">' +
+            '<div class="item-qty-stepper">' +
+              '<button type="button" class="item-qty-step item-qty-minus" aria-label="Restar">−</button>' +
+              '<input class="item-qty" type="text" inputmode="decimal" value="1" aria-label="Cantidad en kg">' +
+              '<button type="button" class="item-qty-step item-qty-plus" aria-label="Sumar">+</button>' +
+            '</div>' +
             '<button type="button" class="item-add">Agregar</button>' +
           '</div>' +
         '</div>';
@@ -4184,12 +5236,43 @@ function renderCategories(categories){
       li.querySelector(".item-price").textContent = displayPrice(p.precio);
 
       const qtyInput = li.querySelector(".item-qty");
+      const qtyMinusBtn = li.querySelector(".item-qty-minus");
+      const qtyPlusBtn = li.querySelector(".item-qty-plus");
       const addBtn = li.querySelector(".item-add");
       const precioNum = parsePrice(p.precio);
 
-      itemRefs[key] = { li, qtyInput, addBtn, nombre: p.nombre, precioTexto: p.precio, precioNum, categoria: cat.nombre };
+      function stepQty(direction){
+        const raw = qtyInput.value.trim();
+        const normalized = raw.replace(",", ".");
+        let current = parseFloat(normalized);
+        if(isNaN(current) || current < 0) current = 0;
+        const decimalPart = normalized.includes(".") ? normalized.split(".")[1] : "";
+        // Respetamos lo que ya hay en el campo: si es un número entero,
+        // sumamos/restamos de a 1; si tiene ",5", de a 0,5; para
+        // cualquier otra fracción (ej. 0,3 = 300g), de a 0,1.
+        let step;
+        if(!decimalPart) step = 1;
+        else if(decimalPart.length === 1 && decimalPart === "5") step = 0.5;
+        else step = 0.1;
+
+        let next = current + direction * step;
+        next = Math.round(next * 1000) / 1000;
+        if(next < step) next = step; // no bajar de un paso, ni a cero o negativo
+        qtyInput.value = formatQty(next);
+        if(li.classList.contains("in-cart")){
+          addToCart(key, next); // ya estaba agregado: actualizamos la cantidad del pedido al instante
+        }
+      }
+      qtyMinusBtn.addEventListener("click", ()=> stepQty(-1));
+      qtyPlusBtn.addEventListener("click", ()=> stepQty(1));
+
+      itemRefs[key] = { li, qtyInput, addBtn, cod: p.cod || "", nombre: p.nombre, precioTexto: p.precio, precioNum, categoria: cat.nombre };
 
       addBtn.addEventListener("click", ()=>{
+        if(li.classList.contains("in-cart")){
+          removeFromCart(key);
+          return;
+        }
         const qty = parseQty(qtyInput.value);
         if(qty === null || qty <= 0){
           removeFromCart(key);
@@ -4202,6 +5285,14 @@ function renderCategories(categories){
       ul.appendChild(li);
     });
     card.appendChild(ul);
+
+    const collapseBtn = document.createElement("button");
+    collapseBtn.type = "button";
+    collapseBtn.className = "cat-collapse-btn";
+    collapseBtn.innerHTML = "<span>Plegar</span><span class=\"cat-chevron\">⌄</span>";
+    collapseBtn.addEventListener("click", ()=> closeCategory(id, true));
+    card.appendChild(collapseBtn);
+
     section.appendChild(card);
     catsEl.appendChild(section);
     sectionByCat[id] = section;
@@ -4274,11 +5365,13 @@ async function loadLiveData(){
     const rows = (json.table && json.table.rows) || [];
 
     // Detectamos las columnas por su encabezado (no importa el orden
-    // ni si hay columnas de más, como "Cod."): buscamos la que dice
-    // "categoría", la que dice "producto" y la que dice "precio"/"pcio".
+    // ni si hay columnas de más): buscamos la que dice "categoría", la
+    // que dice "producto", la que dice "precio"/"pcio" y, si existe,
+    // la del código interno ("cod"/"código") para el mensaje de WhatsApp.
     const catIdx = findColumn(cols, ["categ"]);
     const prodIdx = findColumn(cols, ["produ", "articulo", "descrip"]);
     const priceIdx = findColumn(cols, ["precio", "pcio"]);
+    const codIdx = findColumn(cols, ["cod"]);
     if(catIdx === -1 || prodIdx === -1 || priceIdx === -1){
       throw new Error("No se encontraron las columnas Categoría / Producto / Precio en los encabezados");
     }
@@ -4290,12 +5383,13 @@ async function loadLiveData(){
       const categoria = cellText(cells[catIdx]);
       const producto = cellText(cells[prodIdx]);
       const precio = cellText(cells[priceIdx]);
+      const cod = codIdx !== -1 ? cellText(cells[codIdx]) : "";
       if(!categoria || !producto) return;
       if(!byName[categoria]){
         byName[categoria] = { nombre: categoria, productos: [] };
         grouped.push(byName[categoria]);
       }
-      byName[categoria].productos.push({ nombre: producto, precio: precio || "Consultar" });
+      byName[categoria].productos.push({ cod, nombre: producto, precio: precio || "Consultar" });
     });
 
     if(grouped.length === 0) throw new Error("La planilla no devolvió filas");
