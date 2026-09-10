@@ -4964,6 +4964,80 @@ function updateCartUI(){
     cartSendBtn.href = "#";
     cartSendBtn.classList.add("is-disabled");
   }
+
+  saveCartToStorage();
+}
+
+/* ------ guardar el pedido en curso para que no se pierda al recargar (F5) ------ */
+const CART_STORAGE_KEY = "riomarPedidoEnCurso_v1";
+
+function saveCartToStorage(){
+  try{
+    const items = Object.values(cart).map(it=>({
+      cod: it.cod || "",
+      nombre: it.nombre,
+      categoria: it.categoria,
+      qty: it.qty
+    }));
+    const data = {
+      items,
+      custName: custNameInput ? custNameInput.value : "",
+      custAddress: custAddressInput ? custAddressInput.value : "",
+      delivery: getDeliveryMethod(),
+      payment: getPaymentMethod()
+    };
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(data));
+  } catch(e){
+    // localStorage puede no estar disponible (ventana privada, etc.): no rompemos nada
+  }
+}
+
+function restoreCartFromStorage(){
+  let data;
+  try{
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if(!raw) return;
+    data = JSON.parse(raw);
+  } catch(e){
+    return;
+  }
+  if(!data) return;
+
+  if(Array.isArray(data.items) && data.items.length){
+    // Volvemos a ubicar cada producto guardado dentro del catálogo recién
+    // renderizado, por código interno (si existe) o por categoría+nombre.
+    // No usamos la key guardada tal cual porque el orden alfabético puede
+    // variar de una carga a otra si cambia el catálogo.
+    const byCod = {};
+    const byNameCat = {};
+    Object.entries(itemRefs).forEach(([key, ref])=>{
+      if(ref.cod) byCod[ref.cod] = key;
+      byNameCat[ref.categoria + "||" + ref.nombre] = key;
+    });
+    data.items.forEach(saved=>{
+      let key = null;
+      if(saved.cod && byCod[saved.cod] !== undefined) key = byCod[saved.cod];
+      else if(byNameCat[saved.categoria + "||" + saved.nombre] !== undefined) key = byNameCat[saved.categoria + "||" + saved.nombre];
+      if(!key) return; // el producto ya no está en el catálogo actual
+      const ref = itemRefs[key];
+      const qty = saved.qty && saved.qty > 0 ? saved.qty : 1;
+      ref.qtyInput.value = formatQty(qty);
+      addToCart(key, qty);
+    });
+  }
+
+  if(data.custName) custNameInput.value = data.custName;
+  if(data.custAddress) custAddressInput.value = data.custAddress;
+  if(data.delivery){
+    const radio = document.querySelector('input[name="deliveryMethod"][value="' + data.delivery + '"]');
+    if(radio) radio.checked = true;
+  }
+  if(data.payment){
+    const radio = document.querySelector('input[name="paymentMethod"][value="' + data.payment + '"]');
+    if(radio) radio.checked = true;
+  }
+  if(typeof updateDeliveryFieldsVisibility === "function") updateDeliveryFieldsVisibility();
+  updateCartUI();
 }
 
 function openCart(){
@@ -5026,21 +5100,27 @@ cartSendBtn.addEventListener("click", (e)=>{
 });
 
 document.querySelectorAll('input[name="paymentMethod"]').forEach(input=>{
-  input.addEventListener("change", refreshCartSendHref);
+  input.addEventListener("change", ()=>{
+    refreshCartSendHref();
+    saveCartToStorage();
+  });
 });
 document.querySelectorAll('input[name="deliveryMethod"]').forEach(input=>{
   input.addEventListener("change", ()=>{
     updateDeliveryFieldsVisibility();
     refreshCartSendHref();
+    saveCartToStorage();
   });
 });
 custNameInput.addEventListener("input", ()=>{
   if(custNameInput.value.trim()) custNameError.classList.add("is-hidden");
   refreshCartSendHref();
+  saveCartToStorage();
 });
 custAddressInput.addEventListener("input", ()=>{
   if(custAddressInput.value.trim()) custAddressError.classList.add("is-hidden");
   refreshCartSendHref();
+  saveCartToStorage();
 });
 
 document.getElementById("contactBtn").addEventListener("click", ()=>{
@@ -5304,6 +5384,7 @@ function renderCategories(categories){
   noResults.hidden = true;
   document.getElementById("catGridWrap").hidden = false;
   syncStickyOffsets();
+  restoreCartFromStorage();
 }
 
 /* ---------------- buscador ---------------- */
