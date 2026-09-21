@@ -5475,12 +5475,31 @@ function parseSheetJson(json){
   // ni si hay columnas de más): buscamos la que dice "categoría", la
   // que dice "producto", la que dice "precio"/"pcio" y, si existe,
   // la del código interno ("cod"/"código") para el mensaje de WhatsApp.
-  const catIdx = findColumn(cols, ["categ"]);
+  let catIdx = findColumn(cols, ["categ"]);
   const prodIdx = findColumn(cols, ["produ", "articulo", "descrip"]);
   const priceIdx = findColumn(cols, ["precio", "pcio"]);
   const codIdx = findColumn(cols, ["cod"]);
+
+  // Si no encontramos la columna de categoría por su encabezado (por
+  // ejemplo porque esa celda está vacía en la planilla), pero las otras
+  // tres sí se identificaron, y queda exactamente una columna sin usar:
+  // es casi seguro que esa es la de categoría, aunque no tenga título.
+  if(catIdx === -1 && prodIdx !== -1 && priceIdx !== -1){
+    const used = new Set([prodIdx, priceIdx, codIdx].filter(i => i !== -1));
+    const sinUsar = [];
+    for(let i = 0; i < cols.length; i++){
+      if(!used.has(i)) sinUsar.push(i);
+    }
+    if(sinUsar.length === 1) catIdx = sinUsar[0];
+  }
+
   if(catIdx === -1 || prodIdx === -1 || priceIdx === -1){
-    throw new Error("No se encontraron las columnas Categoría / Producto / Precio en los encabezados");
+    // Mostramos los encabezados que realmente llegaron (entre corchetes
+    // en el aviso), para poder diagnosticar sin acceso a la consola del
+    // navegador: puede que la fila de encabezados se haya corrido, que
+    // falte alguna columna, o algo inesperado en lo que devolvió Google.
+    const labels = cols.map(c => "\"" + ((c && c.label) || "") + "\"").join(", ");
+    throw new Error("No se encontraron las columnas Categoría / Producto / Precio. Encabezados recibidos (" + cols.length + "): [" + labels + "]");
   }
 
   const grouped = [];
