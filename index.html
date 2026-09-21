@@ -5250,11 +5250,14 @@ function toggleCategory(id){
   else openCategory(id, false, true);
 }
 
-function setBanner(mode){
+function setBanner(mode, detail){
   if(mode === "error"){
     banner.hidden = false;
     banner.classList.remove("is-loading");
-    banner.textContent = "No pudimos conectar con tu planilla ahora mismo — mostrando el último catálogo guardado";
+    // Mostramos el motivo técnico en chiquito, útil para diagnosticar
+    // si vuelve a pasar (se puede sacar una vez que quede resuelto).
+    banner.textContent = "No pudimos conectar con tu planilla ahora mismo — mostrando el último catálogo guardado" +
+      (detail ? " [" + detail + "]" : "");
   } else if(mode === "loading"){
     banner.hidden = false;
     banner.classList.add("is-loading");
@@ -5606,7 +5609,7 @@ async function loadLiveData(){
         continue;
       }
       console.error("No se pudo leer la planilla de precios:", err);
-      setBanner("error");
+      setBanner("error", err && err.message ? err.message : "error desconocido");
     }
   }
 }
