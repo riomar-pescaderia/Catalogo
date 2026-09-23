@@ -4634,6 +4634,17 @@ function slug(s){
 function norm(s){
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 }
+// Para matchear el nombre de categoría contra nuestras fotos/íconos/lista
+// de ocultas sin depender de que esté escrito exactamente igual en la
+// planilla (singular/plural, con o sin espacios de más). Sacamos una "s"
+// final si la palabra es suficientemente larga (para no tocar cosas como
+// "Rebozados", que ya termina lógicamente en "s" — igual matchea bien
+// porque comparamos ambos lados con este mismo criterio).
+function catKey(s){
+  let k = norm(s).trim();
+  if(k.endsWith("s") && k.length > 4) k = k.slice(0, -1);
+  return k;
+}
 
 /* ---------------- alto real de la barra fija ----------------
    El buscador (con la aclaración de cantidades) puede ocupar distinta
@@ -4747,12 +4758,29 @@ const CAT_ICONS_SVG = {
       '<rect x="7.3" y="11.5" width="5.4" height="5" rx="0.6" fill="#f5ead9"/>' +
     '</svg>'
 };
+// Índices "tolerantes" (por catKey, ignorando singular/plural) de los
+// mapas de fotos/íconos, para cuando la categoría en la planilla no está
+// escrita exactamente igual a como la tenemos acá (ej. "Suplemento" en
+// vez de "Suplementos").
+function buildFuzzyIndex(map){
+  const idx = {};
+  Object.keys(map).forEach(k=>{ idx[catKey(k)] = map[k]; });
+  return idx;
+}
+const CAT_PHOTOS_FUZZY = buildFuzzyIndex(CAT_PHOTOS);
+const CAT_ICONS_FUZZY = buildFuzzyIndex(CAT_ICONS);
+const CAT_ICONS_SVG_FUZZY = buildFuzzyIndex(CAT_ICONS_SVG);
+
 function catIcon(nombre){
   const key = norm(nombre);
-  return CAT_ICONS_SVG[key] || CAT_ICONS[key] || "🛒";
+  const fkey = catKey(nombre);
+  return CAT_ICONS_SVG[key] || CAT_ICONS[key] ||
+    CAT_ICONS_SVG_FUZZY[fkey] || CAT_ICONS_FUZZY[fkey] || "🛒";
 }
 function catPhoto(nombre){
-  return CAT_PHOTOS[norm(nombre)] || null;
+  const key = norm(nombre);
+  const fkey = catKey(nombre);
+  return CAT_PHOTOS[key] || CAT_PHOTOS_FUZZY[fkey] || null;
 }
 
 const sectionByCat = {};
@@ -5363,7 +5391,15 @@ function setBanner(mode, detail){
   }
 }
 
+// Categorías que no se muestran nunca, aunque sigan viniendo de la
+// planilla en vivo (por ejemplo, mientras no se borran ahí las filas
+// correspondientes). "Carnes" se dejó de vender. Comparamos con catKey()
+// para que matchee igual si en la planilla está en singular ("Carne")
+// o con alguna diferencia menor de tipeo.
+const HIDDEN_CATEGORIES = ["carnes", "carne"].map(catKey);
+
 function renderCategories(categories){
+  categories = categories.filter(cat => !HIDDEN_CATEGORIES.includes(catKey(cat.nombre)));
   catGrid.innerHTML = "";
   catsEl.innerHTML = "";
   Object.keys(sectionByCat).forEach(k=> delete sectionByCat[k]);
