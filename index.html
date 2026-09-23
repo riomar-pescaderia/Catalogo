@@ -28,14 +28,27 @@
     --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 24px -14px rgba(0,0,0,.6);
   }
 
+  html, body{ margin:0; padding:0; }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   @media (prefers-reduced-motion: no-preference){ html{ scroll-behavior:smooth; } }
-  html{ overflow-anchor:none; }
+  html{
+    overflow-anchor:none;
+    background:var(--bg);
+    /* Alto real del viewport en celular: 100vh no descuenta la barra de
+       direcciones de Chrome/Safari cuando se colapsa al hacer scroll, así
+       que al llegar al fondo se ve un espacio de más (con el fondo por
+       defecto del navegador, no el nuestro) por debajo del contenido.
+       100dvh sí la tiene en cuenta. */
+    min-height:100vh;
+    min-height:100dvh;
+  }
   body{
     background:var(--bg);
     color:var(--ink);
     font-family:'Manrope', system-ui, -apple-system, sans-serif;
     overflow-anchor:none;
+    min-height:100vh;
+    min-height:100dvh;
   }
   /* Nota: centramos con margin:auto en vez de flex en el body a
      propósito — un body con display:flex rompe position:sticky en
@@ -44,6 +57,7 @@
     width:100%;
     max-width:520px;
     min-height:100vh;
+    min-height:100dvh;
     margin:0 auto;
     background:var(--bg);
     padding-bottom:96px;
