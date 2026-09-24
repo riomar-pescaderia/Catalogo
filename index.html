@@ -5313,22 +5313,15 @@ let catGridExpanded = false;
 function buildCatStrip(activeId){
   catStrip.innerHTML = "";
   const order = currentCategoryOrder;
-  const total = order.length;
   const activeIdx = order.findIndex(c=> c.id === activeId);
   if(activeIdx === -1) return;
 
-  let idxs;
-  if(total <= 5){
-    idxs = order.map((_, i)=> i);
-  } else {
-    idxs = [];
-    for(let d = -2; d <= 2; d++){
-      idxs.push(((activeIdx + d) % total + total) % total);
-    }
-  }
-
-  idxs.forEach(i=>{
-    const cat = order[i];
+  // Mostramos SIEMPRE las categorías completas (no solo una ventana de
+  // 2 antes/después) para que el gesto de deslizar el dedo tenga
+  // sentido real — con 5 nomás casi no había margen para desplazar.
+  // Después de armarla, centramos la tira en la categoría activa.
+  let activeBtn = null;
+  order.forEach((cat, i)=>{
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "cat-strip-item" + (cat.id === activeId ? " active" : "");
@@ -5349,8 +5342,16 @@ function buildCatStrip(activeId){
     btn.addEventListener("click", ()=>{
       openCategory(cat.id, true, true);
     });
+    if(cat.id === activeId) activeBtn = btn;
     catStrip.appendChild(btn);
   });
+
+  if(activeBtn){
+    requestAnimationFrame(()=>{
+      const target = activeBtn.offsetLeft - (catStrip.clientWidth / 2) + (activeBtn.offsetWidth / 2);
+      catStrip.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+    });
+  }
 }
 
 function goHome(){
@@ -5444,6 +5445,13 @@ window.addEventListener("scroll", ()=>{
 function openCategory(id, scrollTo, exclusive){
   const section = sectionByCat[id];
   if(!section) return;
+  // OJO: hay que guardar cuál era la categoría activa ANTES de cerrarla
+  // más abajo — closeCategory() resetea activeCategoryId a null apenas
+  // cierra la que estaba activa, así que si lo leyéramos después de ese
+  // forEach siempre nos daría null y la transición de abajo no se
+  // disparaba nunca (bug detectado: la animación de "paginado" no se
+  // veía en el celular).
+  const prevId = activeCategoryId;
   if(exclusive){
     // Al pasar a otra categoría, plegamos la que estaba abierta —
     // solo una categoría desplegada a la vez (mientras no se busca).
@@ -5462,7 +5470,6 @@ function openCategory(id, scrollTo, exclusive){
   // grilla de inicio y aparece la tira de categorías vecinas arriba,
   // fija, para poder saltar de categoría sin volver al inicio.
   if(exclusive){
-    const prevId = activeCategoryId;
     activeCategoryId = id;
     document.getElementById("catGridWrap").hidden = true;
     buildCatStrip(id);
