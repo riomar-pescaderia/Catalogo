@@ -5022,6 +5022,61 @@ const cart = {}; // key -> { qty, nombre, precioTexto, precioNum, categoria }
 let currentCategoryOrder = []; // [{id, nombre}] en el orden en que llegaron (planilla o respaldo)
 let activeCategoryId = null; // categoría enfocada (pantalla de detalle), o null si estamos en el inicio
 
+/* ---------------- navegación con el botón/gesto de "volver" ----------------
+   Usamos el historial del navegador (pushState/popstate) para que el
+   gesto de volver del celular haga una SECUENCIA lógica en vez de
+   sacar de la página de una: primero cierra el carrito (si está
+   abierto), después cierra la categoría y vuelve al inicio, y desde
+   el inicio ya no interceptamos nada — ahí sí puede salir de la
+   página con el siguiente "volver", que es lo esperado.
+
+   A diferencia de un intento anterior (que reponía una entrada del
+   historial DESDE el propio popstate para tratar de "atrapar" el
+   gesto siempre), acá sólo agregamos una entrada al historial en el
+   momento en que el USUARIO toca algo (abrir categoría, abrir
+   carrito) — es decir, dentro de un gesto real. Eso es justamente lo
+   que Chrome/Safari SÍ respetan tanto con el botón atrás como con el
+   gesto de deslizar; lo que no respetan es agregar entradas de
+   "reposición" fuera de un toque real, que es lo que hacíamos antes. */
+let suppressHistorySync = false;
+
+function pushNavState(view, extra){
+  if(suppressHistorySync) return;
+  try{
+    const state = Object.assign({ riomarView: view }, extra || {});
+    history.pushState(state, "", location.href);
+  }catch(err){ /* si el navegador bloquea pushState, no rompemos nada */ }
+}
+function replaceNavState(view, extra){
+  if(suppressHistorySync) return;
+  try{
+    const state = Object.assign({ riomarView: view }, extra || {});
+    history.replaceState(state, "", location.href);
+  }catch(err){ /* idem */ }
+}
+function popNavStateIfNeeded(expectedView){
+  if(suppressHistorySync) return;
+  try{
+    if(history.state && history.state.riomarView === expectedView) history.back();
+  }catch(err){ /* idem */ }
+}
+
+window.addEventListener("popstate", (e)=>{
+  suppressHistorySync = true;
+  const view = e.state && e.state.riomarView;
+  if(view === "cart"){
+    if(!cartOverlay.classList.contains("open")) openCart();
+  } else if(view === "category"){
+    if(cartOverlay.classList.contains("open")) closeCart();
+  } else {
+    // Ni carrito ni categoría en este punto del historial: es el
+    // inicio (o antes de que la página empezara a navegar sola).
+    if(cartOverlay.classList.contains("open")) closeCart();
+    if(activeCategoryId) goHome();
+  }
+  suppressHistorySync = false;
+});
+
 function updateCatSelectedCounts(){
   const counts = {};
   Object.values(cart).forEach(it=>{
@@ -5222,7 +5277,10 @@ function updateCartUI(){
   cartNoteEl.textContent = hasConsultar
     ? "Hay productos con precio a consultar — se incluyen en el mensaje, pero no en el total."
     : "";
-  cartPaymentEl.hidden = entries.length === 0;
+  // Mostramos siempre los datos de contacto/entrega, aunque el
+  // carrito esté vacío, para que se puedan completar de una — el
+  // botón de enviar sigue deshabilitado hasta que haya productos.
+  cartPaymentEl.hidden = false;
 
   if(entries.length > 0){
     cartSendBtn.href = BUSINESS.whatsapp + "?text=" + encodeURIComponent(buildWhatsAppMessage());
@@ -5308,20 +5366,33 @@ function restoreCartFromStorage(){
 }
 
 function openCart(){
+  // Refrescamos el estado del panel cada vez que se abre (mensaje de
+  // "carrito vacío", datos de contacto/entrega, botón de enviar) para
+  // que se vea bien tanto si hay productos cargados como si no.
+  updateCartUI();
+  const wasOpen = cartOverlay.classList.contains("open");
   cartOverlay.hidden = false;
   cartDrawer.hidden = false;
   requestAnimationFrame(()=>{
     cartOverlay.classList.add("open");
     cartDrawer.classList.add("open");
   });
+  // Historial: el carrito es siempre "lo más profundo" — se agrega
+  // una entrada nueva (encima de la categoría, si hay una abierta).
+  if(!wasOpen) pushNavState("cart");
 }
 function closeCart(){
+  const wasOpen = cartOverlay.classList.contains("open");
   cartOverlay.classList.remove("open");
   cartDrawer.classList.remove("open");
   setTimeout(()=>{
     cartOverlay.hidden = true;
     cartDrawer.hidden = true;
   }, 220);
+  // Igual que con la categoría: si el cierre lo disparó la "x" o el
+  // fondo (no el botón atrás), sincronizamos retrocediendo nosotros
+  // la entrada que se había agregado al abrir el carrito.
+  if(wasOpen) popNavStateIfNeeded("cart");
 }
 cartClose.addEventListener("click", closeCart);
 cartOverlay.addEventListener("click", closeCart);
@@ -5391,11 +5462,11 @@ custAddressInput.addEventListener("input", ()=>{
 });
 
 document.getElementById("contactBtn").addEventListener("click", ()=>{
-  if(cartCount() > 0){
-    openCart();
-  } else {
-    window.open(BUSINESS.whatsapp, "_blank", "noopener");
-  }
+  // Antes, con el carrito vacío, este botón te llevaba directo al chat
+  // de WhatsApp sin pasar por el panel. Ahora siempre abre el panel
+  // del carrito (aunque esté vacío) para poder completar los datos
+  // de contacto/entrega de una, y desde ahí seguir agregando productos.
+  openCart();
 });
 
 /* ---------------- grilla de categorías ---------------- */
@@ -5645,31 +5716,6 @@ window.addEventListener("scroll", ()=>{
   strip.addEventListener("dragstart", (e)=> e.preventDefault());
 })();
 
-/* Atajamos el gesto de "volver" del celular (o el botón Atrás del
-   navegador): en vez de salir de la página, primero cierra el
-   carrito si está abierto, después cierra la categoría y vuelve al
-   inicio, y una vez ahí se queda — no sale del catálogo. Es el truco
-   habitual: dejamos siempre un "colchón" extra en el historial, así
-   el navegador nunca llega a la entrada anterior (la que sacaría al
-   cliente de la página). */
-(function setupBackGestureTrap(){
-  function pushGuardState(){
-    try{ history.pushState({ riomarGuard: true }, "", location.href); }
-    catch(err){ /* si el navegador bloquea pushState, no rompemos nada */ }
-  }
-  pushGuardState();
-
-  window.addEventListener("popstate", ()=>{
-    if(cartOverlay.classList.contains("open")){
-      closeCart();
-    } else if(activeCategoryId){
-      goHome();
-    }
-    // Reponemos el colchón siempre, para que el próximo "volver"
-    // tampoco saque al cliente del catálogo.
-    pushGuardState();
-  });
-})();
 
 function openCategory(id, scrollTo, exclusive){
   const section = sectionByCat[id];
@@ -5684,9 +5730,16 @@ function openCategory(id, scrollTo, exclusive){
   if(exclusive){
     // Al pasar a otra categoría, plegamos la que estaba abierta —
     // solo una categoría desplegada a la vez (mientras no se busca).
+    // OJO: esto es un detalle interno de "cambiar" de categoría, no
+    // un cierre real hacia el inicio — si dejáramos que closeCategory
+    // toque el historial acá, cambiar de categoría con la tira de
+    // arriba terminaba disparando un "volver" real por accidente.
+    const wasSuppressed = suppressHistorySync;
+    suppressHistorySync = true;
     Object.keys(sectionByCat).forEach(otherId=>{
       if(otherId !== id) closeCategory(otherId);
     });
+    suppressHistorySync = wasSuppressed;
   }
   section.hidden = false;
   section.classList.add("open");
@@ -5699,6 +5752,16 @@ function openCategory(id, scrollTo, exclusive){
   // grilla de inicio y aparece la tira de categorías vecinas arriba,
   // fija, para poder saltar de categoría sin volver al inicio.
   if(exclusive){
+    // Historial: si ya estábamos "adentro" de la pantalla de
+    // categoría (cambiando de una a otra con la tira de arriba),
+    // reemplazamos la entrada en vez de apilar una nueva — así
+    // "volver" siempre pega un solo salto al inicio, sin tener que
+    // pasar por cada categoría que se visitó en el medio.
+    if(prevId){
+      replaceNavState("category", { id });
+    } else {
+      pushNavState("category", { id });
+    }
     activeCategoryId = id;
     document.getElementById("catGridWrap").hidden = true;
     buildCatStrip(id);
@@ -5745,6 +5808,11 @@ function closeCategory(id, scrollTo){
     appEl.classList.remove("header-compact");
     const q = searchInput.value.trim();
     if(!q) document.getElementById("catGridWrap").hidden = false;
+    // Si el cierre lo disparó un botón (Volver, "Ver menos", etc.) y
+    // no una vuelta con el gesto/botón atrás, sincronizamos el
+    // historial retrocediendo nosotros la entrada que habíamos
+    // agregado al abrir la categoría.
+    popNavStateIfNeeded("category");
   }
 
   if(scrollTo){
@@ -5963,6 +6031,7 @@ searchInput.addEventListener("input", ()=>{
     catStripWrap.hidden = true;
     appEl.classList.remove("cat-open");
     appEl.classList.remove("header-compact");
+    popNavStateIfNeeded("category");
   }
 
   Object.entries(sectionByCat).forEach(([id, section])=>{
