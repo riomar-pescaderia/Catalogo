@@ -5645,6 +5645,32 @@ window.addEventListener("scroll", ()=>{
   strip.addEventListener("dragstart", (e)=> e.preventDefault());
 })();
 
+/* Atajamos el gesto de "volver" del celular (o el botón Atrás del
+   navegador): en vez de salir de la página, primero cierra el
+   carrito si está abierto, después cierra la categoría y vuelve al
+   inicio, y una vez ahí se queda — no sale del catálogo. Es el truco
+   habitual: dejamos siempre un "colchón" extra en el historial, así
+   el navegador nunca llega a la entrada anterior (la que sacaría al
+   cliente de la página). */
+(function setupBackGestureTrap(){
+  function pushGuardState(){
+    try{ history.pushState({ riomarGuard: true }, "", location.href); }
+    catch(err){ /* si el navegador bloquea pushState, no rompemos nada */ }
+  }
+  pushGuardState();
+
+  window.addEventListener("popstate", ()=>{
+    if(cartOverlay.classList.contains("open")){
+      closeCart();
+    } else if(activeCategoryId){
+      goHome();
+    }
+    // Reponemos el colchón siempre, para que el próximo "volver"
+    // tampoco saque al cliente del catálogo.
+    pushGuardState();
+  });
+})();
+
 function openCategory(id, scrollTo, exclusive){
   const section = sectionByCat[id];
   if(!section) return;
