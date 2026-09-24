@@ -944,6 +944,62 @@
   }
   .app.cat-open .appbar-bg--home{ transform:translateX(-100%); }
   .app.cat-open .appbar-bg--cat{ transform:translateX(0); }
+
+  /* ---------- versión PC: sin barra de scroll lateral + animaciones
+     de "hover" en todo lo que se puede tocar, para que al pasar el
+     mouse por encima se note que es interactivo. Todo esto va dentro
+     de "hover:hover and pointer:fine" para que NO se active en
+     celular/tablet (ahí no hay mouse, y un :hover mal aplicado con el
+     dedo puede quedar "pegado" después de tocar). */
+  @media (hover:hover) and (pointer:fine){
+    html, body{ scrollbar-width:none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+    .cat-card-btn{ transition:transform .15s ease; }
+    .cat-card-btn:hover{ transform:translateY(-3px); }
+    .cat-card-btn:hover .cat-card-name{ color:var(--accent); }
+
+    .cat-strip-back:hover:not(:active):not(.is-pressed){
+      transform:translateY(-2px);
+      box-shadow:
+        0 3px 0 #c79a48,
+        0 5px 0 #b28a3d,
+        0 7px 0 #9c7932,
+        0 9px 4px rgba(0,0,0,.22),
+        0 14px 20px -8px rgba(0,0,0,.6);
+    }
+
+    .cat-strip-item{ transition:opacity .15s ease, transform .15s ease; }
+    .cat-strip-item:hover{ opacity:.85; transform:translateY(-2px); }
+    .cat-strip-item.active:hover{ opacity:1; }
+
+    .cat-grid-toggle:hover{ color:var(--accent); }
+
+    .cat-head:hover{ background:var(--surface-alt); }
+    .cat-collapse-btn:hover{ background:var(--line); }
+
+    .item-qty-step:hover:not(:active){ background:var(--surface-alt); border-color:var(--accent); }
+    .item-add:hover{ background:var(--accent); color:var(--accent-ink); }
+
+    .fab button{ transition:transform .15s ease, box-shadow .15s ease; }
+    .fab button:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -8px rgba(246,163,11,.7); }
+
+    .cart-close{ transition:background .15s ease, transform .15s ease; }
+    .cart-close:hover{ background:var(--line); transform:rotate(90deg); }
+
+    .cart-item-remove:hover{ color:var(--ink); }
+
+    .cart-payment-option{ transition:background .15s ease; border-radius:8px; }
+    .cart-payment-option:hover{ background:var(--surface-alt); }
+
+    .cart-send{ transition:filter .15s ease, transform .15s ease; }
+    .cart-send:hover:not(.is-disabled){ filter:brightness(1.08); transform:translateY(-1px); }
+
+    /* tira de categorías vecinas: en PC se puede arrastrar con el
+       mouse (clic sostenido) para correrla hacia cualquier lado */
+    .cat-strip{ cursor:grab; }
+    .cat-strip.dragging{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
+  }
 </style>
 </head>
 <body>
@@ -5535,6 +5591,58 @@ window.addEventListener("scroll", ()=>{
     const el = e.target && e.target.closest && e.target.closest(PRESS_SELECTOR + ".is-pressed");
     if(el) releaseEl(el);
   }, { passive: true, capture: true });
+})();
+
+/* En PC (con mouse), la tira de categorías vecinas se puede arrastrar
+   con clic sostenido para moverla hacia cualquier lado, además de
+   poder usar la rueda/trackpad. En celular esto no hace falta porque
+   ya se desliza nativamente con el dedo (por eso escuchamos eventos
+   de mouse, no de puntero genérico: así no interferimos con el touch
+   scroll nativo). */
+(function setupStripDragScroll(){
+  const strip = document.querySelector(".cat-strip");
+  if(!strip) return;
+  let isDown = false;
+  let moved = false;
+  let startX = 0;
+  let startScrollLeft = 0;
+  const DRAG_THRESHOLD = 4;
+
+  strip.addEventListener("mousedown", (e)=>{
+    isDown = true;
+    moved = false;
+    startX = e.clientX;
+    startScrollLeft = strip.scrollLeft;
+    strip.classList.add("dragging");
+  });
+
+  window.addEventListener("mousemove", (e)=>{
+    if(!isDown) return;
+    const dx = e.clientX - startX;
+    if(Math.abs(dx) > DRAG_THRESHOLD) moved = true;
+    strip.scrollLeft = startScrollLeft - dx;
+  });
+
+  function endDrag(){
+    if(!isDown) return;
+    isDown = false;
+    strip.classList.remove("dragging");
+    if(moved){
+      // si hubo arrastre real, evitamos que el "click" que sigue abra
+      // la categoría que quedó bajo el mouse al soltar
+      const suppressClick = (ev)=>{
+        ev.stopPropagation();
+        ev.preventDefault();
+        strip.removeEventListener("click", suppressClick, true);
+      };
+      strip.addEventListener("click", suppressClick, true);
+    }
+  }
+  window.addEventListener("mouseup", endDrag);
+  // OJO: no cortamos el arrastre en "mouseleave" de la tira — el clic
+  // sigue sostenido aunque el mouse se vaya un poco de la franja, y
+  // sólo soltamos con mouseup (en toda la ventana).
+  strip.addEventListener("dragstart", (e)=> e.preventDefault());
 })();
 
 function openCategory(id, scrollTo, exclusive){
