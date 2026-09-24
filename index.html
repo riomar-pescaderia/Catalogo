@@ -5795,7 +5795,13 @@ function openCategory(id, scrollTo, exclusive){
 function closeCategory(id, scrollTo){
   const section = sectionByCat[id];
   if(!section) return;
-  section.hidden = true;
+  // Mientras se está buscando, cada categoría con resultados tiene que
+  // seguir viéndose en la lista (con su título) aunque el cliente la
+  // pliegue — antes se ocultaba la sección entera (título incluido) y
+  // parecía que el resultado desaparecía. Fuera de una búsqueda (modo
+  // "pantalla" normal), plegar sí oculta todo el bloque, como antes.
+  const searching = !!searchInput.value.trim();
+  if(!searching) section.hidden = true;
   section.classList.remove("open");
   section.querySelector(".cat-head").setAttribute("aria-expanded", "false");
   section.querySelector(".cat-card").hidden = true;
