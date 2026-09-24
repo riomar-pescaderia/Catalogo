@@ -310,18 +310,32 @@
     border-bottom:1px solid var(--line);
   }
   .cat-strip-back{
-    display:flex;
+    display:inline-flex;
     align-items:center;
-    gap:5px;
-    margin:0 20px 10px;
-    background:none;
+    gap:7px;
+    margin:0 20px 14px;
+    background:var(--accent);
     border:0;
-    padding:0;
-    color:var(--ink-soft);
+    padding:9px 18px;
+    border-radius:999px;
+    color:var(--accent-ink);
     font-family:'Manrope', sans-serif;
-    font-weight:700;
-    font-size:.78rem;
+    font-weight:800;
+    font-size:.82rem;
     cursor:pointer;
+    box-shadow:
+      0 2px 0 #c79a48,
+      0 4px 0 #b28a3d,
+      0 6px 0 #9c7932,
+      0 8px 3px rgba(0,0,0,.2),
+      0 12px 18px -8px rgba(0,0,0,.55);
+    transition:box-shadow .12s ease, transform .12s ease;
+  }
+  .cat-strip-back:active{
+    transform:translateY(6px);
+    box-shadow:
+      0 1px 0 #c79a48,
+      0 2px 5px rgba(0,0,0,.4);
   }
   .cat-strip-back svg{ width:14px; height:14px; }
   .cat-strip{
@@ -342,8 +356,8 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:6px;
-    width:64px;
+    gap:7px;
+    width:76px;
     opacity:.55;
     background:none;
     border:0;
@@ -354,7 +368,7 @@
     transition:opacity .15s ease;
   }
   .cat-strip-photo{
-    width:54px; height:54px;
+    width:64px; height:64px;
     border-radius:50%;
     background:linear-gradient(155deg, #223350 0%, #16233a 55%, #0e1830 100%);
     border:1px solid rgba(220,170,84,.15);
@@ -404,7 +418,7 @@
     background:#fff;
   }
   .cat-strip-label{
-    font-size:.66rem;
+    font-size:.7rem;
     font-weight:600;
     text-align:center;
     line-height:1.2;
@@ -412,11 +426,11 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width:64px;
+    max-width:76px;
   }
   .cat-strip-item.active{ opacity:1; }
   .cat-strip-item.active .cat-strip-photo{
-    width:66px; height:66px;
+    width:78px; height:78px;
     box-shadow:
       0 1.5px 0 #c79a48,
       0 3px 0 #b28a3d,
@@ -936,8 +950,8 @@
 
   <div class="cat-strip-wrap" id="catStripWrap" hidden>
     <button type="button" class="cat-strip-back" id="catStripBack">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      Categorías
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Volver
     </button>
     <div class="cat-strip" id="catStrip"></div>
   </div>
