@@ -1000,6 +1000,108 @@
     .cat-strip{ cursor:grab; }
     .cat-strip.dragging{ cursor:grabbing; scroll-snap-type:none; user-select:none; }
   }
+
+  /* ---------- versión pantallas grandes (PC / notebook) ----------
+     Todo lo de abajo SOLO se activa a partir de 900px de ancho, así
+     que en celular y tablet vertical el catálogo se ve exactamente
+     igual que antes. En PC la app deja de ser una columna angosta de
+     520px: se ensancha, la grilla de categorías usa más columnas, los
+     productos se acomodan en 2-3 columnas y el carrito se abre como
+     panel lateral a la derecha en vez de subir desde abajo. */
+  @media (min-width:900px){
+    .app{ max-width:1180px; padding-bottom:110px; }
+
+    /* encabezado: más aire y logo más grande */
+    .appbar{ padding:34px 40px 26px; border-radius:0 0 24px 24px; }
+    .biz-logo{ width:170px; }
+    .biz-tag{ font-size:1.25rem; }
+    .biz-meta{ font-size:.98rem; }
+    .biz-hours{ font-size:.92rem; }
+    .app.header-compact .appbar{ padding:14px 40px 12px; }
+    .app.header-compact .biz-logo{ width:64px; }
+
+    /* buscador centrado y de ancho cómodo (un input de 1100px no se lee bien) */
+    .search-wrap{ padding:20px 40px 12px; }
+    .search-box{ max-width:680px; margin:0 auto; padding:13px 16px; }
+    .search-box input{ font-size:1rem; }
+    .search-hint{ max-width:680px; margin:10px auto 0; text-align:center; }
+
+    /* grilla de categorías: tantas por fila como entren, círculos de
+       tamaño fijo y la última fila centrada */
+    .cat-grid-wrap{ padding:8px 40px 16px; }
+    .cat-grid{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:24px 22px;
+    }
+    .cat-card-btn{ width:140px; }
+    .cat-card-name{ font-size:.95rem; }
+
+    /* tira de categorías vecinas: "Volver" a la izquierda en la misma
+       fila (así la franja fija ocupa menos alto) y la tira centrada
+       cuando entran todas */
+    .cat-strip-wrap{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 0 12px 40px;
+    }
+    .cat-strip-back{ margin:0 0 8px; flex:none; }
+    .cat-strip{ flex:1 1 auto; min-width:0; padding:6px 40px 6px 12px; gap:22px; justify-content:safe center; scroll-padding-inline:40px; }
+    .cat-strip-item, .cat-strip-label{ width:88px; max-width:88px; }
+    .cat-strip-label{ font-size:.76rem; }
+
+    /* productos en columnas */
+    .categories{ padding:16px 40px 8px; gap:18px; }
+    .cat-head{ padding:16px 20px; }
+    .cat-title{ font-size:1.45rem; }
+    .cat-count, .cat-count-selected{ font-size:.8rem; }
+    ul.items{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(330px, 1fr));
+      /* las líneas divisorias del borde de la tarjeta quedan afuera
+         (la tarjeta tiene overflow:hidden), así no se ven dobles */
+      margin:0 -1px -1px 0;
+    }
+    .item{
+      padding:14px 20px;
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+    }
+    .item + .item{ border-top:0; }
+    .item-name{ font-size:.95rem; }
+    .item-price{ font-size:.9rem; }
+
+    .foot{ padding:30px 40px 8px; }
+
+    /* botón de WhatsApp alineado al borde derecho del contenido */
+    .fab{ width:min(1100px, calc(100vw - 80px)); bottom:28px; }
+    .fab button{ font-size:.92rem; padding:15px 24px; }
+
+    /* carrito: panel lateral a la derecha */
+    .cart-drawer{
+      top:0; bottom:0; right:0; left:auto;
+      width:440px;
+      max-width:100vw;
+      max-height:none;
+      margin:0;
+      border-radius:20px 0 0 20px;
+      box-shadow:-10px 0 30px rgba(0,0,0,.35);
+      transform:translateX(100%);
+    }
+    .cart-drawer.open{ transform:translateX(0); }
+    .cart-drawer-head{ padding:20px 22px 12px; }
+    .cart-items{ padding:6px 22px; flex:0 1 auto; }
+    .cart-drawer-foot{ padding:14px 22px 22px; margin-top:auto; }
+  }
+
+  /* monitores grandes (1440px o más): un poco más de ancho todavía */
+  @media (min-width:1440px){
+    .app{ max-width:1360px; }
+    .fab{ width:min(1280px, calc(100vw - 80px)); }
+    .cat-card-btn{ width:150px; }
+  }
 </style>
 </head>
 <body>
