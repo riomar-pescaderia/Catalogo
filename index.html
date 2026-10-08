@@ -5689,14 +5689,21 @@ function buildCatStrip(activeId){
   }
 }
 
-/* Mismo corte que el bloque CSS de "pantallas grandes". */
-const IS_DESKTOP = window.matchMedia("(min-width:900px)");
-
-/* Sube hasta que la tira de categorías vecinas quede justo debajo del
-   buscador fijo (en PC la tira no queda fija, sube con el scroll). */
-function scrollToCatStrip(){
+/* Después de "Plegar" dentro de una categoría: sube para que se vea la
+   tira de categorías vecinas y el título de la categoría plegada.
+   - PC: la tira no queda fija, así que subimos hasta que la tira quede
+     justo debajo del buscador.
+   - Celular: la tira sí queda fija debajo del buscador, así que
+     subimos hasta que el título de la categoría quede justo debajo
+     de la tira. */
+function scrollToCatStrip(section){
   const searchH = document.querySelector(".search-wrap").offsetHeight;
-  const top = catStripWrap.getBoundingClientRect().top + window.scrollY - searchH;
+  let top;
+  if(getComputedStyle(catStripWrap).position === "sticky"){
+    top = section.getBoundingClientRect().top + window.scrollY - searchH - catStripWrap.offsetHeight - 10;
+  } else {
+    top = catStripWrap.getBoundingClientRect().top + window.scrollY - searchH;
+  }
   window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
 }
 
@@ -6182,16 +6189,17 @@ function renderCategories(categories){
     collapseBtn.className = "cat-collapse-btn";
     collapseBtn.innerHTML = "<span>Plegar</span><span class=\"cat-chevron\">⌄</span>";
     collapseBtn.addEventListener("click", ()=>{
-      // En PC, si estamos dentro de la categoría (no en una búsqueda),
-      // "Plegar" no vuelve al inicio: pliega la lista (queda el título,
-      // que al tocarlo la vuelve a abrir) y sube hasta la tira de
-      // categorías vecinas para que el cliente elija otra desde ahí.
+      // Si estamos dentro de la categoría (no en una búsqueda), "Plegar"
+      // no vuelve al inicio: pliega la lista (queda el título, que al
+      // tocarlo la vuelve a abrir) y sube hasta la tira de categorías
+      // vecinas para que el cliente elija otra desde ahí. Para volver
+      // al inicio está el botón "Volver".
       const searching = !!searchInput.value.trim();
-      if(IS_DESKTOP.matches && id === activeCategoryId && !searching){
+      if(id === activeCategoryId && !searching){
         section.classList.remove("open");
         section.querySelector(".cat-head").setAttribute("aria-expanded", "false");
         card.hidden = true;
-        scrollToCatStrip();
+        scrollToCatStrip(section);
         return;
       }
       closeCategory(id, true);
