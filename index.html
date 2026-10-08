@@ -120,6 +120,40 @@
   .biz-hours svg{ width:15px; height:15px; flex:none; color:var(--accent); margin-top:2px; }
   .biz-hours-lines{ text-align:left; }
   .biz-hours-lines span{ display:block; }
+  /* Botón de Instagram: mismo relieve 3D dorado que "Volver" y las
+     fotos de categorías, para que se note que se puede tocar. */
+  .biz-ig{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    margin:14px 0 8px;
+    padding:8px 16px;
+    border-radius:999px;
+    background:linear-gradient(180deg, #e8bd6d 0%, #dcaa54 55%, #c99640 100%);
+    color:var(--accent-ink);
+    font-family:'Manrope', sans-serif;
+    font-weight:800;
+    font-size:.82rem;
+    text-decoration:none;
+    box-shadow:
+      0 2px 0 #c79a48,
+      0 4px 0 #b28a3d,
+      0 6px 0 #9c7932,
+      0 8px 3px rgba(0,0,0,.25),
+      0 12px 18px -8px rgba(0,0,0,.6),
+      inset 0 1px 1px rgba(255,255,255,.55),
+      inset 0 -1px 2px rgba(0,0,0,.2);
+    transition:box-shadow .12s ease, transform .12s ease;
+  }
+  .biz-ig svg{ width:17px; height:17px; flex:none; }
+  .biz-ig:active,
+  .biz-ig.is-pressed{
+    transform:translateY(6px);
+    box-shadow:
+      0 1px 0 #c79a48,
+      0 2px 5px rgba(0,0,0,.4),
+      inset 0 1px 1px rgba(255,255,255,.4);
+  }
   /* Estado compacto: ya NO se activa apenas se entra a una categoría —
      el encabezado se mantiene grande hasta que el usuario baja con el
      scroll (ver listener de "header-compact" en el JS), para no
@@ -129,6 +163,16 @@
   .app.header-compact .biz-tag, .app.header-compact .biz-meta{ display:none; }
   .app.header-compact .biz-hours{ margin-top:6px; font-size:.76rem; }
   .app.header-compact .biz-hours svg{ width:13px; height:13px; }
+  /* encabezado achicado: el botón queda solo con el ícono, en la
+     esquina, para no sumar alto */
+  .app.header-compact .biz-ig{
+    position:absolute;
+    top:50%; right:16px;
+    margin:0;
+    padding:7px;
+    translate:0 -50%;
+  }
+  .app.header-compact .biz-ig-label{ display:none; }
 
   /* ---------- buscador ---------- */
   .search-wrap{
@@ -973,6 +1017,18 @@
     .cat-strip-item:hover{ opacity:.85; transform:translateY(-2px); }
     .cat-strip-item.active:hover{ opacity:1; }
 
+    .biz-ig:hover:not(:active):not(.is-pressed){
+      transform:translateY(-2px);
+      box-shadow:
+        0 3px 0 #c79a48,
+        0 5px 0 #b28a3d,
+        0 7px 0 #9c7932,
+        0 9px 4px rgba(0,0,0,.22),
+        0 14px 20px -8px rgba(0,0,0,.6),
+        inset 0 1px 1px rgba(255,255,255,.55),
+        inset 0 -1px 2px rgba(0,0,0,.2);
+    }
+
     .cat-grid-toggle:hover{ color:var(--accent); }
 
     .cat-head:hover{ background:var(--surface-alt); }
@@ -1017,6 +1073,8 @@
     .biz-tag{ font-size:1.25rem; }
     .biz-meta{ font-size:.98rem; }
     .biz-hours{ font-size:.92rem; }
+    .biz-ig{ font-size:.88rem; padding:9px 18px; }
+    .app.header-compact .biz-ig{ right:40px; }
     .app.header-compact .appbar{ padding:14px 40px 12px; }
     .app.header-compact .biz-logo{ width:64px; }
 
@@ -1039,9 +1097,11 @@
     .cat-card-name{ font-size:.95rem; }
 
     /* tira de categorías vecinas: "Volver" a la izquierda en la misma
-       fila (así la franja fija ocupa menos alto) y la tira centrada
-       cuando entran todas */
+       fila y la tira centrada cuando entran todas. En PC NO queda fija:
+       al bajar con el scroll sube junto con el resto y deja más lugar
+       para los productos (solo el buscador queda fijo arriba). */
     .cat-strip-wrap{
+      position:static;
       display:flex;
       align-items:center;
       gap:12px;
@@ -1116,6 +1176,7 @@
     <p class="biz-tag" id="bizTag"></p>
     <p class="biz-meta" id="bizArea"></p>
     <p class="biz-hours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="biz-hours-lines"><span>Lun a Vie 9 a 13 y 17 a 21 hs</span><span>S&aacute;b 10 a 13 y 18 a 21 hs</span></span></p>
+    <a class="biz-ig" href="https://www.instagram.com/riomar.rcia/" target="_blank" rel="noopener" aria-label="Instagram de RIOMAR (@riomar.rcia)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg><span class="biz-ig-label">@riomar.rcia</span></a>
   </header>
 
   <div class="search-wrap">
@@ -5628,6 +5689,17 @@ function buildCatStrip(activeId){
   }
 }
 
+/* Mismo corte que el bloque CSS de "pantallas grandes". */
+const IS_DESKTOP = window.matchMedia("(min-width:900px)");
+
+/* Sube hasta que la tira de categorías vecinas quede justo debajo del
+   buscador fijo (en PC la tira no queda fija, sube con el scroll). */
+function scrollToCatStrip(){
+  const searchH = document.querySelector(".search-wrap").offsetHeight;
+  const top = catStripWrap.getBoundingClientRect().top + window.scrollY - searchH;
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+}
+
 function goHome(){
   if(activeCategoryId) closeCategory(activeCategoryId, true);
 }
@@ -5736,7 +5808,7 @@ window.addEventListener("scroll", ()=>{
    tiempo para que el efecto 3D se note siempre, tanto con mouse como
    con el dedo. */
 (function setupPressFx(){
-  const PRESS_SELECTOR = ".cat-card-btn, .cat-strip-back, .cat-strip-item";
+  const PRESS_SELECTOR = ".cat-card-btn, .cat-strip-back, .cat-strip-item, .biz-ig";
   const MIN_PRESS_MS = 90;
   const pressStart = new WeakMap();
 
@@ -6109,7 +6181,21 @@ function renderCategories(categories){
     collapseBtn.type = "button";
     collapseBtn.className = "cat-collapse-btn";
     collapseBtn.innerHTML = "<span>Plegar</span><span class=\"cat-chevron\">⌄</span>";
-    collapseBtn.addEventListener("click", ()=> closeCategory(id, true));
+    collapseBtn.addEventListener("click", ()=>{
+      // En PC, si estamos dentro de la categoría (no en una búsqueda),
+      // "Plegar" no vuelve al inicio: pliega la lista (queda el título,
+      // que al tocarlo la vuelve a abrir) y sube hasta la tira de
+      // categorías vecinas para que el cliente elija otra desde ahí.
+      const searching = !!searchInput.value.trim();
+      if(IS_DESKTOP.matches && id === activeCategoryId && !searching){
+        section.classList.remove("open");
+        section.querySelector(".cat-head").setAttribute("aria-expanded", "false");
+        card.hidden = true;
+        scrollToCatStrip();
+        return;
+      }
+      closeCategory(id, true);
+    });
     card.appendChild(collapseBtn);
 
     section.appendChild(card);
