@@ -599,6 +599,73 @@
     transition:background .15s ease, border-color .15s ease;
   }
   .item + .item{ border-top:1px solid var(--line); }
+  /* miniatura de la foto a la izquierda: ocupa las dos filas (nombre y
+     precio/cantidad) y el resto del producto queda a su derecha */
+  .item{
+    display:grid;
+    grid-template-columns:56px minmax(0, 1fr);
+    column-gap:12px;
+    row-gap:6px;
+    align-items:center;
+  }
+  .item-name, .item-bottom{ grid-column:2; }
+  .item-thumb{
+    grid-row:1 / span 2;
+    width:56px; height:56px;
+    padding:0;
+    border:0;
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+    cursor:zoom-in;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+  }
+  .item-thumb img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .item-thumb.is-empty{
+    background:var(--surface-alt);
+    color:var(--accent);
+    opacity:.55;
+    cursor:default;
+    box-shadow:none;
+  }
+  .item-thumb.is-empty svg{ width:55%; height:55%; }
+
+  /* visor de foto grande (al tocar la miniatura) */
+  .photo-viewer{
+    position:fixed; inset:0; z-index:30;
+    background:rgba(7,13,23,.88);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    opacity:0;
+    transition:opacity .18s ease;
+    cursor:zoom-out;
+  }
+  .photo-viewer.open{ opacity:1; }
+  .photo-viewer-box{
+    margin:0;
+    width:min(92vw, 520px);
+    background:#fff;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.6);
+  }
+  .photo-viewer-box img{ width:100%; aspect-ratio:1; object-fit:contain; display:block; background:#fff; }
+  .photo-viewer-box figcaption{
+    background:var(--surface);
+    color:var(--ink);
+    font-size:.9rem;
+    font-weight:700;
+    padding:12px 16px;
+    line-height:1.3;
+  }
+  .photo-viewer-close{
+    position:absolute; top:16px; right:16px;
+    width:40px; height:40px;
+    border:0; border-radius:999px;
+    background:var(--surface-alt); color:var(--ink);
+    font-size:1.4rem; line-height:1; cursor:pointer;
+  }
   .item.in-cart{
     background:var(--accent-soft);
     border-left-color:var(--accent);
@@ -1036,6 +1103,8 @@
 
     .item-qty-step:hover:not(:active){ background:var(--surface-alt); border-color:var(--accent); }
     .item-add:hover{ background:var(--accent); color:var(--accent-ink); }
+    .item-thumb{ transition:transform .15s ease, box-shadow .15s ease; }
+    .item-thumb:not(.is-empty):hover{ transform:scale(1.06); box-shadow:0 4px 12px rgba(0,0,0,.45); }
 
     .fab button{ transition:transform .15s ease, box-shadow .15s ease; }
     .fab button:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -8px rgba(246,163,11,.7); }
@@ -1131,6 +1200,8 @@
     }
     .item + .item{ border-top:0; }
     .item-name{ font-size:.95rem; }
+    .item{ grid-template-columns:64px minmax(0, 1fr); column-gap:14px; }
+    .item-thumb{ width:64px; height:64px; }
     .item-price{ font-size:.9rem; }
 
     .foot{ padding:30px 40px 8px; }
@@ -1220,6 +1291,14 @@
       <span id="bizContactLabel">Pedir por WhatsApp</span>
       <span class="cart-badge" id="cartBadge" hidden>0</span>
     </button>
+  </div>
+
+  <div class="photo-viewer" id="photoViewer" hidden role="dialog" aria-label="Foto del producto">
+    <figure class="photo-viewer-box">
+      <img id="photoViewerImg" alt="" referrerpolicy="no-referrer">
+      <figcaption id="photoViewerName"></figcaption>
+    </figure>
+    <button type="button" class="photo-viewer-close" aria-label="Cerrar">&times;</button>
   </div>
 
   <div class="cart-overlay" id="cartOverlay" hidden></div>
@@ -6096,6 +6175,7 @@ function renderCategories(categories){
       li.className = "item";
       li.dataset.search = norm(p.nombre);
       li.innerHTML =
+        '<button type="button" class="item-thumb" tabindex="-1" aria-hidden="true"></button>' +
         '<span class="item-name"></span>' +
         '<div class="item-bottom">' +
           '<span class="item-price"></span>' +
@@ -6110,6 +6190,7 @@ function renderCategories(categories){
         '</div>';
       li.querySelector(".item-name").textContent = p.nombre;
       li.querySelector(".item-price").textContent = displayPrice(p.precio);
+      setupItemThumb(li.querySelector(".item-thumb"), p);
 
       const qtyInput = li.querySelector(".item-qty");
       const qtyMinusBtn = li.querySelector(".item-qty-minus");
@@ -6263,6 +6344,65 @@ function cellText(cell){
   return "";
 }
 
+/* ---------------- fotos de productos ----------------
+   La columna "Foto" de la planilla trae el link de Drive de cada foto
+   (lo completa el botón "Fotos catálogo → Actualizar fotos"). De ese
+   link sacamos el id del archivo y le pedimos a Google la imagen ya
+   achicada: chica para la miniatura, más grande para el visor. También
+   acepta un link directo a una imagen (https://...jpg). */
+const PHOTO_PLACEHOLDER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12c2.6-3.6 6-5.5 9.6-5.5 3.3 0 6.1 1.7 8 4.2L22 9v6l-1.9-1.7c-1.9 2.5-4.7 4.2-8 4.2-3.6 0-7-1.9-9.6-5.5z"/><circle cx="7.2" cy="11" r=".7" fill="currentColor"/></svg>';
+
+function photoUrl(link, width){
+  if(!link) return "";
+  const m = link.match(/\/d\/([\w-]{20,})/) || link.match(/[?&]id=([\w-]{20,})/);
+  if(m) return "https://lh3.googleusercontent.com/d/" + m[1] + "=w" + width;
+  return /^https?:\/\//i.test(link) ? link : "";
+}
+
+function setThumbEmpty(btn){
+  btn.classList.add("is-empty");
+  btn.innerHTML = PHOTO_PLACEHOLDER_SVG;
+  btn.disabled = true;
+}
+
+function setupItemThumb(btn, p){
+  const thumb = photoUrl(p.foto, 160);
+  if(!thumb){ setThumbEmpty(btn); return; }
+  const img = document.createElement("img");
+  img.alt = "";
+  img.loading = "lazy";
+  img.decoding = "async";
+  // Drive rechaza algunas imágenes si el pedido dice desde qué página
+  // viene (el "referrer"); sin ese dato las sirve todas.
+  img.referrerPolicy = "no-referrer";
+  img.src = thumb;
+  // si la foto no carga (link roto, archivo borrado), volvemos al ícono
+  img.addEventListener("error", ()=> setThumbEmpty(btn));
+  btn.appendChild(img);
+  btn.removeAttribute("aria-hidden");
+  btn.removeAttribute("tabindex");
+  btn.setAttribute("aria-label", "Ver foto de " + p.nombre);
+  btn.addEventListener("click", ()=> openPhotoViewer(photoUrl(p.foto, 900), p.nombre));
+}
+
+const photoViewer = document.getElementById("photoViewer");
+const photoViewerImg = document.getElementById("photoViewerImg");
+const photoViewerName = document.getElementById("photoViewerName");
+function openPhotoViewer(src, name){
+  photoViewerImg.src = src;
+  photoViewerName.textContent = name;
+  photoViewer.hidden = false;
+  requestAnimationFrame(()=> photoViewer.classList.add("open"));
+}
+function closePhotoViewer(){
+  if(photoViewer.hidden) return;
+  photoViewer.classList.remove("open");
+  setTimeout(()=>{ photoViewer.hidden = true; photoViewerImg.removeAttribute("src"); }, 180);
+}
+photoViewer.addEventListener("click", closePhotoViewer);
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closePhotoViewer(); });
+window.addEventListener("popstate", closePhotoViewer);
+
 function findColumn(cols, keywords){
   for(let i = 0; i < cols.length; i++){
     const label = norm((cols[i].label || "").trim());
@@ -6288,13 +6428,14 @@ function parseSheetJson(json){
   const prodIdx = findColumn(cols, ["produ", "articulo", "descrip"]);
   const priceIdx = findColumn(cols, ["precio", "pcio"]);
   const codIdx = findColumn(cols, ["cod"]);
+  const fotoIdx = findColumn(cols, ["foto", "imagen"]);
 
   // Si no encontramos la columna de categoría por su encabezado (por
   // ejemplo porque esa celda está vacía en la planilla), pero las otras
   // tres sí se identificaron, y queda exactamente una columna sin usar:
   // es casi seguro que esa es la de categoría, aunque no tenga título.
   if(catIdx === -1 && prodIdx !== -1 && priceIdx !== -1){
-    const used = new Set([prodIdx, priceIdx, codIdx].filter(i => i !== -1));
+    const used = new Set([prodIdx, priceIdx, codIdx, fotoIdx].filter(i => i !== -1));
     const sinUsar = [];
     for(let i = 0; i < cols.length; i++){
       if(!used.has(i)) sinUsar.push(i);
@@ -6319,6 +6460,7 @@ function parseSheetJson(json){
     const producto = cellText(cells[prodIdx]);
     const precio = cellText(cells[priceIdx]);
     const cod = codIdx !== -1 ? cellText(cells[codIdx]) : "";
+    const foto = fotoIdx !== -1 ? cellText(cells[fotoIdx]) : "";
     if(!categoria || !producto) return;
     if(!byName[categoria]){
       byName[categoria] = { nombre: categoria, productos: [] };
@@ -6329,7 +6471,7 @@ function parseSheetJson(json){
     // estático de respaldo).
     const precioNum = parsePrice(precio);
     const precioFinal = (precioNum === null || precioNum === 0) ? "Consultar" : precio;
-    byName[categoria].productos.push({ cod, nombre: producto, precio: precioFinal });
+    byName[categoria].productos.push({ cod, nombre: producto, precio: precioFinal, foto });
   });
 
   if(grouped.length === 0) throw new Error("La planilla no devolvió filas");
