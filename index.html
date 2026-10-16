@@ -631,6 +631,202 @@
   }
   .item-thumb.is-empty svg{ width:55%; height:55%; }
 
+  /* ---------- mapa de puntos de venta ---------- */
+  /* el botón comparte el estilo 3D del de Instagram (.biz-ig); en el
+     encabezado achicado queda solo el ícono, al lado del de Instagram */
+  /* "Lomo de libro": franja dorada vertical pegada al borde derecho del
+     encabezado. Late (con un halo) y le pasa un brillo cada 4 segundos,
+     5 veces, y después queda quieto. Al tocarlo, el mapa se despliega
+     desde el lomo como la hoja de un libro. */
+  .appbar.con-lomo{ padding-right:54px; padding-left:54px; }
+  .mapa-lomo{
+    position:absolute; top:0; right:0; bottom:0;
+    width:36px;
+    z-index:2;
+    border:0; padding:0; margin:0;
+    background:linear-gradient(90deg, #c99640 0%, #e8bd6d 45%, #dcaa54 70%, #b8873a 100%);
+    color:var(--accent-ink);
+    cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    overflow:hidden;
+    transform-origin:right center;
+    box-shadow:-3px 0 8px rgba(0,0,0,.35), inset 2px 0 0 rgba(255,255,255,.25);
+    font-family:'Manrope', sans-serif;
+  }
+  .mapa-lomo svg{ width:18px; height:18px; flex:none; position:relative; z-index:1; }
+  .mapa-lomo-label{
+    writing-mode:vertical-rl; transform:rotate(180deg);
+    font-size:.74rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+    white-space:nowrap; position:relative; z-index:1;
+  }
+  /* brillo que recorre el dorado */
+  .mapa-lomo::after{
+    content:""; position:absolute; left:0; right:0; top:0; height:42%;
+    background:linear-gradient(180deg, rgba(255,250,230,0) 0%, rgba(255,250,230,.85) 50%, rgba(255,250,230,0) 100%);
+    transform:translateY(-110%);
+    pointer-events:none;
+  }
+  /* halo del latido (detrás del lomo, hacia el lado del encabezado) */
+  .mapa-lomo-halo{
+    position:absolute; top:0; right:0; bottom:0; width:70px;
+    background:linear-gradient(270deg, rgba(220,170,84,.6), rgba(220,170,84,0));
+    opacity:0; pointer-events:none; z-index:1;
+  }
+  @keyframes lomoLatido{
+    0%, 22%, 100%{ transform:scaleX(1); }
+    5%{ transform:scaleX(1.32); }
+    10%{ transform:scaleX(1.06); }
+    15%{ transform:scaleX(1.24); }
+  }
+  @keyframes lomoHalo{
+    0%, 24%, 100%{ opacity:0; }
+    5%, 15%{ opacity:1; }
+  }
+  @keyframes lomoBrillo{
+    0%, 22%{ transform:translateY(-110%); }
+    55%, 100%{ transform:translateY(260%); }
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .mapa-lomo.anima{ animation:lomoLatido 4s ease-in-out 1.2s 5; }
+    .mapa-lomo.anima::after{ animation:lomoBrillo 4s ease-in-out 1.2s 5; }
+    .mapa-lomo.anima + .mapa-lomo-halo{ animation:lomoHalo 4s ease-in-out 1.2s 5; }
+  }
+  /* encabezado achicado: el lomo queda finito, solo con el ícono */
+  .app.header-compact .appbar.con-lomo{ padding-right:20px; padding-left:20px; }
+  .app.header-compact .mapa-lomo{ width:30px; }
+  .app.header-compact .mapa-lomo-label{ display:none; }
+  .app.header-compact .appbar.con-lomo .biz-ig{ right:42px; }
+
+  /* el mapa se despliega desde el lomo, como la hoja de un libro */
+  @keyframes libroAbrir{
+    from{ transform:perspective(1400px) rotateY(-88deg); opacity:.6; }
+    to{ transform:perspective(1400px) rotateY(0deg); opacity:1; }
+  }
+  @keyframes libroCerrar{
+    from{ transform:perspective(1400px) rotateY(0deg); opacity:1; }
+    to{ transform:perspective(1400px) rotateY(-88deg); opacity:.6; }
+  }
+  .mapa-overlay{ transform-origin:right center; }
+  @media (prefers-reduced-motion: no-preference){
+    .mapa-overlay.abriendo{ animation:libroAbrir .7s cubic-bezier(.2,.7,.25,1) both; }
+    .mapa-overlay.cerrando{ animation:libroCerrar .45s cubic-bezier(.5,0,.75,.3) both; }
+  }
+  .mapa-overlay{
+    position:fixed; inset:0; z-index:31;
+    background:var(--bg);
+    display:flex; flex-direction:column;
+  }
+  .mapa-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 16px calc(10px);
+    padding-top:calc(12px + env(safe-area-inset-top, 0px));
+    background:var(--surface);
+    border-bottom:1px solid var(--line);
+    flex:none;
+  }
+  .mapa-title{ margin:0; font-family:'Bebas Neue', 'Manrope', sans-serif; font-weight:400; letter-spacing:.03em; font-size:1.35rem; color:var(--ink); }
+  .mapa-sub{ margin:2px 0 0; font-size:.78rem; color:var(--ink-soft); }
+  .mapa-canvas{ flex:1 1 auto; min-height:0; background:#dfe3e6; }
+  .mapa-search{ flex:none; padding:10px 16px 10px; background:var(--bg); border-bottom:1px solid var(--line); }
+  .mapa-search .search-box{ padding:9px 12px; }
+  .mapa-search input::-webkit-search-cancel-button{ display:none; }
+  .mapa-search-clear{
+    flex:none; width:26px; height:26px; border:0; border-radius:999px;
+    background:var(--surface-alt); color:var(--ink); font-size:1rem; line-height:1; cursor:pointer;
+  }
+  .mapa-search-res{ margin:8px 2px 0; font-size:.8rem; font-weight:600; color:var(--ink-soft); line-height:1.35; }
+  .mapa-search-res b{ color:var(--accent); }
+  /* comercios "apagados" (no tienen lo que se busca) y "encendidos" */
+  .mapa-pin.is-off{ filter:grayscale(1); opacity:.35; border-color:#9aa3ad; box-shadow:none; z-index:0; }
+  .mapa-pin.is-off::after{ border-top-color:#9aa3ad; }
+  .mapa-pin.is-hit{ box-shadow:0 0 0 4px rgba(220,170,84,.55), 0 4px 12px rgba(0,0,0,.5); z-index:1; }
+  /* local de RIOMAR: más grande, con el logo, siempre encendido y arriba */
+  .mapa-pin.is-riomar{
+    width:66px; height:66px;
+    background:var(--bg);
+    border-width:3px;
+    z-index:3;
+    box-shadow:0 0 0 4px rgba(220,170,84,.35), 0 6px 14px rgba(0,0,0,.55);
+  }
+  .mapa-pin.is-riomar img{ object-fit:contain; padding:5px; }
+  .mapa-card-logo.is-riomar{ background:var(--bg); }
+  .mapa-card-logo.is-riomar img{ object-fit:contain; padding:4px; }
+  .mapa-chips span.is-hit{ background:var(--accent); color:var(--accent-ink); }
+  .mapa-error{ position:absolute; top:50%; left:0; right:0; text-align:center; color:var(--ink-soft); padding:0 24px; }
+  /* marcador: logo redondo con borde dorado */
+  .mapa-pin{
+    position:absolute;
+    width:46px; height:46px;
+    transform:translate(-50%, -100%);
+    border-radius:50%;
+    background:#fff;
+    border:3px solid var(--accent);
+    box-shadow:0 4px 10px rgba(0,0,0,.45);
+    overflow:hidden;
+    cursor:pointer;
+    padding:0;
+    display:flex; align-items:center; justify-content:center;
+    font:800 .8rem 'Manrope', sans-serif;
+    color:var(--accent-ink);
+    transition:transform .12s ease;
+  }
+  .mapa-pin img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mapa-pin.is-active{ transform:translate(-50%, -100%) scale(1.18); z-index:2; box-shadow:0 0 0 4px rgba(220,170,84,.45), 0 6px 14px rgba(0,0,0,.5); }
+  .mapa-pin::after{
+    content:""; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
+    border:6px solid transparent; border-top-color:var(--accent);
+  }
+  /* ficha del comercio */
+  .mapa-card{
+    position:absolute;
+    left:12px; right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom, 0px));
+    max-width:440px; margin:0 auto;
+    background:var(--surface);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow:0 14px 34px rgba(0,0,0,.55);
+    padding:14px;
+    max-height:60vh; overflow-y:auto;
+  }
+  .mapa-card-close{
+    position:absolute; top:8px; right:8px;
+    width:30px; height:30px; border:0; border-radius:999px;
+    background:var(--surface-alt); color:var(--ink); font-size:1.1rem; cursor:pointer;
+  }
+  .mapa-card-top{ display:flex; gap:12px; align-items:center; padding-right:30px; }
+  .mapa-card-logo{
+    width:54px; height:54px; flex:none; border-radius:50%;
+    background:#fff; border:3px solid var(--accent); overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font:800 .9rem 'Manrope', sans-serif; color:var(--accent-ink);
+  }
+  .mapa-card-logo img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mapa-card-name{ margin:0; font-size:1rem; font-weight:800; line-height:1.25; }
+  .mapa-card-dir, .mapa-card-hor{ margin:2px 0 0; font-size:.8rem; color:var(--ink-soft); line-height:1.35; }
+  .mapa-card-btns{ display:flex; gap:8px; margin:12px 0 4px; flex-wrap:wrap; }
+  .mapa-card-btns a{
+    flex:1 1 auto; min-width:0;
+    white-space:nowrap;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding:9px 10px; border-radius:999px;
+    font-size:.8rem; font-weight:800; text-decoration:none;
+    border:1px solid var(--accent); color:var(--accent);
+  }
+  .mapa-card-btns a.is-main{ background:var(--accent); color:var(--accent-ink); }
+  .mapa-card-btns svg{ width:15px; height:15px; flex:none; }
+  .mapa-card-prods{ border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
+  .mapa-card-label{ margin:0 0 7px; font-size:.76rem; color:var(--ink-soft); }
+  .mapa-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .mapa-chips span, .mapa-chips button{
+    font:600 .76rem 'Manrope', sans-serif;
+    background:var(--surface-alt); color:var(--ink);
+    border:0; border-radius:999px; padding:4px 10px;
+  }
+  .mapa-chips button{ color:var(--accent); background:transparent; cursor:pointer; padding:4px 4px; }
+  .mapa-card-note{ margin:9px 0 0; font-size:.72rem; color:var(--ink-faint); }
+
   /* visor de foto grande (al tocar la miniatura) */
   .photo-viewer{
     position:fixed; inset:0; z-index:30;
@@ -1115,6 +1311,8 @@
         inset 0 -1px 2px rgba(0,0,0,.2);
     }
 
+    .mapa-lomo:hover{ filter:brightness(1.07); }
+
     .cat-grid-toggle:hover{ color:var(--accent); }
 
     .cat-head:hover{ background:var(--surface-alt); }
@@ -1163,6 +1361,13 @@
     .biz-hours{ font-size:.92rem; }
     .biz-ig{ font-size:.88rem; padding:9px 18px; }
     .app.header-compact .biz-ig{ right:40px; }
+    .mapa-lomo{ width:44px; }
+    .mapa-lomo-label{ font-size:.8rem; }
+    .appbar.con-lomo{ padding-right:84px; padding-left:84px; }
+    .app.header-compact .appbar.con-lomo{ padding-right:40px; padding-left:40px; }
+    .app.header-compact .appbar.con-lomo .biz-ig{ right:52px; }
+    .mapa-head{ padding-left:32px; padding-right:32px; }
+    .mapa-card{ left:auto; right:24px; bottom:24px; margin:0; width:400px; }
     .app.header-compact .appbar{ padding:14px 40px 12px; }
     .app.header-compact .biz-logo{ width:64px; }
 
@@ -1267,6 +1472,7 @@
     <p class="biz-meta" id="bizArea"></p>
     <p class="biz-hours"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span class="biz-hours-lines"><span>Lun a Vie 9 a 13 y 17 a 21 hs</span><span>S&aacute;b 10 a 13 y 18 a 21 hs</span></span></p>
     <a class="biz-ig" href="https://www.instagram.com/riomar.rcia/" target="_blank" rel="noopener" aria-label="Instagram de RIOMAR (@riomar.rcia)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/></svg><span class="biz-ig-label">@riomar.rcia</span></a>
+    <button type="button" class="mapa-lomo" id="mapaBtn" hidden aria-label="Dónde encontrarnos: comercios que venden productos RIOMAR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg><span class="mapa-lomo-label">Dónde encontrarnos</span></button>
   </header>
 
   <div class="search-wrap">
@@ -1310,6 +1516,45 @@
       <span id="bizContactLabel">Pedir por WhatsApp</span>
       <span class="cart-badge" id="cartBadge" hidden>0</span>
     </button>
+  </div>
+
+  <div class="mapa-overlay" id="mapaOverlay" hidden role="dialog" aria-label="Dónde encontrarnos">
+    <div class="mapa-head">
+      <div>
+        <h2 class="mapa-title">Dónde encontrarnos</h2>
+        <p class="mapa-sub" id="mapaSub"></p>
+      </div>
+      <button type="button" class="cart-close" id="mapaClose" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="mapa-search">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="mapaBuscar" type="search" list="mapaProductos" autocomplete="off" enterkeyhint="search"
+          placeholder="Buscá un producto y te mostramos dónde conseguirlo" aria-label="Buscar un producto en los comercios">
+        <button type="button" class="mapa-search-clear" id="mapaBuscarBorrar" aria-label="Borrar búsqueda" hidden>&times;</button>
+      </div>
+      <datalist id="mapaProductos"></datalist>
+      <p class="mapa-search-res" id="mapaBuscarRes" hidden></p>
+    </div>
+    <div class="mapa-canvas" id="mapaCanvas"></div>
+    <p class="mapa-error" id="mapaError" hidden>No se pudo cargar el mapa. Probá de nuevo en un rato.</p>
+    <div class="mapa-card" id="mapaCard" hidden>
+      <button type="button" class="mapa-card-close" id="mapaCardClose" aria-label="Cerrar ficha">&times;</button>
+      <div class="mapa-card-top">
+        <div class="mapa-card-logo" id="mapaCardLogo"></div>
+        <div class="mapa-card-info">
+          <h3 class="mapa-card-name" id="mapaCardName"></h3>
+          <p class="mapa-card-dir" id="mapaCardDir"></p>
+          <p class="mapa-card-hor" id="mapaCardHor"></p>
+        </div>
+      </div>
+      <div class="mapa-card-btns" id="mapaCardBtns"></div>
+      <div class="mapa-card-prods" id="mapaCardProdsWrap">
+        <p class="mapa-card-label">Productos RIOMAR que suele tener</p>
+        <div class="mapa-chips" id="mapaCardProds"></div>
+        <p class="mapa-card-note">Consultá disponibilidad con el comercio.</p>
+      </div>
+    </div>
   </div>
 
   <div class="photo-viewer" id="photoViewer" hidden role="dialog" aria-label="Foto del producto">
@@ -6571,6 +6816,13 @@ window.google.visualization = window.google.visualization || {};
 window.google.visualization.Query = window.google.visualization.Query || {};
 
 function fetchLiveCatalog(){
+  return fetchGvizSheet(SHEET_CONFIG.sheetId, SHEET_CONFIG.gid, parseSheetJson);
+}
+
+/* Lee una pestaña pública de Google Sheets (mismo mecanismo de abajo) y
+   devuelve lo que arme "parse" con la respuesta. Como Google siempre
+   llama a la misma función global, se usa de a una planilla por vez. */
+function fetchGvizSheet(sheetId, gid, parse){
   return new Promise((resolve, reject)=>{
     let settled = false;
     let script = null;
@@ -6596,9 +6848,9 @@ function fetchLiveCatalog(){
       if(settled) return;
       settled = true;
       try{
-        const grouped = parseSheetJson(json);
+        const parsed = parse(json);
         cleanup();
-        resolve(grouped);
+        resolve(parsed);
       } catch(err){
         cleanup();
         reject(err);
@@ -6606,8 +6858,8 @@ function fetchLiveCatalog(){
     };
 
     script = document.createElement("script");
-    script.src = "https://docs.google.com/spreadsheets/d/" + SHEET_CONFIG.sheetId +
-      "/gviz/tq?tqx=out:json&gid=" + SHEET_CONFIG.gid + "&headers=1";
+    script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(sheetId) +
+      "/gviz/tq?tqx=out:json&gid=" + encodeURIComponent(gid) + "&headers=1";
     script.onerror = function(){
       if(settled) return;
       settled = true;
@@ -6658,7 +6910,442 @@ async function loadLiveData(){
   }
 }
 
-loadLiveData();
+/* ============================================================
+   MAPA DE PUNTOS DE VENTA ("Dónde encontrarnos")
+   ============================================================
+   Los comercios salen de la planilla PÚBLICA "Puntos de venta", que se
+   completa sola desde Ruta Fría (solo los clientes marcados para
+   publicar). El botón aparece únicamente si hay clave de Google Maps y
+   al menos un comercio; el mapa de Google se carga recién cuando alguien
+   toca el botón (Google cobra por mapa cargado).
+
+   La clave de Google Maps es pública por naturaleza (va en la página):
+   en Google Cloud tiene que quedar RESTRINGIDA al sitio del catálogo y
+   solo a "Maps JavaScript API", con tope de uso diario. */
+const MAPA_CONFIG = {
+  sheetId: "1dq_2EJzaLDSgn6Ve6F7YoqTtTUutgQqHspgDOA9qp0c",
+  gid: "0",
+  googleMapsKey: "AIzaSyCT0L16_PLRPzW1Tjt3sos9FqqJ4PCSnS0",
+  centro: { lat: -27.4512, lng: -58.9867 }, // Resistencia, por si no hay comercios
+  // Local de RIOMAR: marcador más grande con el logo, siempre encendido.
+  // Mientras lat/lng estén vacíos, no se muestra.
+  local: { nombre: "RIOMAR Pescadería", direccion: "La Rioja 45, Resistencia", lat: -27.4462161, lng: -58.9817962 }
+};
+
+let puntosDeVenta = [];
+
+function parsePuntosJson(json){
+  if(!json || json.status === "error") throw new Error("La planilla de puntos de venta respondió con un error");
+  const cols = (json.table && json.table.cols) || [];
+  const rows = (json.table && json.table.rows) || [];
+  const idx = {};
+  cols.forEach((c, i)=>{ idx[norm((c && c.label) || "").trim()] = i; });
+  const get = (cells, name)=> idx[name] === undefined ? "" : cellText(cells[idx[name]]);
+  const num = (cells, name)=>{
+    const c = idx[name] === undefined ? null : cells[idx[name]];
+    const v = c ? (typeof c.v === "number" ? c.v : parseFloat(String(c.v).replace(",", "."))) : NaN;
+    return isFinite(v) ? v : null;
+  };
+  return rows.map(r=>{
+    const cells = r.c || [];
+    return {
+      nombre: get(cells, "nombre"),
+      direccion: get(cells, "direccion"),
+      lat: num(cells, "latitud"),
+      lng: num(cells, "longitud"),
+      telefono: get(cells, "telefono"),
+      whatsapp: get(cells, "whatsapp"),
+      logo: get(cells, "logo"),
+      horario: get(cells, "horario"),
+      productos: get(cells, "productos").split(",").map(t=>t.trim()).filter(Boolean)
+    };
+  }).filter(p=> p.nombre && p.lat !== null && p.lng !== null &&
+    Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180);
+}
+
+async function cargarPuntosDeVenta(){
+  if(!MAPA_CONFIG.googleMapsKey || !MAPA_CONFIG.sheetId) return;
+  try{
+    puntosDeVenta = await fetchGvizSheet(MAPA_CONFIG.sheetId, MAPA_CONFIG.gid, parsePuntosJson);
+  } catch(e){
+    console.warn("No se pudo leer la planilla de puntos de venta:", e);
+    puntosDeVenta = [];
+  }
+  const lomo = document.getElementById("mapaBtn");
+  lomo.hidden = puntosDeVenta.length === 0 && !localRiomar();
+  if(!lomo.hidden){
+    document.querySelector(".appbar").classList.add("con-lomo");
+    if(!document.querySelector(".mapa-lomo-halo")){
+      const halo = document.createElement("div");
+      halo.className = "mapa-lomo-halo";
+      lomo.after(halo);
+    }
+    reanimarLomo();
+  }
+  armarSugerenciasMapa();
+}
+
+/* Reinicia el latido + brillo (5 veces y queda quieto) */
+function reanimarLomo(){
+  const lomo = document.getElementById("mapaBtn");
+  lomo.classList.remove("anima");
+  void lomo.offsetWidth; // fuerza a reiniciar la animación
+  lomo.classList.add("anima");
+}
+
+function iniciales(nombre){
+  return nombre.split(/\s+/).filter(w=> /^[a-záéíóúñ0-9]/i.test(w)).slice(0, 2).map(w=> w[0]).join("").toUpperCase() || "•";
+}
+
+function rellenarLogo(el, p){
+  el.textContent = "";
+  const src = photoUrl(p.logo, 160);
+  if(src){
+    const img = document.createElement("img");
+    img.alt = "";
+    img.referrerPolicy = "no-referrer";
+    img.src = src;
+    img.addEventListener("error", ()=>{ el.textContent = iniciales(p.nombre); });
+    el.appendChild(img);
+  } else {
+    el.textContent = iniciales(p.nombre);
+  }
+}
+
+const SOLO_DIGITOS = s => String(s || "").replace(/[^\d]/g, "");
+const ICONO_WA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.9-4.45 9.9-9.92C21.94 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.44 1.32-1.98 1.36-.5.05-.98.23-3.32-.69-2.8-1.1-4.58-3.97-4.72-4.15-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.03.97-2.31.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.23.55.78 1.9.85 2.04.07.14.11.3.02.48-.09.18-.14.3-.28.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.57.16.28.72 1.19 1.55 1.92 1.07.95 1.97 1.25 2.25 1.39.28.14.44.12.6-.07.17-.18.69-.8.88-1.08.18-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.28.14.46.21.53.32.07.12.07.67-.18 1.36z"/></svg>';
+const ICONO_TEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>';
+const ICONO_RUTA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>';
+
+function boton(href, html, texto, principal){
+  const a = document.createElement("a");
+  a.href = href;
+  a.target = "_blank";
+  a.rel = "noopener";
+  if(principal) a.className = "is-main";
+  a.innerHTML = html;
+  a.appendChild(document.createTextNode(texto));
+  return a;
+}
+
+/* --- búsqueda de productos en el mapa --- */
+let mapaBusqueda = "";           // texto normalizado de la búsqueda actual
+const pinesMapa = [];             // { p, el } de cada marcador dibujado
+
+function terminosBusqueda(q){
+  return norm(q).split(/\s+/).filter(t=> t.length >= 2);
+}
+function coincide(nombreProducto, terminos){
+  const n = norm(nombreProducto);
+  return terminos.length > 0 && terminos.every(t=> n.includes(t));
+}
+function productosQueCoinciden(p, terminos){
+  return p.productos.filter(x=> coincide(x, terminos));
+}
+// Productos del catálogo de RIOMAR que coinciden (el local tiene todo el catálogo)
+function catalogoQueCoincide(terminos){
+  const vistos = new Set();
+  Object.values(itemRefs).forEach(r=>{ if(coincide(r.nombre, terminos)) vistos.add(r.nombre); });
+  return [...vistos];
+}
+
+function localRiomar(){
+  const l = MAPA_CONFIG.local;
+  if(!l || typeof l.lat !== "number" || typeof l.lng !== "number") return null;
+  const horario = [...document.querySelectorAll(".biz-hours-lines span")].map(e=> e.textContent).join(" · ");
+  return {
+    esRiomar: true,
+    nombre: l.nombre,
+    direccion: l.direccion || "",
+    lat: l.lat, lng: l.lng,
+    telefono: "",
+    whatsapp: SOLO_DIGITOS(BUSINESS.whatsapp),
+    logo: "",
+    horario,
+    productos: []
+  };
+}
+
+function aplicarBusquedaMapa(){
+  const input = document.getElementById("mapaBuscar");
+  const q = input.value.trim();
+  mapaBusqueda = q;
+  document.getElementById("mapaBuscarBorrar").hidden = !q;
+  const terminos = terminosBusqueda(q);
+  const res = document.getElementById("mapaBuscarRes");
+  const buscando = terminos.length > 0;
+  let encendidos = 0;
+  pinesMapa.forEach(({ p, el })=>{
+    if(p.esRiomar){ el.classList.remove("is-off"); return; } // el local siempre encendido
+    const tiene = buscando && productosQueCoinciden(p, terminos).length > 0;
+    el.classList.toggle("is-off", buscando && !tiene);
+    el.classList.toggle("is-hit", tiene);
+    if(tiene) encendidos++;
+  });
+  res.hidden = !buscando;
+  if(buscando){
+    res.textContent = "";
+    const b = document.createElement("b");
+    b.textContent = "«" + q + "»";
+    if(encendidos > 0){
+      res.append(encendidos + (encendidos === 1 ? " comercio tiene " : " comercios tienen "), b, ". Tocá uno para ver el detalle.");
+    } else {
+      res.append("Ningún comercio tiene ", b, " por ahora. Probá con otra palabra o consultanos en nuestro local.");
+    }
+    if(localRiomar()) res.append(" Nuestro local siempre está encendido.");
+  }
+  // Acomodamos el mapa a lo encendido (comercios con el producto + el local)
+  if(mapaGoogle && window.google && google.maps){
+    const visibles = pinesMapa.filter(({ p, el })=> !buscando || p.esRiomar || el.classList.contains("is-hit"));
+    encuadrar(visibles.map(x=> x.p));
+  }
+  // Si hay una ficha abierta, la refrescamos para resaltar lo buscado
+  if(fichaActual) mostrarFicha(fichaActual, pinActivo);
+}
+
+function encuadrar(puntos){
+  if(!mapaGoogle || puntos.length === 0) return;
+  if(puntos.length === 1){
+    mapaGoogle.panTo({ lat: puntos[0].lat, lng: puntos[0].lng });
+    if(mapaGoogle.getZoom() < 14) mapaGoogle.setZoom(15);
+    return;
+  }
+  const limites = new google.maps.LatLngBounds();
+  puntos.forEach(p=> limites.extend({ lat: p.lat, lng: p.lng }));
+  mapaGoogle.fitBounds(limites, 60);
+}
+
+let pinActivo = null;
+let fichaActual = null;
+function mostrarFicha(p, pinEl){
+  fichaActual = p;
+  if(pinActivo) pinActivo.classList.remove("is-active");
+  pinActivo = pinEl || null;
+  if(pinActivo) pinActivo.classList.add("is-active");
+
+  const logoEl = document.getElementById("mapaCardLogo");
+  logoEl.classList.toggle("is-riomar", !!p.esRiomar);
+  if(p.esRiomar) ponerLogoRiomar(logoEl); else rellenarLogo(logoEl, p);
+  document.getElementById("mapaCardName").textContent = p.nombre;
+  document.getElementById("mapaCardDir").textContent = p.direccion;
+  const hor = document.getElementById("mapaCardHor");
+  hor.textContent = p.horario ? "Horario: " + p.horario : "";
+  hor.hidden = !p.horario;
+
+  const btns = document.getElementById("mapaCardBtns");
+  btns.textContent = "";
+  const wa = SOLO_DIGITOS(p.whatsapp);
+  const tel = SOLO_DIGITOS(p.telefono);
+  if(wa.length >= 8) btns.appendChild(boton("https://wa.me/" + wa, ICONO_WA, "WhatsApp", true));
+  if(tel.length >= 6) btns.appendChild(boton("tel:" + tel, ICONO_TEL, "Llamar", wa.length < 8));
+  btns.appendChild(boton("https://www.google.com/maps/dir/?api=1&destination=" + p.lat + "," + p.lng, ICONO_RUTA, "Cómo llegar", false));
+
+  const wrap = document.getElementById("mapaCardProdsWrap");
+  const chips = document.getElementById("mapaCardProds");
+  const etiqueta = wrap.querySelector(".mapa-card-label");
+  const nota = wrap.querySelector(".mapa-card-note");
+  chips.textContent = "";
+  const terminos = terminosBusqueda(mapaBusqueda);
+  // En el local de RIOMAR: está todo el catálogo; si hay búsqueda, se
+  // listan los productos del catálogo que coinciden.
+  let lista, aciertos;
+  if(p.esRiomar){
+    aciertos = terminos.length ? catalogoQueCoincide(terminos) : [];
+    lista = aciertos;
+    etiqueta.textContent = terminos.length
+      ? (aciertos.length ? "En nuestro local tenemos:" : "Consultanos por este producto en el local")
+      : "Todo el catálogo de RIOMAR";
+    nota.textContent = "Precios y stock en el catálogo de esta página.";
+  } else {
+    aciertos = productosQueCoinciden(p, terminos);
+    lista = [...aciertos, ...p.productos.filter(x=> !aciertos.includes(x))];
+    etiqueta.textContent = "Productos RIOMAR que suele tener";
+    nota.textContent = "Consultá disponibilidad con el comercio.";
+  }
+  wrap.hidden = lista.length === 0 && !p.esRiomar;
+  const VISIBLES = 8;
+  function pintar(todos){
+    chips.textContent = "";
+    (todos ? lista : lista.slice(0, VISIBLES)).forEach(nombre=>{
+      const s = document.createElement("span");
+      s.textContent = nombre;
+      if(aciertos.includes(nombre)) s.className = "is-hit";
+      chips.appendChild(s);
+    });
+    if(!todos && lista.length > VISIBLES){
+      const mas = document.createElement("button");
+      mas.type = "button";
+      mas.textContent = "+" + (lista.length - VISIBLES) + " más";
+      mas.addEventListener("click", ()=> pintar(true));
+      chips.appendChild(mas);
+    }
+  }
+  pintar(false);
+  document.getElementById("mapaCard").hidden = false;
+}
+
+function ocultarFicha(){
+  document.getElementById("mapaCard").hidden = true;
+  if(pinActivo) pinActivo.classList.remove("is-active");
+  pinActivo = null;
+  fichaActual = null;
+}
+
+// El logo de RIOMAR ya está en la página (el del encabezado): lo reusamos
+function ponerLogoRiomar(el){
+  el.textContent = "";
+  const img = document.createElement("img");
+  img.alt = "";
+  img.src = document.getElementById("bizLogo").src;
+  el.appendChild(img);
+}
+
+/* Carga el script de Google Maps una sola vez, recién cuando hace falta. */
+let googleMapsPromesa = null;
+function cargarGoogleMaps(){
+  if(googleMapsPromesa) return googleMapsPromesa;
+  googleMapsPromesa = new Promise((resolve, reject)=>{
+    window.__riomarMapaListo = ()=> resolve(window.google.maps);
+    const sc = document.createElement("script");
+    sc.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(MAPA_CONFIG.googleMapsKey) +
+      "&v=weekly&loading=async&callback=__riomarMapaListo&language=es&region=AR";
+    sc.async = true;
+    sc.onerror = ()=>{ googleMapsPromesa = null; reject(new Error("No se pudo cargar Google Maps")); };
+    document.head.appendChild(sc);
+  });
+  return googleMapsPromesa;
+}
+
+let mapaGoogle = null;
+async function abrirMapa(){
+  const overlay = document.getElementById("mapaOverlay");
+  // Igual que el carrito: abrir el mapa agrega un paso al historial, así
+  // el botón "atrás" del celular cierra el mapa en vez de salir del sitio.
+  if(overlay.hidden) pushNavState("mapa");
+  overlay.classList.remove("cerrando");
+  if(overlay.hidden){
+    overlay.classList.add("abriendo");
+    overlay.addEventListener("animationend", ()=> overlay.classList.remove("abriendo"), { once: true });
+    setTimeout(()=> overlay.classList.remove("abriendo"), 900); // por si la animación no avisa que terminó
+  }
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  document.getElementById("mapaSub").textContent =
+    (localRiomar() ? "Nuestro local y " : "") +
+    puntosDeVenta.length + (puntosDeVenta.length === 1 ? " comercio" : " comercios") + " con productos RIOMAR";
+  document.getElementById("mapaError").hidden = true;
+  if(mapaGoogle) return;
+  try{
+    const maps = await cargarGoogleMaps();
+    mapaGoogle = new maps.Map(document.getElementById("mapaCanvas"), {
+      center: MAPA_CONFIG.centro,
+      zoom: 13,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false,
+      clickableIcons: false,
+      gestureHandling: "greedy"
+    });
+    mapaGoogle.addListener("click", ocultarFicha);
+
+    // Marcador propio (el logo redondo) dibujado como capa HTML sobre el mapa
+    class PinLogo extends maps.OverlayView {
+      constructor(p){ super(); this.p = p; }
+      onAdd(){
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "mapa-pin" + (this.p.esRiomar ? " is-riomar" : "");
+        b.setAttribute("aria-label", this.p.nombre);
+        if(this.p.esRiomar) ponerLogoRiomar(b); else rellenarLogo(b, this.p);
+        pinesMapa.push({ p: this.p, el: b });
+        b.addEventListener("click", (e)=>{ e.stopPropagation(); mostrarFicha(this.p, b); });
+        this.el = b;
+        this.getPanes().overlayMouseTarget.appendChild(b);
+      }
+      draw(){
+        const proj = this.getProjection();
+        if(!proj) return; // el mapa todavía no está listo para ubicar el marcador
+        const pos = proj.fromLatLngToDivPixel(new maps.LatLng(this.p.lat, this.p.lng));
+        if(pos && this.el){ this.el.style.left = pos.x + "px"; this.el.style.top = pos.y + "px"; }
+      }
+      onRemove(){ if(this.el) this.el.remove(); }
+    }
+
+    const local = localRiomar();
+    const todos = local ? [...puntosDeVenta, local] : puntosDeVenta;
+    todos.forEach(p=> new PinLogo(p).setMap(mapaGoogle));
+    encuadrar(todos);
+    // Cuando se dibujan los marcadores, aplicamos la búsqueda que haya
+    // escrita (por si la persona empezó a escribir mientras cargaba)
+    maps.event.addListenerOnce(mapaGoogle, "idle", ()=> setTimeout(aplicarBusquedaMapa, 0));
+  } catch(e){
+    console.error(e);
+    document.getElementById("mapaError").hidden = false;
+  }
+}
+
+function cerrarMapa(desdeHistorial){
+  const overlay = document.getElementById("mapaOverlay");
+  if(overlay.hidden || overlay.classList.contains("cerrando")) return;
+  ocultarFicha();
+  if(desdeHistorial !== true) popNavStateIfNeeded("mapa");
+  const terminar = ()=>{
+    overlay.classList.remove("cerrando", "abriendo");
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+  };
+  // Se pliega de vuelta hacia el lomo (sin animación si el celular pide
+  // reducir movimiento)
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ terminar(); return; }
+  overlay.classList.remove("abriendo");
+  overlay.classList.add("cerrando");
+  overlay.addEventListener("animationend", terminar, { once: true });
+  setTimeout(()=>{ if(!overlay.hidden) terminar(); }, 700); // por las dudas
+}
+
+function armarSugerenciasMapa(){
+  const dl = document.getElementById("mapaProductos");
+  dl.textContent = "";
+  const unicos = [...new Set(puntosDeVenta.flatMap(p=> p.productos))].sort((a, b)=> a.localeCompare(b, "es"));
+  unicos.forEach(nombre=>{
+    const o = document.createElement("option");
+    o.value = nombre;
+    dl.appendChild(o);
+  });
+}
+
+let mapaBuscarTimer = null;
+document.getElementById("mapaBuscar").addEventListener("input", ()=>{
+  clearTimeout(mapaBuscarTimer);
+  mapaBuscarTimer = setTimeout(aplicarBusquedaMapa, 250);
+});
+document.getElementById("mapaBuscar").addEventListener("keydown", (e)=>{
+  if(e.key === "Enter"){ e.preventDefault(); e.target.blur(); aplicarBusquedaMapa(); }
+});
+document.getElementById("mapaBuscarBorrar").addEventListener("click", ()=>{
+  const input = document.getElementById("mapaBuscar");
+  input.value = "";
+  aplicarBusquedaMapa();
+  input.focus();
+});
+
+document.getElementById("mapaBtn").addEventListener("click", abrirMapa);
+// En PC, al pasar el mouse por el lomo vuelve a latir
+document.getElementById("mapaBtn").addEventListener("mouseenter", ()=>{
+  if(window.matchMedia("(hover: hover) and (pointer: fine)").matches) reanimarLomo();
+});
+document.getElementById("mapaClose").addEventListener("click", ()=> cerrarMapa());
+document.getElementById("mapaCardClose").addEventListener("click", ocultarFicha);
+document.addEventListener("keydown", (e)=>{
+  if(e.key !== "Escape") return;
+  if(!document.getElementById("mapaCard").hidden) ocultarFicha();
+  else cerrarMapa();
+});
+window.addEventListener("popstate", ()=> cerrarMapa(true));
+
+// Primero el catálogo (precios) y después los puntos de venta: las dos
+// planillas usan la misma función global de Google, de a una por vez.
+loadLiveData().finally(cargarPuntosDeVenta);
 </script>
 </body>
 </html>
