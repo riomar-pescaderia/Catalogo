@@ -7128,6 +7128,42 @@ function rellenarLogo(el, p){
 }
 
 const SOLO_DIGITOS = s => String(s || "").replace(/[^\d]/g, "");
+
+/* Teléfonos argentinos: en Ruta Fría pueden estar cargados de muchas
+   formas ("3624 111222", "4111222", "0362 15 4111222", "549362..."). Se
+   llevan al número nacional de 10 dígitos (característica + número, sin
+   0 ni 15) completando lo que falte; si es un número local de 7 dígitos
+   se asume Resistencia (362). Devuelve { nacional, celular } o null. */
+const CARACTERISTICA_POR_DEFECTO = "362";
+function telefonoAR(raw){
+  let d = SOLO_DIGITOS(raw);
+  if(!d) return null;
+  let celular = false;
+  d = d.replace(/^00/, "");
+  if(d.length > 10 && d.startsWith("54")){
+    d = d.slice(2);
+    if(d.startsWith("9")){ d = d.slice(1); celular = true; }
+  }
+  d = d.replace(/^0/, "");
+  // "15" de celular después de la característica (2, 3 o 4 dígitos)
+  if(d.length === 12){
+    for(const i of [3, 4, 2]){
+      if(d.slice(i, i + 2) === "15"){ d = d.slice(0, i) + d.slice(i + 2); celular = true; break; }
+    }
+  }
+  // número local sin característica (con o sin 15 adelante)
+  if(d.length === 9 && d.startsWith("15")){ d = d.slice(2); celular = true; }
+  if(d.length === 7) d = CARACTERISTICA_POR_DEFECTO + d;
+  return d.length === 10 ? { nacional: d, celular } : null;
+}
+function linkWhatsApp(raw){
+  const t = telefonoAR(raw);
+  return t ? "https://wa.me/549" + t.nacional : "";
+}
+function linkLlamar(raw, esCelular){
+  const t = telefonoAR(raw);
+  return t ? "tel:+54" + (t.celular || esCelular ? "9" : "") + t.nacional : "";
+}
 const ICONO_WA = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.9-4.45 9.9-9.92C21.94 6.45 17.5 2 12.04 2zm5.8 14.03c-.25.69-1.44 1.32-1.98 1.36-.5.05-.98.23-3.32-.69-2.8-1.1-4.58-3.97-4.72-4.15-.14-.18-1.13-1.5-1.13-2.86 0-1.36.71-2.03.97-2.31.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.23.55.78 1.9.85 2.04.07.14.11.3.02.48-.09.18-.14.3-.28.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.57.16.28.72 1.19 1.55 1.92 1.07.95 1.97 1.25 2.25 1.39.28.14.44.12.6-.07.17-.18.69-.8.88-1.08.18-.28.37-.23.62-.14.25.09 1.6.75 1.87.89.28.14.46.21.53.32.07.12.07.67-.18 1.36z"/></svg>';
 const ICONO_TEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>';
 const ICONO_RUTA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>';
@@ -7249,10 +7285,12 @@ function mostrarFicha(p, pinEl){
 
   const btns = document.getElementById("mapaCardBtns");
   btns.textContent = "";
-  const wa = SOLO_DIGITOS(p.whatsapp);
-  const tel = SOLO_DIGITOS(p.telefono);
-  if(wa.length >= 8) btns.appendChild(boton("https://wa.me/" + wa, ICONO_WA, "WhatsApp", true));
-  if(tel.length >= 6) btns.appendChild(boton("tel:" + tel, ICONO_TEL, "Llamar", wa.length < 8));
+  const waLink = linkWhatsApp(p.whatsapp);
+  const tWa = telefonoAR(p.whatsapp), tTel = telefonoAR(p.telefono);
+  // si el teléfono es el mismo número que el WhatsApp, es un celular
+  const telLink = linkLlamar(p.telefono, !!(tWa && tTel && tWa.nacional === tTel.nacional));
+  if(waLink) btns.appendChild(boton(waLink, ICONO_WA, "WhatsApp", true));
+  if(telLink) btns.appendChild(boton(telLink, ICONO_TEL, "Llamar", !waLink));
   btns.appendChild(boton("https://www.google.com/maps/dir/?api=1&destination=" + p.lat + "," + p.lng, ICONO_RUTA, "Cómo llegar", false));
 
   const wrap = document.getElementById("mapaCardProdsWrap");
