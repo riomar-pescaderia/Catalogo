@@ -7156,9 +7156,11 @@ function telefonoAR(raw){
   if(d.length === 7) d = CARACTERISTICA_POR_DEFECTO + d;
   return d.length === 10 ? { nacional: d, celular } : null;
 }
+// Mensaje que aparece ya escrito al tocar "WhatsApp" en la ficha del mapa
+const MENSAJE_WHATSAPP_MAPA = "Hola quisiera consultar por stock de productos de RIOMAR";
 function linkWhatsApp(raw){
   const t = telefonoAR(raw);
-  return t ? "https://wa.me/549" + t.nacional : "";
+  return t ? "https://wa.me/549" + t.nacional + "?text=" + encodeURIComponent(MENSAJE_WHATSAPP_MAPA) : "";
 }
 function linkLlamar(raw, esCelular){
   const t = telefonoAR(raw);
