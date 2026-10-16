@@ -697,19 +697,55 @@
   .app.header-compact .mapa-lomo-label{ display:none; }
   .app.header-compact .appbar.con-lomo .biz-ig{ right:42px; }
 
-  /* el mapa se despliega desde el lomo, como la hoja de un libro */
-  @keyframes libroAbrir{
-    from{ transform:perspective(1400px) rotateY(-88deg); opacity:.6; }
-    to{ transform:perspective(1400px) rotateY(0deg); opacity:1; }
+  /* Esquina doblada ("oreja") arriba a la derecha del encabezado: debajo
+     de la parte doblada asoma el mapa. Late junto con el lomo. */
+  .mapa-oreja{
+    position:absolute; top:0; right:0;
+    width:64px; height:64px;
+    z-index:3;
+    border:0; padding:0; margin:0;
+    background:transparent;
+    cursor:pointer;
+    transform-origin:top right;
   }
-  @keyframes libroCerrar{
-    from{ transform:perspective(1400px) rotateY(0deg); opacity:1; }
-    to{ transform:perspective(1400px) rotateY(-88deg); opacity:.6; }
+  .mapa-oreja-mapa{
+    position:absolute; inset:0;
+    clip-path:polygon(0 0, 100% 0, 100% 100%);
+    background-color:#e8ecef;
+    background-image:
+      repeating-linear-gradient(32deg, transparent 0 13px, #ffffff 13px 17px),
+      repeating-linear-gradient(-58deg, transparent 0 19px, #ffffff 19px 22px),
+      radial-gradient(circle at 74% 30%, #dcaa54 0 5px, transparent 6px);
   }
-  .mapa-overlay{ transform-origin:right center; }
+  .mapa-oreja-sombra{ position:absolute; inset:0; filter:drop-shadow(-3px 4px 4px rgba(0,0,0,.5)); }
+  .mapa-oreja-hoja{
+    position:absolute; inset:0;
+    clip-path:polygon(0 0, 0 100%, 100% 100%);
+    background:linear-gradient(225deg, #fffaf0 0%, #f1e2bd 38%, #d9b46a 72%, #a87a2f 100%);
+  }
+  @keyframes orejaLatido{
+    0%, 22%, 100%{ transform:scale(1); }
+    5%{ transform:scale(1.22); }
+    10%{ transform:scale(1.04); }
+    15%{ transform:scale(1.16); }
+  }
   @media (prefers-reduced-motion: no-preference){
-    .mapa-overlay.abriendo{ animation:libroAbrir .7s cubic-bezier(.2,.7,.25,1) both; }
-    .mapa-overlay.cerrando{ animation:libroCerrar .45s cubic-bezier(.5,0,.75,.3) both; }
+    .mapa-oreja.anima{ animation:orejaLatido 4s ease-in-out 1.2s 5; }
+  }
+  .app.header-compact .mapa-oreja{ width:40px; height:40px; }
+
+  /* Film protector que se despega: durante la animación el mapa se
+     recorta con un triángulo que crece desde la esquina superior derecha
+     hasta la inferior izquierda, y la parte "despegada" se dibuja doblada
+     sobre sí misma (.mapa-film), como el film de una pantalla nueva. */
+  .mapa-film{
+    position:fixed; inset:0; z-index:33;
+    pointer-events:none;
+    filter:drop-shadow(-6px 8px 10px rgba(0,0,0,.45));
+  }
+  .mapa-film-hoja{
+    position:absolute; inset:0;
+    background:linear-gradient(45deg, rgba(255,255,255,.55) 0%, rgba(235,240,245,.92) 45%, rgba(255,255,255,.98) 70%, rgba(205,214,224,.95) 100%);
   }
   .mapa-overlay{
     position:fixed; inset:0; z-index:31;
@@ -6980,6 +7016,18 @@ async function cargarPuntosDeVenta(){
       halo.className = "mapa-lomo-halo";
       lomo.after(halo);
     }
+    if(!document.querySelector(".mapa-oreja")){
+      const oreja = document.createElement("button");
+      oreja.type = "button";
+      oreja.className = "mapa-oreja";
+      oreja.setAttribute("aria-label", "Abrir el mapa de dónde encontrarnos");
+      oreja.innerHTML = '<span class="mapa-oreja-mapa"></span><span class="mapa-oreja-sombra"><span class="mapa-oreja-hoja"></span></span>';
+      oreja.addEventListener("click", abrirMapa);
+      oreja.addEventListener("mouseenter", ()=>{
+        if(window.matchMedia("(hover: hover) and (pointer: fine)").matches) reanimarLomo();
+      });
+      document.querySelector(".appbar").appendChild(oreja);
+    }
     reanimarLomo();
   }
   armarSugerenciasMapa();
@@ -6987,19 +7035,86 @@ async function cargarPuntosDeVenta(){
 
 /* Reinicia el latido + brillo (5 veces y queda quieto) */
 function reanimarLomo(){
-  const lomo = document.getElementById("mapaBtn");
-  lomo.classList.remove("anima");
-  void lomo.offsetWidth; // fuerza a reiniciar la animación
-  lomo.classList.add("anima");
+  [document.getElementById("mapaBtn"), document.querySelector(".mapa-oreja")].forEach(el=>{
+    if(!el) return;
+    el.classList.remove("anima");
+    void el.offsetWidth; // fuerza a reiniciar la animación
+    el.classList.add("anima");
+  });
+}
+
+/* Animación de "film que se despega": t va de la esquina superior
+   derecha (0) hasta cubrir toda la pantalla (ancho + alto). La parte ya
+   despegada muestra el mapa; la solapa doblada es el reflejo de esa
+   parte sobre la línea de despegue. */
+let filmAnimando = null;
+function animarFilm(overlay, abrir, alTerminar){
+  const reducir = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(filmAnimando){ cancelAnimationFrame(filmAnimando); filmAnimando = null; }
+  let film = document.querySelector(".mapa-film");
+  let terminado = false;
+  let respaldo = null;
+  const limpiar = ()=>{
+    if(terminado) return;
+    terminado = true;
+    clearTimeout(respaldo);
+    if(filmAnimando){ cancelAnimationFrame(filmAnimando); }
+    overlay.style.clipPath = "";
+    if(film) film.remove();
+    filmAnimando = null;
+    alTerminar();
+  };
+  if(reducir){ limpiar(); return; }
+  if(!film){
+    film = document.createElement("div");
+    film.className = "mapa-film";
+    film.innerHTML = '<div class="mapa-film-hoja"></div>';
+    document.body.appendChild(film);
+  }
+  const hoja = film.firstChild;
+  const W = window.innerWidth, H = window.innerHeight;
+  const total = W + H;
+  const duracion = abrir ? 950 : 600;
+  const inicio = performance.now();
+  // aceleración suave: arranca despacio (como tirando del film), sigue firme
+  const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+  function cuadro(ahora){
+    const p = Math.min(1, (ahora - inicio) / duracion);
+    const k = abrir ? ease(p) : 1 - ease(p);
+    const t = 40 + k * (total + 80);
+    // lo despegado (mapa visible): triángulo desde la esquina sup. derecha
+    overlay.style.clipPath = "polygon(" + (W - t) + "px 0px, " + W + "px 0px, " + W + "px " + t + "px)";
+    // la solapa doblada: reflejo de ese triángulo sobre la línea de despegue
+    // (solo una franja cerca del borde de despegue, como el film real que se
+    // dobla sobre sí mismo: f = qué tanto de la solapa se ve)
+    const f = 0.3;
+    hoja.style.clipPath = "polygon(" + (W - t) + "px 0px, " + W + "px " + t + "px, " +
+      (W - f * t) + "px " + t + "px, " + (W - t) + "px " + (f * t) + "px)";
+    film.style.opacity = String(Math.max(0, Math.min(1, (1 - k) * 2.2)));
+    if(p < 1){ filmAnimando = requestAnimationFrame(cuadro); }
+    else { limpiar(); }
+  }
+  filmAnimando = requestAnimationFrame(cuadro);
+  // Respaldo: si el navegador frena las animaciones (pestaña de fondo,
+  // ahorro de batería), igual se termina de abrir/cerrar a tiempo.
+  respaldo = setTimeout(limpiar, duracion + 600);
 }
 
 function iniciales(nombre){
   return nombre.split(/\s+/).filter(w=> /^[a-záéíóúñ0-9]/i.test(w)).slice(0, 2).map(w=> w[0]).join("").toUpperCase() || "•";
 }
 
+/* El logo puede venir como imagen cargada en Ruta Fría (data:image/...,
+   ya achicada) o como link de Drive/https. Solo se aceptan imágenes
+   JPG, PNG o WebP en ese formato; cualquier otra cosa se ignora. */
+function logoSrc(v){
+  if(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+={0,2}$/.test(v || "") && v.length <= 50000) return v;
+  return photoUrl(v, 160);
+}
+
 function rellenarLogo(el, p){
   el.textContent = "";
-  const src = photoUrl(p.logo, 160);
+  const src = logoSrc(p.logo);
   if(src){
     const img = document.createElement("img");
     img.alt = "";
@@ -7221,14 +7336,13 @@ async function abrirMapa(){
   const overlay = document.getElementById("mapaOverlay");
   // Igual que el carrito: abrir el mapa agrega un paso al historial, así
   // el botón "atrás" del celular cierra el mapa en vez de salir del sitio.
-  if(overlay.hidden) pushNavState("mapa");
-  overlay.classList.remove("cerrando");
   if(overlay.hidden){
-    overlay.classList.add("abriendo");
-    overlay.addEventListener("animationend", ()=> overlay.classList.remove("abriendo"), { once: true });
-    setTimeout(()=> overlay.classList.remove("abriendo"), 900); // por si la animación no avisa que terminó
+    pushNavState("mapa");
+    overlay.style.clipPath = "polygon(0 0, 0 0, 0 0)"; // arranca tapado
+    overlay.hidden = false;
+    animarFilm(overlay, true, ()=>{});
   }
-  overlay.hidden = false;
+  overlay.classList.remove("cerrando");
   document.body.style.overflow = "hidden";
   document.getElementById("mapaSub").textContent =
     (localRiomar() ? "Nuestro local y " : "") +
@@ -7290,17 +7404,15 @@ function cerrarMapa(desdeHistorial){
   ocultarFicha();
   if(desdeHistorial !== true) popNavStateIfNeeded("mapa");
   const terminar = ()=>{
-    overlay.classList.remove("cerrando", "abriendo");
+    overlay.classList.remove("cerrando");
     overlay.hidden = true;
+    overlay.style.clipPath = "";
     document.body.style.overflow = "";
   };
-  // Se pliega de vuelta hacia el lomo (sin animación si el celular pide
-  // reducir movimiento)
-  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ terminar(); return; }
-  overlay.classList.remove("abriendo");
+  // Se vuelve a "pegar" el film, de la esquina inferior izquierda hacia la
+  // superior derecha (sin animación si el celular pide reducir movimiento)
   overlay.classList.add("cerrando");
-  overlay.addEventListener("animationend", terminar, { once: true });
-  setTimeout(()=>{ if(!overlay.hidden) terminar(); }, 700); // por las dudas
+  animarFilm(overlay, false, terminar);
 }
 
 function armarSugerenciasMapa(){
