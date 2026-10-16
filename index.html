@@ -7156,11 +7156,23 @@ function telefonoAR(raw){
   if(d.length === 7) d = CARACTERISTICA_POR_DEFECTO + d;
   return d.length === 10 ? { nacional: d, celular } : null;
 }
-// Mensaje que aparece ya escrito al tocar "WhatsApp" en la ficha del mapa
+// Mensaje que aparece ya escrito al tocar "WhatsApp" en la ficha del mapa.
+// Si hay algo escrito en el buscador del mapa, se nombra ese producto.
 const MENSAJE_WHATSAPP_MAPA = "Hola quisiera consultar por stock de productos de RIOMAR";
+function mensajeWhatsAppMapa(){
+  let prod = String(mapaBusqueda || "").trim();
+  if(!prod) return MENSAJE_WHATSAPP_MAPA;
+  // si eligió una sugerencia ("BASTONES DE MERLUZA REBOZADOS X KG"),
+  // la dejamos en minúsculas y sin la unidad de venta
+  prod = prod.toLowerCase()
+    .replace(/\s+x\s*(\d+([.,]\d+)?\s*)?(kg|kgs|g|gr|grs|ml|cc|lt|lts|u|un|unid|unidades|laminas)\.?\s*$/i, "")
+    .replace(/\s+/g, " ").trim();
+  if(!prod) return MENSAJE_WHATSAPP_MAPA;
+  return "Hola quisiera consultar por stock de " + prod + " de RIOMAR";
+}
 function linkWhatsApp(raw){
   const t = telefonoAR(raw);
-  return t ? "https://wa.me/549" + t.nacional + "?text=" + encodeURIComponent(MENSAJE_WHATSAPP_MAPA) : "";
+  return t ? "https://wa.me/549" + t.nacional + "?text=" + encodeURIComponent(mensajeWhatsAppMapa()) : "";
 }
 function linkLlamar(raw, esCelular){
   const t = telefonoAR(raw);
