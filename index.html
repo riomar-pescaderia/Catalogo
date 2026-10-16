@@ -7112,19 +7112,127 @@ function logoSrc(v){
   return photoUrl(v, 160);
 }
 
+/* Los logos suelen venir con margen o fondo propio (un cuadrado blanco, un
+   recuadro de color, un logo redondo chico...) y dentro del círculo del
+   mapa quedaban como "un cuadrado adentro del redondo". Esto los acomoda:
+   - recorta el margen del color de las esquinas,
+   - toma como relleno el color que predomina en el borde de lo recortado,
+   - agranda el dibujo (lo que no es fondo ni relleno) hasta que toque el
+     borde del círculo, sin cortarlo.
+   Devuelve una imagen cuadrada lista para mostrar en redondo, o null si no
+   se puede analizar (en ese caso se muestra el logo tal cual). */
+const logosAjustados = new Map();
+function ajustarLogoCirculo(img){
+  const MAXA = 220, SALIDA = 180;
+  const esc = Math.min(1, MAXA / Math.max(img.naturalWidth, img.naturalHeight));
+  const W = Math.max(1, Math.round(img.naturalWidth * esc)), H = Math.max(1, Math.round(img.naturalHeight * esc));
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H); // lo transparente cuenta como blanco
+  ctx.drawImage(img, 0, 0, W, H);
+  const d = ctx.getImageData(0, 0, W, H).data; // tira error si la imagen no lo permite
+  const px = (x, y)=>{ const i = (y * W + x) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+  const parecido = (a, b, tol)=> Math.abs(a[0] - b[0]) <= tol && Math.abs(a[1] - b[1]) <= tol && Math.abs(a[2] - b[2]) <= tol;
+  const TOL = 38;
+  // color que más se repite en un conjunto de puntos
+  function predominante(puntos){
+    const grupos = new Map();
+    puntos.forEach(p=>{
+      const k = (p[0] >> 4) + "," + (p[1] >> 4) + "," + (p[2] >> 4);
+      const g = grupos.get(k) || { n: 0, r: 0, g: 0, b: 0 };
+      g.n++; g.r += p[0]; g.g += p[1]; g.b += p[2];
+      grupos.set(k, g);
+    });
+    let mejor = null;
+    grupos.forEach(g=>{ if(!mejor || g.n > mejor.n) mejor = g; });
+    const color = [Math.round(mejor.r / mejor.n), Math.round(mejor.g / mejor.n), Math.round(mejor.b / mejor.n)];
+    color.parejo = mejor.n / puntos.length; // qué parte del borde es de ese color
+    return color;
+  }
+  function borde(x0, y0, x1, y1){
+    const pts = [];
+    for(let x = x0; x <= x1; x++){ pts.push(px(x, y0), px(x, y1)); }
+    for(let y = y0; y <= y1; y++){ pts.push(px(x0, y), px(x1, y)); }
+    return pts;
+  }
+  // 1) margen exterior: color del borde de toda la imagen
+  const fondo = predominante(borde(0, 0, W - 1, H - 1));
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
+    if(!parecido(px(x, y), fondo, TOL)){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; }
+  }
+  if(x1 < 0) return null; // imagen lisa
+  // se deja afuera el filo del recorte (suele quedar una línea borrosa)
+  if(x1 - x0 > 20 && y1 - y0 > 20){ x0 += 2; y0 += 2; x1 -= 2; y1 -= 2; }
+  const ancho = x1 - x0 + 1, alto = y1 - y0 + 1;
+  const o = document.createElement("canvas");
+  o.width = SALIDA; o.height = SALIDA;
+  const octx = o.getContext("2d");
+  octx.imageSmoothingQuality = "high";
+  // 2) relleno: lo que predomina en el borde de lo recortado
+  const relleno = predominante(borde(x0, y0, x1, y1));
+  // foto o imagen "a sangre": se recorta al centro y llena el círculo
+  const llenar = ()=>{
+    const lado = Math.min(ancho, alto);
+    octx.drawImage(c, x0 + (ancho - lado) / 2, y0 + (alto - lado) / 2, lado, lado, 0, 0, SALIDA, SALIDA);
+    return o.toDataURL("image/png");
+  };
+  if(relleno.parejo < 0.45) return llenar(); // el borde no es de un color parejo
+  // 3) el dibujo: lo que no es margen ni relleno; su centro y su radio
+  const esDibujo = (x, y)=>{ const p = px(x, y); return !parecido(p, fondo, TOL) && !parecido(p, relleno, TOL); };
+  let cx0 = W, cy0 = H, cx1 = -1, cy1 = -1;
+  for(let y = y0; y <= y1; y++) for(let x = x0; x <= x1; x++){
+    if(esDibujo(x, y)){ if(x < cx0) cx0 = x; if(x > cx1) cx1 = x; if(y < cy0) cy0 = y; if(y > cy1) cy1 = y; }
+  }
+  if(cx1 < 0) return llenar();
+  // si el dibujo llega hasta el borde del recorte, no es un logo "flotando"
+  if(cx0 <= x0 + 1 || cy0 <= y0 + 1 || cx1 >= x1 - 1 || cy1 >= y1 - 1) return llenar();
+  const mx = (cx0 + cx1 + 1) / 2, my = (cy0 + cy1 + 1) / 2;
+  let r2 = 0;
+  for(let y = cy0; y <= cy1; y++) for(let x = cx0; x <= cx1; x++){
+    if(esDibujo(x, y)){
+      const dx = Math.max(Math.abs(x - mx), Math.abs(x + 1 - mx)), dy = Math.max(Math.abs(y - my), Math.abs(y + 1 - my));
+      if(dx * dx + dy * dy > r2) r2 = dx * dx + dy * dy;
+    }
+  }
+  const radio = Math.sqrt(r2) || Math.max(cx1 - cx0 + 1, cy1 - cy0 + 1) / 2;
+  // 4) dibujar: relleno + lo recortado, con el dibujo tocando el círculo
+  const k = (SALIDA / 2) * 0.93 / radio;
+  octx.fillStyle = "rgb(" + relleno.join(",") + ")";
+  octx.fillRect(0, 0, SALIDA, SALIDA);
+  octx.drawImage(c, x0, y0, ancho, alto,
+    SALIDA / 2 + (x0 - mx) * k, SALIDA / 2 + (y0 - my) * k, ancho * k, alto * k);
+  return o.toDataURL("image/png");
+}
+
 function rellenarLogo(el, p){
   el.textContent = "";
   const src = logoSrc(p.logo);
-  if(src){
-    const img = document.createElement("img");
-    img.alt = "";
-    img.referrerPolicy = "no-referrer";
+  if(!src){ el.textContent = iniciales(p.nombre); return; }
+  const img = document.createElement("img");
+  img.alt = "";
+  img.referrerPolicy = "no-referrer";
+  el.appendChild(img);
+  if(logosAjustados.has(src)){ img.src = logosAjustados.get(src) || src; return; }
+  // se analiza en una imagen aparte; si algo falla se muestra el logo tal cual
+  const sinAjuste = ()=>{
+    if(!logosAjustados.has(src)) logosAjustados.set(src, null);
+    img.addEventListener("error", ()=>{ el.textContent = iniciales(p.nombre); }, { once: true });
     img.src = src;
-    img.addEventListener("error", ()=>{ el.textContent = iniciales(p.nombre); });
-    el.appendChild(img);
-  } else {
-    el.textContent = iniciales(p.nombre);
-  }
+  };
+  const analisis = new Image();
+  if(!src.startsWith("data:")) analisis.crossOrigin = "anonymous";
+  analisis.referrerPolicy = "no-referrer";
+  analisis.onload = ()=>{
+    let listo = null;
+    try { listo = ajustarLogoCirculo(analisis); } catch(e) { listo = null; }
+    if(!listo) return sinAjuste();
+    logosAjustados.set(src, listo);
+    img.src = listo;
+  };
+  analisis.onerror = sinAjuste;
+  analisis.src = src;
 }
 
 const SOLO_DIGITOS = s => String(s || "").replace(/[^\d]/g, "");
