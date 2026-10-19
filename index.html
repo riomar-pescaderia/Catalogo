@@ -136,31 +136,21 @@
     gap:7px;
     margin:14px 0 8px;
     padding:8px 16px;
-    border-radius:999px;
-    background:linear-gradient(180deg, #e8bd6d 0%, #dcaa54 55%, #c99640 100%);
+    border-radius:12px;
+    background:var(--accent);
     color:var(--accent-ink);
     font-family:'Manrope', sans-serif;
     font-weight:800;
     font-size:.82rem;
     text-decoration:none;
-    box-shadow:
-      0 2px 0 #c79a48,
-      0 4px 0 #b28a3d,
-      0 6px 0 #9c7932,
-      0 8px 3px rgba(0,0,0,.25),
-      0 12px 18px -8px rgba(0,0,0,.6),
-      inset 0 1px 1px rgba(255,255,255,.55),
-      inset 0 -1px 2px rgba(0,0,0,.2);
+    box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
     transition:box-shadow .12s ease, transform .12s ease;
   }
   .biz-ig svg{ width:17px; height:17px; flex:none; }
   .biz-ig:active,
   .biz-ig.is-pressed{
-    transform:translateY(6px);
-    box-shadow:
-      0 1px 0 #c79a48,
-      0 2px 5px rgba(0,0,0,.4),
-      inset 0 1px 1px rgba(255,255,255,.4);
+    transform:scale(.95);
+    box-shadow:0 2px 6px -3px rgba(0,0,0,.6);
   }
   /* Estado compacto: ya NO se activa apenas se entra a una categoría —
      el encabezado se mantiene grande hasta que el usuario baja con el
@@ -363,26 +353,19 @@
     background:var(--accent);
     border:0;
     padding:9px 18px;
-    border-radius:999px;
+    border-radius:12px;
     color:var(--accent-ink);
     font-family:'Manrope', sans-serif;
     font-weight:800;
     font-size:.82rem;
     cursor:pointer;
-    box-shadow:
-      0 2px 0 #c79a48,
-      0 4px 0 #b28a3d,
-      0 6px 0 #9c7932,
-      0 8px 3px rgba(0,0,0,.2),
-      0 12px 18px -8px rgba(0,0,0,.55);
+    box-shadow:0 6px 14px -6px rgba(0,0,0,.6);
     transition:box-shadow .12s ease, transform .12s ease;
   }
   .cat-strip-back:active,
   .cat-strip-back.is-pressed{
-    transform:translateY(6px);
-    box-shadow:
-      0 1px 0 #c79a48,
-      0 2px 5px rgba(0,0,0,.4);
+    transform:scale(.95);
+    box-shadow:0 2px 6px -3px rgba(0,0,0,.6);
   }
   .cat-strip-back svg{ width:14px; height:14px; }
   .cat-strip{
@@ -1011,9 +994,15 @@
     font-weight:800;
     font-size:.86rem;
     padding:14px 20px;
-    border-radius:999px;
+    border-radius:14px;
     cursor:pointer;
     box-shadow:0 10px 24px -8px rgba(246,163,11,.55);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .fab button:active,
+  .fab button.is-pressed{
+    transform:scale(.95);
+    box-shadow:0 4px 12px -6px rgba(246,163,11,.55);
   }
   .fab svg{ width:17px; height:17px; fill:currentColor; flex:none; }
   .cart-badge{
@@ -1291,12 +1280,7 @@
 
     .cat-strip-back:hover:not(:active):not(.is-pressed){
       transform:translateY(-2px);
-      box-shadow:
-        0 3px 0 #c79a48,
-        0 5px 0 #b28a3d,
-        0 7px 0 #9c7932,
-        0 9px 4px rgba(0,0,0,.22),
-        0 14px 20px -8px rgba(0,0,0,.6);
+      box-shadow:0 10px 18px -8px rgba(0,0,0,.65);
     }
 
     .cat-strip-item{ transition:opacity .15s ease, transform .15s ease; }
@@ -1305,14 +1289,7 @@
 
     .biz-ig:hover:not(:active):not(.is-pressed){
       transform:translateY(-2px);
-      box-shadow:
-        0 3px 0 #c79a48,
-        0 5px 0 #b28a3d,
-        0 7px 0 #9c7932,
-        0 9px 4px rgba(0,0,0,.22),
-        0 14px 20px -8px rgba(0,0,0,.6),
-        inset 0 1px 1px rgba(255,255,255,.55),
-        inset 0 -1px 2px rgba(0,0,0,.2);
+      box-shadow:0 10px 18px -8px rgba(0,0,0,.65);
     }
 
     .mapa-lomo:hover{ filter:brightness(1.07); }
@@ -1327,8 +1304,7 @@
     .item-thumb{ transition:transform .15s ease, box-shadow .15s ease; }
     .item-thumb:not(.is-empty):hover{ transform:scale(1.06); box-shadow:0 4px 12px rgba(0,0,0,.45); }
 
-    .fab button{ transition:transform .15s ease, box-shadow .15s ease; }
-    .fab button:hover{ transform:translateY(-3px); box-shadow:0 16px 30px -8px rgba(246,163,11,.7); }
+    .fab button:hover:not(:active):not(.is-pressed){ transform:translateY(-3px); box-shadow:0 16px 30px -8px rgba(246,163,11,.7); }
 
     .cart-close{ transition:background .15s ease, transform .15s ease; }
     .cart-close:hover{ background:var(--line); transform:rotate(90deg); }
@@ -6230,7 +6206,7 @@ window.addEventListener("scroll", ()=>{
    tiempo para que el efecto 3D se note siempre, tanto con mouse como
    con el dedo. */
 (function setupPressFx(){
-  const PRESS_SELECTOR = ".cat-card-btn, .cat-strip-back, .cat-strip-item, .biz-ig";
+  const PRESS_SELECTOR = ".cat-card-btn, .cat-strip-back, .cat-strip-item, .biz-ig, .fab button";
   const MIN_PRESS_MS = 90;
   const pressStart = new WeakMap();
 
