@@ -6926,11 +6926,8 @@ const nutriVacio = document.getElementById("nutriVacio");
 
 function fotoModo(id){
   if(id === "catalogo") return catPhoto("Pescados") || (currentCategoryOrder[0] && catPhoto(currentCategoryOrder[0].nombre));
-  if(id === "recetas"){
-    const r = recetas.find(x => x.foto);
-    return r ? photoUrl(r.foto, 400) : MODO_FOTOS.recetasProducto;
-  }
-  return "img/nutrientes.png?v=2"; // torta de nutrientes (img/nutrientes.png)
+  if(id === "recetas") return "img/recetas.jpg?v=1"; // foto de ingredientes (img/recetas.jpg)
+  return "img/nutrientes.png?v=3"; // torta de nutrientes (img/nutrientes.png)
 }
 function iconoModo(el, m){
   const foto = fotoModo(m.id);
