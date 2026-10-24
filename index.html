@@ -6930,7 +6930,7 @@ function fotoModo(id){
     const r = recetas.find(x => x.foto);
     return r ? photoUrl(r.foto, 400) : MODO_FOTOS.recetasProducto;
   }
-  return "img/nutrientes.png"; // torta de nutrientes (img/nutrientes.png)
+  return "img/nutrientes.png?v=2"; // torta de nutrientes (img/nutrientes.png)
 }
 function iconoModo(el, m){
   const foto = fotoModo(m.id);
