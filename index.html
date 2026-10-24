@@ -853,6 +853,152 @@
     background:var(--accent-soft);
     border-left-color:var(--accent);
   }
+  /* botones chicos de "Recetas" y "Nutrientes" debajo del nombre */
+  .item-extras{ grid-column:2; display:flex; flex-wrap:wrap; gap:6px; }
+  .item-chip{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:4px 9px;
+    border:1px solid var(--accent);
+    border-radius:8px;
+    background:transparent;
+    color:var(--accent);
+    font:inherit; font-size:.72rem; font-weight:700;
+    cursor:pointer;
+    text-decoration:none;
+    transition:transform .12s ease, background .12s ease;
+  }
+  .item-chip svg{ width:13px; height:13px; flex:none; }
+  .item-chip:active, .item-chip.is-pressed{ transform:scale(.95); }
+  @media (hover:hover) and (pointer:fine){
+    .item-chip:hover{ background:var(--accent-soft); }
+  }
+  .cat-intro{ margin:0; padding:12px 16px 4px; font-size:.82rem; color:var(--ink-soft); line-height:1.45; }
+  /* el apartado Nutrientes no se pliega: es una pantalla propia */
+  .category[data-apartado] .cat-chevron, .category[data-apartado] .cat-collapse-btn{ display:none; }
+  .category[data-apartado] .cat-head{ cursor:default; }
+
+  /* buscador de nutrientes */
+  .nb{ padding:12px 16px 6px; }
+  .nb .search-box{ box-shadow:none; }
+  .nb-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .nb-chips .item-chip.on{ background:var(--accent); color:var(--accent-ink); }
+  .nb-info{ margin:10px 0 0; font-size:.78rem; color:var(--ink-soft); line-height:1.45; }
+  .nb-info b{ color:var(--ink); }
+  .item-nutri-val{ grid-column:2; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:.8rem; color:var(--ink-soft); }
+  .item-nutri-val b{ color:var(--accent); font-variant-numeric:tabular-nums; }
+  .item-nutri-val i{ flex:0 0 100%; height:6px; border-radius:4px; background:var(--line); overflow:hidden; max-width:200px; }
+  .item-nutri-val i::before{ content:""; display:block; height:100%; width:var(--pct, 0%); background:var(--accent); }
+  .item-nutri-rank{ font-weight:800; color:var(--ink); }
+
+  /* ---------- pre-menú: Catálogo · Recetas · Nutrientes ---------- */
+  .modo-titulo{
+    font-family:'Bebas Neue', sans-serif; font-weight:400; letter-spacing:.04em;
+    font-size:1.5rem; color:var(--ink); margin:4px 0 12px;
+  }
+  .cat-card-sub{ display:block; font-weight:500; font-size:.72rem; color:var(--ink-soft); margin-top:2px; }
+
+  /* ---------- recetas ---------- */
+  .recetas-view{ padding:8px 20px 28px; }
+  .rec-filtro{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0 0 14px; font-size:.86rem; color:var(--ink-soft); }
+  .rec-filtro b{ color:var(--ink); }
+  .rec-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+  @media (min-width:700px){ .rec-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); } }
+  .rec-card{
+    display:block; padding:0; text-align:left; cursor:pointer;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden;
+    color:var(--ink); font:inherit;
+    transition:transform .12s ease;
+  }
+  .rec-card:active, .rec-card.is-pressed{ transform:scale(.97); }
+  .rec-card .ph{ display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:var(--surface-alt); }
+  .rec-card b{ display:block; padding:9px 10px 2px; font-size:.88rem; line-height:1.3; }
+  .rec-card span{ display:block; padding:0 10px 10px; font-size:.72rem; color:var(--ink-soft); }
+  .rec-vacio{ text-align:center; color:var(--ink-soft); padding:22px 8px; font-size:.9rem; line-height:1.5; }
+  .rec-vacio .item-chip{ margin-top:12px; }
+  .rec-det{ background:var(--surface); border:1px solid var(--line); border-radius:18px; overflow:hidden; margin-top:12px; }
+  .rec-det .ph{ display:block; width:100%; aspect-ratio:16/10; object-fit:cover; background:var(--surface-alt); }
+  .rec-det .bd{ padding:14px 16px 18px; }
+  .rec-det h3{ margin:0 0 4px; font-size:1.18rem; line-height:1.3; }
+  .rec-meta{ font-size:.8rem; color:var(--ink-soft); }
+  .rec-det h4{ margin:16px 0 6px; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+  .rec-comensales{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--accent-soft); border-radius:12px; padding:10px 12px; margin-top:14px;
+    font-size:.88rem; font-weight:700;
+  }
+  .rec-ing{
+    display:grid; grid-template-columns:24px 40px minmax(0,1fr) auto; gap:10px; align-items:center;
+    padding:8px 0; border-bottom:1px solid var(--line); font-size:.84rem; cursor:pointer;
+  }
+  .rec-ing.sin-foto{ grid-template-columns:24px minmax(0,1fr) auto; }
+  .rec-ing input{ width:20px; height:20px; accent-color:var(--accent); margin:0; cursor:pointer; }
+  .rec-ing img{ width:40px; height:40px; border-radius:8px; object-fit:contain; background:#fff; }
+  .rec-ing small{ display:block; color:var(--ink-faint); font-size:.72rem; }
+  .rec-ing b{ color:var(--accent); font-size:.8rem; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .rec-nota{ font-size:.76rem; color:var(--ink-soft); margin:6px 0 0; }
+  .rec-pasos{ margin:0; padding-left:20px; font-size:.86rem; line-height:1.55; }
+  .rec-pasos li + li{ margin-top:4px; }
+  .rec-btn{
+    display:block; width:100%; margin-top:12px; padding:13px;
+    border:0; border-radius:12px; background:var(--accent); color:var(--accent-ink);
+    font:inherit; font-weight:800; font-size:.9rem; cursor:pointer;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .rec-btn:active, .rec-btn.is-pressed{ transform:scale(.97); }
+  .rec-btn:disabled{ opacity:.45; cursor:default; transform:none; }
+  .rec-btn.wa{ background:#25d366; color:#06210f; }
+  .rec-det .item-chip.full{ display:flex; justify-content:center; padding:10px; font-size:.84rem; margin-top:10px; }
+
+  /* ficha de nutrientes */
+  .nutri-overlay{
+    position:fixed; inset:0; z-index:30;
+    background:rgba(7,13,23,.82);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; transition:opacity .18s ease;
+  }
+  .nutri-overlay.open{ opacity:1; }
+  .nutri-box{
+    width:min(100%, 520px);
+    max-height:88vh;
+    overflow-y:auto;
+    background:var(--surface);
+    color:var(--ink);
+    border-radius:18px 18px 0 0;
+    padding:18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -10px 40px rgba(0,0,0,.5);
+    transform:translateY(24px); transition:transform .2s ease;
+  }
+  .nutri-overlay.open .nutri-box{ transform:none; }
+  @media (min-width:700px){
+    .nutri-overlay{ align-items:center; }
+    .nutri-box{ border-radius:18px; }
+  }
+  .nutri-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .nutri-head h3{ margin:0; font-size:1.02rem; line-height:1.3; }
+  .nutri-close{
+    flex:none; width:36px; height:36px; border:0; border-radius:10px;
+    background:var(--surface-alt); color:var(--ink); font-size:1.3rem; line-height:1; cursor:pointer;
+  }
+  .nutri-sub{ margin:4px 0 12px; font-size:.78rem; color:var(--ink-soft); }
+  .nutri-kcal{
+    display:flex; align-items:baseline; gap:6px;
+    background:var(--accent-soft); border-radius:12px; padding:10px 14px; margin-bottom:12px;
+  }
+  .nutri-kcal b{ font-size:1.6rem; color:var(--accent); font-family:'Manrope', sans-serif; }
+  .nutri-kcal span{ font-size:.82rem; color:var(--ink-soft); }
+  .nutri-group{ margin:0 0 12px; }
+  .nutri-group h4{
+    margin:0 0 4px; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent);
+  }
+  .nutri-row{
+    display:flex; justify-content:space-between; gap:12px;
+    padding:6px 0; border-bottom:1px solid var(--line); font-size:.86rem;
+  }
+  .nutri-row.sub{ padding-left:14px; font-size:.8rem; color:var(--ink-soft); }
+  .nutri-row b{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .nutri-src{ margin:12px 0 0; font-size:.7rem; color:var(--ink-faint); line-height:1.45; }
+  .nutri-actions{ display:flex; gap:8px; margin-top:14px; }
+  .nutri-actions .item-chip{ flex:1; justify-content:center; padding:10px; font-size:.82rem; }
   .item-name{
     font-size:.92rem;
     color:var(--ink);
@@ -1464,7 +1610,20 @@
     <p class="search-hint">Para realizar el pedido, carga la cantidad en kg de cada producto - por ejemplo 0,3 = 300g - y tocá "agregar"</p>
   </div>
 
-  <div class="cat-grid-wrap" id="catGridWrap">
+  <div class="cat-grid-wrap" id="modoHome">
+    <div class="modo-titulo">¿Qué querés ver?</div>
+    <div class="cat-grid" id="modoGrid"></div>
+  </div>
+
+  <div class="cat-strip-wrap" id="modoStripWrap" hidden>
+    <button type="button" class="cat-strip-back" id="modoStripBack">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Volver
+    </button>
+    <div class="cat-strip" id="modoStrip"></div>
+  </div>
+
+  <div class="cat-grid-wrap" id="catGridWrap" hidden>
     <div class="cat-grid" id="catGrid"></div>
     <div class="cat-grid-extra-wrap" id="catGridExtraWrap">
       <div class="cat-grid cat-grid-extra" id="catGridExtra"></div>
@@ -1484,6 +1643,8 @@
   </div>
 
   <div class="categories" id="categories"></div>
+  <div class="recetas-view" id="recetasView" hidden></div>
+  <p class="rec-vacio" id="nutriVacio" hidden>Muy pronto vas a ver acá la información nutricional de nuestros pescados y mariscos.</p>
   <p class="no-results" id="noResults" hidden>No encontramos productos que coincidan con tu búsqueda.</p>
 
   <div class="foot">
@@ -1544,6 +1705,10 @@
       <figcaption id="photoViewerName"></figcaption>
     </figure>
     <button type="button" class="photo-viewer-close" aria-label="Cerrar">&times;</button>
+  </div>
+
+  <div class="nutri-overlay" id="nutriOverlay" hidden role="dialog" aria-label="Información nutricional">
+    <div class="nutri-box" id="nutriBox"></div>
   </div>
 
   <div class="cart-overlay" id="cartOverlay" hidden></div>
@@ -5433,7 +5598,9 @@ const CAT_ICONS = {
   "vinos y bebidas": "🍷",
   "carnes": "🥩",
   "utensilios y accesorios": "🍽️",
-  "suplementos": "💊"
+  "suplementos": "💊",
+  "nutrientes": "🥗",
+  "recetas": "🍳"
 };
 // Íconos propios (SVG) para categorías sin un emoji que las represente bien:
 // Rebozados = "patita" de pollo rebozada (una sola pieza tipo muslo, con
@@ -5504,6 +5671,7 @@ function catIcon(nombre){
   return CAT_ICONS_SVG[key] || CAT_ICONS[key] ||
     CAT_ICONS_SVG_FUZZY[fkey] || CAT_ICONS_FUZZY[fkey] || "🛒";
 }
+const MODO_FOTOS = {}; // fotos de las fichas del pre-menú (las arma agregarApartados)
 function catPhoto(nombre){
   const key = norm(nombre);
   const fkey = catKey(nombre);
@@ -5514,6 +5682,12 @@ const sectionByCat = {};
 const catSelectedCountEls = {}; // categoría id -> <span> con la cuenta de seleccionados
 const itemRefs = {};
 const cart = {}; // key -> { qty, nombre, precioTexto, precioNum, categoria }
+// Los apartados "Nutrientes" y "Recetas" muestran productos que ya están
+// en su categoría. Esa copia apunta al producto original (canon): el
+// pedido se guarda una sola vez y las dos filas se ven iguales.
+const twinKeys = {}; // key original -> [keys de las copias]
+function canonKey(key){ return (itemRefs[key] && itemRefs[key].canon) || key; }
+function keysOf(key){ const k = canonKey(key); return [k].concat(twinKeys[k] || []); }
 let currentCategoryOrder = []; // [{id, nombre}] en el orden en que llegaron (planilla o respaldo)
 let activeCategoryId = null; // categoría enfocada (pantalla de detalle), o null si estamos en el inicio
 
@@ -5557,26 +5731,38 @@ function popNavStateIfNeeded(expectedView){
 }
 
 window.addEventListener("popstate", (e)=>{
+  if(typeof saltarPop !== "undefined" && saltarPop) return;
   suppressHistorySync = true;
   const view = e.state && e.state.riomarView;
   if(view === "cart"){
     if(!cartOverlay.classList.contains("open")) openCart();
   } else if(view === "category"){
     if(cartOverlay.classList.contains("open")) closeCart();
+  } else if(view === "modo"){
+    // Dentro de Catálogo / Recetas / Nutrientes (o de una receta)
+    if(cartOverlay.classList.contains("open")) closeCart();
+    if(activeCategoryId) goHome();
+    modo = e.state.modo || "catalogo";
+    recetaAbierta = e.state.receta || null;
+    renderModo();
   } else {
     // Ni carrito ni categoría en este punto del historial: es el
     // inicio (o antes de que la página empezara a navegar sola).
     if(cartOverlay.classList.contains("open")) closeCart();
     if(activeCategoryId) goHome();
+    modo = null;
+    recetaAbierta = null;
+    aplicarVista();
   }
   suppressHistorySync = false;
 });
 
 function updateCatSelectedCounts(){
   const counts = {};
-  Object.values(cart).forEach(it=>{
-    const id = "cat-" + slug(it.categoria);
-    counts[id] = (counts[id] || 0) + 1;
+  Object.entries(cart).forEach(([key, it])=>{
+    const ids = new Set(["cat-" + slug(it.categoria)]);
+    (twinKeys[key] || []).forEach(k=>{ if(itemRefs[k]) ids.add("cat-" + slug(itemRefs[k].categoria)); });
+    ids.forEach(id=>{ counts[id] = (counts[id] || 0) + 1; });
   });
   Object.entries(catSelectedCountEls).forEach(([id, el])=>{
     const n = counts[id] || 0;
@@ -5684,22 +5870,30 @@ function displayPrice(raw){
 }
 
 function addToCart(key, qty){
+  key = canonKey(key);
   const ref = itemRefs[key];
   if(!ref) return;
   cart[key] = { qty, cod: ref.cod, nombre: ref.nombre, precioTexto: ref.precioTexto, precioNum: ref.precioNum, categoria: ref.categoria };
-  ref.li.classList.add("in-cart");
-  ref.addBtn.textContent = "✕ Quitar";
+  keysOf(key).forEach(k=>{
+    const r = itemRefs[k];
+    if(!r) return;
+    r.li.classList.add("in-cart");
+    r.addBtn.textContent = "✕ Quitar";
+    r.qtyInput.value = formatQty(qty);
+  });
   updateCartUI();
 }
 
 function removeFromCart(key){
+  key = canonKey(key);
   if(cart[key]) delete cart[key];
-  const ref = itemRefs[key];
-  if(ref){
-    ref.li.classList.remove("in-cart");
-    ref.addBtn.textContent = "Agregar";
-    ref.qtyInput.value = "1";
-  }
+  keysOf(key).forEach(k=>{
+    const r = itemRefs[k];
+    if(!r) return;
+    r.li.classList.remove("in-cart");
+    r.addBtn.textContent = "Agregar";
+    r.qtyInput.value = "1";
+  });
   updateCartUI();
 }
 
@@ -6335,10 +6529,10 @@ function openCategory(id, scrollTo, exclusive){
       pushNavState("category", { id });
     }
     activeCategoryId = id;
-    document.getElementById("catGridWrap").hidden = true;
     buildCatStrip(id);
     catStripWrap.hidden = false;
     appEl.classList.add("cat-open");
+    aplicarVista();
 
     // Transición tipo "paginado": si venimos de otra categoría (no es
     // la primera vez que se abre una), la que entra se desliza desde
@@ -6384,8 +6578,7 @@ function closeCategory(id, scrollTo){
     catStripWrap.hidden = true;
     appEl.classList.remove("cat-open");
     appEl.classList.remove("header-compact");
-    const q = searchInput.value.trim();
-    if(!q) document.getElementById("catGridWrap").hidden = false;
+    aplicarVista();
     // Si el cierre lo disparó un botón (Volver, "Ver menos", etc.) y
     // no una vuelta con el gesto/botón atrás, sincronizamos el
     // historial retrocediendo nosotros la entrada que habíamos
@@ -6444,7 +6637,9 @@ function renderCategories(categories){
   // (restoreCartFromStorage), buscando cada producto por su código.
   Object.keys(itemRefs).forEach(k=> delete itemRefs[k]);
   Object.keys(cart).forEach(k=> delete cart[k]);
-  currentCategoryOrder = categories.map(cat=> ({ id: "cat-" + slug(cat.nombre), nombre: cat.nombre }));
+  Object.keys(twinKeys).forEach(k=> delete twinKeys[k]);
+  categories = agregarApartados(categories);
+  currentCategoryOrder = categories.filter(cat=> !cat.apartado).map(cat=> ({ id: "cat-" + slug(cat.nombre), nombre: cat.nombre }));
   // Si veníamos de la pantalla de detalle de una categoría (por ejemplo,
   // el catálogo de respaldo se reemplaza en silencio por los datos en
   // vivo apenas cargan), volvemos al inicio: las secciones se
@@ -6464,6 +6659,7 @@ function renderCategories(categories){
     section.className = "category";
     section.id = id;
     section.dataset.name = cat.nombre;
+    if(cat.apartado) section.dataset.apartado = "1";
     section.hidden = true; // arrancamos en la pantalla de inicio (grilla); openCategory() la muestra
 
     const head = document.createElement("button");
@@ -6479,13 +6675,20 @@ function renderCategories(categories){
       '<span class="cat-chevron">⌄</span>';
     head.querySelector(".cat-title").textContent = cat.nombre;
     head.querySelector(".cat-count").textContent = productosOrdenados.length + (productosOrdenados.length===1 ? " producto" : " productos");
-    head.addEventListener("click", ()=> toggleCategory(id));
+    head.addEventListener("click", ()=>{ if(!cat.apartado) toggleCategory(id); });
     section.appendChild(head);
     catSelectedCountEls[id] = head.querySelector(".cat-count-selected");
 
     const card = document.createElement("div");
     card.className = "cat-card";
     card.hidden = true; // plegado por defecto
+    if(cat.intro){
+      const intro = document.createElement("p");
+      intro.className = "cat-intro";
+      intro.textContent = cat.intro;
+      card.appendChild(intro);
+    }
+    if(cat.apartado) card.appendChild(crearBuscadorNutrientes());
     const ul = document.createElement("ul");
     ul.className = "items";
     productosOrdenados.forEach((p, idx)=>{
@@ -6510,6 +6713,7 @@ function renderCategories(categories){
       li.querySelector(".item-name").textContent = p.nombre;
       li.querySelector(".item-price").textContent = displayPrice(p.precio);
       setupItemThumb(li.querySelector(".item-thumb"), p);
+      agregarBotonesExtra(li, p, p.origen || cat.nombre);
 
       const qtyInput = li.querySelector(".item-qty");
       const qtyMinusBtn = li.querySelector(".item-qty-minus");
@@ -6550,6 +6754,7 @@ function renderCategories(categories){
       });
 
       itemRefs[key] = { li, qtyInput, addBtn, cod: p.cod || "", nombre: p.nombre, precioTexto: p.precio, precioNum, categoria: cat.nombre };
+      if(cat.apartado) itemRefs[key].copiaDe = p.origen + "||" + p.nombre;
 
       addBtn.addEventListener("click", ()=>{
         if(li.classList.contains("in-cart")){
@@ -6596,12 +6801,23 @@ function renderCategories(categories){
     sectionByCat[id] = section;
   });
 
-  buildCatGrid(categories);
+  // Enlazamos cada copia de los apartados con su producto original
+  const keyPorProducto = {};
+  Object.entries(itemRefs).forEach(([k, r])=>{ if(!r.copiaDe) keyPorProducto[r.categoria + "||" + r.nombre] = k; });
+  Object.entries(itemRefs).forEach(([k, r])=>{
+    if(!r.copiaDe) return;
+    const orig = keyPorProducto[r.copiaDe];
+    if(!orig) return;
+    r.canon = orig;
+    (twinKeys[orig] = twinKeys[orig] || []).push(k);
+  });
+
+  buildCatGrid(categories.filter(cat=> !cat.apartado));
 
   searchInput.value = "";
   noResults.hidden = true;
-  document.getElementById("catGridWrap").hidden = false;
-  syncStickyOffsets();
+  armarModoHome();
+  if(modo) renderModo(); else aplicarVista();
   restoreCartFromStorage();
   updateCartUI(); // refresca contador y lista aunque no hubiera nada guardado
 }
@@ -6623,6 +6839,7 @@ searchInput.addEventListener("input", ()=>{
   }
 
   Object.entries(sectionByCat).forEach(([id, section])=>{
+    if(q && section.dataset.apartado){ section.hidden = true; return; }
     const items = section.querySelectorAll(".item");
     let visibleInCat = 0;
     items.forEach(li=>{
@@ -6638,7 +6855,7 @@ searchInput.addEventListener("input", ()=>{
   });
 
   noResults.hidden = anyVisible || !q;
-  document.getElementById("catGridWrap").hidden = !!q;
+  aplicarVista();
 });
 
 /* ---------------- lectura en vivo desde Google Sheets ---------------- */
@@ -6690,6 +6907,854 @@ function setupItemThumb(btn, p){
   btn.addEventListener("click", ()=> openPhotoViewer(photoUrl(p.foto, 900), p.nombre));
 }
 
+/* ---------------- pre-menú: Catálogo · Recetas · Nutrientes ----------------
+   Al entrar se ven tres fichas. Al elegir una, quedan como una tira
+   horizontal arriba (igual que la tira de categorías) para saltar entre
+   las tres. "Volver" en esa tira regresa a las tres fichas. */
+let modo = null; // null (inicio) · "catalogo" · "recetas" · "nutrientes"
+const MODOS = [
+  { id: "catalogo", nombre: "Catálogo", sub: "Productos y precios", icono: "🛒" },
+  { id: "recetas", nombre: "Recetas", sub: "Ideas para cocinar", icono: "🍳" },
+  { id: "nutrientes", nombre: "Nutrientes", sub: "Info nutricional", icono: "🥗" }
+];
+const modoHome = document.getElementById("modoHome");
+const modoGrid = document.getElementById("modoGrid");
+const modoStripWrap = document.getElementById("modoStripWrap");
+const modoStrip = document.getElementById("modoStrip");
+const recetasView = document.getElementById("recetasView");
+const nutriVacio = document.getElementById("nutriVacio");
+
+function fotoModo(id){
+  if(id === "catalogo") return catPhoto("Pescados") || (currentCategoryOrder[0] && catPhoto(currentCategoryOrder[0].nombre));
+  if(id === "recetas"){
+    const r = recetas.find(x => x.foto);
+    return r ? photoUrl(r.foto, 400) : MODO_FOTOS.recetasProducto;
+  }
+  return MODO_FOTOS.nutrientes;
+}
+function iconoModo(el, m){
+  const foto = fotoModo(m.id);
+  el.innerHTML = "";
+  el.classList.toggle("has-photo", !!foto);
+  if(foto){
+    const img = document.createElement("img");
+    img.src = foto; img.alt = m.nombre; img.referrerPolicy = "no-referrer";
+    el.appendChild(img);
+  } else {
+    el.textContent = m.icono;
+  }
+}
+function armarModoHome(){
+  modoGrid.innerHTML = "";
+  MODOS.forEach(m=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cat-card-btn";
+    btn.innerHTML = '<span class="cat-card-icon"></span><span class="cat-card-name"></span>';
+    iconoModo(btn.querySelector(".cat-card-icon"), m);
+    const name = btn.querySelector(".cat-card-name");
+    name.textContent = m.nombre;
+    const sub = document.createElement("span");
+    sub.className = "cat-card-sub";
+    sub.textContent = m.sub;
+    name.appendChild(sub);
+    btn.addEventListener("click", ()=> abrirModo(m.id));
+    modoGrid.appendChild(btn);
+  });
+}
+function armarModoStrip(){
+  modoStrip.innerHTML = "";
+  MODOS.forEach(m=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cat-strip-item" + (m.id === modo ? " active" : "");
+    btn.innerHTML = '<span class="cat-strip-photo"></span><span class="cat-strip-label"></span>';
+    iconoModo(btn.querySelector(".cat-strip-photo"), m);
+    btn.querySelector(".cat-strip-label").textContent = m.nombre;
+    btn.addEventListener("click", ()=>{ if(m.id !== modo) abrirModo(m.id); });
+    modoStrip.appendChild(btn);
+  });
+}
+let saltarPop = false;
+function sinRecetaEnHistorial(fn){
+  if(history.state && history.state.receta){
+    saltarPop = true;
+    window.addEventListener("popstate", ()=>{ saltarPop = false; fn(); }, { once: true });
+    history.back();
+  } else {
+    fn();
+  }
+}
+function abrirModo(id){
+  if(history.state && history.state.receta){ sinRecetaEnHistorial(()=> abrirModo(id)); return; }
+  const desdeInicio = modo === null;
+  modo = id;
+  recetaAbierta = null;
+  if(id === "recetas") filtroReceta = null;
+  if(desdeInicio) pushNavState("modo", { modo: id }); else replaceNavState("modo", { modo: id });
+  renderModo();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function renderModo(){
+  armarModoStrip();
+  if(modo === "recetas") renderRecetas();
+  aplicarVista();
+}
+document.getElementById("modoStripBack").addEventListener("click", ()=>{
+  sinRecetaEnHistorial(()=>{
+    modo = null;
+    recetaAbierta = null;
+    aplicarVista();
+    popNavStateIfNeeded("modo");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+// Qué se ve según el modo, si hay una categoría abierta o una búsqueda
+function aplicarVista(){
+  const q = searchInput.value.trim();
+  const enCat = !!activeCategoryId;
+  const libre = !q && !enCat;
+  modoHome.hidden = !libre || modo !== null;
+  modoStripWrap.hidden = !libre || modo === null;
+  document.getElementById("catGridWrap").hidden = !libre || modo !== "catalogo";
+  recetasView.hidden = !libre || modo !== "recetas";
+  const nutriSec = document.querySelector("section.category[data-apartado]");
+  if(nutriSec && !q){
+    const ver = libre && modo === "nutrientes";
+    nutriSec.hidden = !ver;
+    nutriSec.classList.toggle("open", ver);
+    nutriSec.querySelector(".cat-card").hidden = !ver;
+  }
+  nutriVacio.hidden = !libre || modo !== "nutrientes" || !!nutriSec;
+  syncStickyOffsets();
+}
+
+/* ---------------- recetas (pestaña "Recetas" de la planilla pública) ----------------
+   Una fila por ingrediente. Columnas: Receta · Porciones · Tiempo · Foto ·
+   Ingrediente · Código · Cantidad · Unidad · Pasos. El nombre, las
+   porciones, el tiempo, la foto y los pasos alcanza con ponerlos en la
+   primera fila de cada receta. Con Código, el ingrediente es un producto
+   del catálogo (se puede agregar al pedido); sin código, es algo para
+   comprar en otro lado (verduras, etc.). Los pasos van uno por renglón
+   dentro de la celda, o separados con "|". */
+const RECETAS_HOJA = "Recetas";
+let recetas = [];
+let filtroReceta = null;   // { cod, nombre } al venir desde un producto
+let recetaAbierta = null;  // id de la receta que se está viendo
+const comensalesPorReceta = {};
+const destildadosPorReceta = {}; // productos nuestros que el cliente destildó
+const faltantesPorReceta = {};   // lo que tildó como "me falta"
+
+function numReceta(t){
+  const v = parseFloat(String(t || "").replace(",", "."));
+  return isFinite(v) && v > 0 ? v : null;
+}
+function parseRecetasJson(json){
+  if(!json || json.status === "error") throw new Error("No hay pestaña de recetas");
+  const cols = (json.table && json.table.cols) || [];
+  const rows = (json.table && json.table.rows) || [];
+  const c = {
+    nombre: findColumn(cols, ["receta", "plato"]),
+    porciones: findColumn(cols, ["porcion", "comensal"]),
+    tiempo: findColumn(cols, ["tiempo"]),
+    foto: findColumn(cols, ["foto", "imagen"]),
+    ing: findColumn(cols, ["ingred"]),
+    cod: findColumn(cols, ["cod"]),
+    cant: findColumn(cols, ["cant"]),
+    unidad: findColumn(cols, ["unidad", "medida"]),
+    pasos: findColumn(cols, ["paso", "prepar"])
+  };
+  if(c.nombre === -1 || c.ing === -1) throw new Error("Faltan las columnas Receta / Ingrediente");
+  const val = (cells, i) => i === -1 ? "" : cellText(cells[i]);
+  const lista = [];
+  let actual = null;
+  rows.forEach(r=>{
+    const cells = r.c || [];
+    const nombre = val(cells, c.nombre);
+    if(nombre && (!actual || norm(nombre) !== norm(actual.nombre))){
+      actual = { id: "r-" + slug(nombre) + "-" + lista.length, nombre, porciones: 2, tiempo: "", foto: "", pasos: [], ingredientes: [] };
+      lista.push(actual);
+    }
+    if(!actual) return;
+    const porc = numReceta(val(cells, c.porciones));
+    if(porc) actual.porciones = porc;
+    if(!actual.tiempo) actual.tiempo = val(cells, c.tiempo);
+    if(!actual.foto) actual.foto = val(cells, c.foto);
+    const pasos = val(cells, c.pasos);
+    if(pasos) actual.pasos = actual.pasos.concat(pasos.split(/\n|\|/).map(t => t.trim().replace(/^\d+[.)-]\s*/, "")).filter(Boolean));
+    const ing = val(cells, c.ing);
+    const cod = val(cells, c.cod);
+    if(ing || cod) actual.ingredientes.push({ nombre: ing, cod, cant: numReceta(val(cells, c.cant)), unidad: val(cells, c.unidad) });
+  });
+  return lista.filter(r => r.ingredientes.length);
+}
+async function cargarRecetas(){
+  try{
+    recetas = await fetchGvizSheet(SHEET_CONFIG.sheetId, null, parseRecetasJson, RECETAS_HOJA);
+  }catch(err){
+    recetas = [];
+  }
+  armarModoHome();
+  if(modo) renderModo();
+}
+
+// Producto del catálogo por su código (el original, no una copia de un apartado)
+function productoPorCod(cod){
+  if(!cod) return null;
+  const k = Object.keys(itemRefs).find(key => !itemRefs[key].copiaDe && String(itemRefs[key].cod).trim() === String(cod).trim());
+  return k ? { key: k, ref: itemRefs[k] } : null;
+}
+function fotoDeProducto(ref){
+  const img = ref && ref.li.querySelector(".item-thumb img");
+  return img ? img.src : "";
+}
+function recetaUsa(r, p){
+  return r.ingredientes.some(i => (p.cod && String(i.cod).trim() === String(p.cod).trim()) ||
+    (!p.cod && i.nombre && norm(p.nombre).includes(norm(i.nombre))));
+}
+
+// "Recetas" desde un producto del catálogo
+function irRecetasDe(p){
+  const wasSuppressed = suppressHistorySync;
+  suppressHistorySync = true;
+  if(activeCategoryId) closeCategory(activeCategoryId);
+  if(searchInput.value.trim()){ searchInput.value = ""; searchInput.dispatchEvent(new Event("input")); }
+  suppressHistorySync = wasSuppressed;
+  const desdeInicio = !(history.state && (history.state.riomarView === "modo" || history.state.riomarView === "category"));
+  modo = "recetas";
+  filtroReceta = { cod: p.cod || "", nombre: p.nombre };
+  recetaAbierta = null;
+  if(desdeInicio) pushNavState("modo", { modo: "recetas" }); else replaceNavState("modo", { modo: "recetas" });
+  renderModo();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function botonGoogle(nombre, texto){
+  const a = document.createElement("a");
+  a.className = "item-chip";
+  a.href = linkRecetas(nombre);
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.innerHTML = ICONO_RECETA + "<span></span>";
+  a.querySelector("span").textContent = texto || ("Buscar recetas con " + nombreParaReceta(nombre) + " en Google");
+  return a;
+}
+
+function renderRecetas(){
+  recetasView.innerHTML = "";
+  const r = recetaAbierta && recetas.find(x => x.id === recetaAbierta);
+  if(r){ renderDetalleReceta(r); return; }
+  recetaAbierta = null;
+  const lista = filtroReceta ? recetas.filter(x => recetaUsa(x, filtroReceta)) : recetas;
+  if(filtroReceta){
+    const f = document.createElement("div");
+    f.className = "rec-filtro";
+    f.innerHTML = "<span>Recetas con <b></b></span>";
+    f.querySelector("b").textContent = nombreParaReceta(filtroReceta.nombre);
+    const todas = document.createElement("button");
+    todas.type = "button";
+    todas.className = "item-chip";
+    todas.textContent = "✕ Ver todas";
+    todas.addEventListener("click", ()=>{ filtroReceta = null; renderRecetas(); });
+    f.appendChild(todas);
+    recetasView.appendChild(f);
+  }
+  if(!lista.length){
+    const v = document.createElement("div");
+    v.className = "rec-vacio";
+    v.textContent = filtroReceta
+      ? "Todavía no tenemos recetas propias con este producto."
+      : "Estamos preparando nuestras recetas. ¡Muy pronto las vas a ver acá!";
+    if(filtroReceta){ v.appendChild(document.createElement("br")); v.appendChild(botonGoogle(filtroReceta.nombre)); }
+    recetasView.appendChild(v);
+    return;
+  }
+  const grid = document.createElement("div");
+  grid.className = "rec-grid";
+  lista.forEach(x=>{
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "rec-card";
+    const foto = x.foto ? photoUrl(x.foto, 500) : fotoDeProducto((x.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
+    card.innerHTML = (foto ? '<img class="ph" alt="" referrerpolicy="no-referrer">' : '<span class="ph"></span>') + "<b></b><span></span>";
+    if(foto) card.querySelector("img").src = foto;
+    card.querySelector("b").textContent = x.nombre;
+    card.querySelector("span:last-child").textContent = [x.tiempo, x.porciones + (x.porciones === 1 ? " porción" : " porciones")].filter(Boolean).join(" · ");
+    card.addEventListener("click", ()=>{
+      recetaAbierta = x.id;
+      pushNavState("modo", { modo: "recetas", receta: x.id });
+      renderRecetas();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    grid.appendChild(card);
+  });
+  recetasView.appendChild(grid);
+  if(filtroReceta){
+    const g = document.createElement("div");
+    g.className = "rec-vacio";
+    g.appendChild(botonGoogle(filtroReceta.nombre, "Más ideas en Google"));
+    recetasView.appendChild(g);
+  }
+}
+
+// Cantidades según los comensales
+const UNIDADES_ENTERAS = /^(u|un|unid|unidad|unidades|diente|dientes|planta|plantas|atado|atados|lata|latas|paquete|paquetes|sobre|sobres)$/;
+function cantEscalada(cant, escala, unidad){
+  if(cant === null) return null;
+  const x = cant * escala;
+  const u = norm(unidad || "");
+  if(UNIDADES_ENTERAS.test(u)) return Math.max(0.5, Math.ceil(x * 2) / 2);
+  if(/^(g|gr|grs|gramos|ml|cc)$/.test(u)) return x >= 100 ? Math.round(x / 10) * 10 : Math.max(1, Math.round(x));
+  return Math.round(x * 10) / 10;
+}
+const PLURALES = { cda: "cdas", cdita: "cditas", planta: "plantas", diente: "dientes", taza: "tazas", lata: "latas",
+  paquete: "paquetes", sobre: "sobres", atado: "atados", rama: "ramas", hoja: "hojas", pizca: "pizcas", vaso: "vasos", feta: "fetas" };
+function textoCant(x, unidad){
+  let u = (unidad || "").trim();
+  if(x !== null && x > 1 && PLURALES[u.toLowerCase()]) u = PLURALES[u.toLowerCase()];
+  if(x === null) return u || "a gusto";
+  const f = n => Number(n.toFixed(2)).toLocaleString("es-AR", { maximumFractionDigits: 2 });
+  if(/^(g|gr|grs|gramos)$/i.test(u) && x >= 1000) return f(x / 1000) + " kg";
+  if(/^(ml|cc)$/i.test(u) && x >= 1000) return f(x / 1000) + " l";
+  return f(x) + (u ? " " + u : "");
+}
+// Cuánto se agrega al pedido: los productos por kilo, los kilos de la
+// receta; los envasados, una unidad (o las unidades que pida la receta).
+function cantPedido(i, ref, escala){
+  const x = cantEscalada(i.cant, escala, i.unidad);
+  const u = norm(i.unidad || "");
+  if(/\bx\s*kg\b/i.test(ref.nombre)){
+    let kg = null;
+    if(x !== null && /^(g|gr|grs|gramos)$/.test(u)) kg = x / 1000;
+    else if(x !== null && /^(kg|kilo|kilos)$/.test(u)) kg = x;
+    if(kg === null) kg = 0.5;
+    return Math.max(0.1, Math.round(kg * 20) / 20);
+  }
+  if(x !== null && /^(u|un|unid|unidad|unidades)$/.test(u)) return Math.max(1, Math.ceil(x));
+  return 1;
+}
+
+function renderDetalleReceta(r){
+  const n = comensalesPorReceta[r.id] || r.porciones;
+  const escala = n / r.porciones;
+  const destildados = destildadosPorReceta[r.id] = destildadosPorReceta[r.id] || new Set();
+  const faltan = faltantesPorReceta[r.id] = faltantesPorReceta[r.id] || new Set();
+
+  const volver = document.createElement("button");
+  volver.type = "button";
+  volver.className = "item-chip";
+  volver.textContent = "‹ Todas las recetas";
+  volver.addEventListener("click", ()=>{
+    if(history.state && history.state.receta) history.back();
+    else { recetaAbierta = null; renderRecetas(); }
+  });
+  recetasView.appendChild(volver);
+
+  const det = document.createElement("div");
+  det.className = "rec-det";
+  const nuestros = [], otros = [];
+  r.ingredientes.forEach((i, idx)=>{
+    const prod = productoPorCod(i.cod);
+    if(prod) nuestros.push({ i, idx, prod }); else otros.push({ i, idx });
+  });
+  const foto = r.foto ? photoUrl(r.foto, 900) : (nuestros[0] ? fotoDeProducto(nuestros[0].prod.ref) : "");
+  if(foto){
+    const img = document.createElement("img");
+    img.className = "ph"; img.alt = ""; img.referrerPolicy = "no-referrer"; img.src = foto;
+    det.appendChild(img);
+  }
+  const bd = document.createElement("div");
+  bd.className = "bd";
+  det.appendChild(bd);
+  const h = document.createElement("h3");
+  h.textContent = r.nombre;
+  bd.appendChild(h);
+  if(r.tiempo){
+    const m = document.createElement("div");
+    m.className = "rec-meta";
+    m.textContent = "⏱ " + r.tiempo;
+    bd.appendChild(m);
+  }
+
+  // comensales
+  const com = document.createElement("div");
+  com.className = "rec-comensales";
+  com.innerHTML = '<span>¿Para cuántos comensales?</span>' +
+    '<div class="item-qty-stepper">' +
+      '<button type="button" class="item-qty-step" aria-label="Menos comensales">−</button>' +
+      '<input class="item-qty" type="text" inputmode="numeric" aria-label="Comensales">' +
+      '<button type="button" class="item-qty-step" aria-label="Más comensales">+</button>' +
+    '</div>';
+  const inp = com.querySelector("input");
+  inp.value = n;
+  const setN = v=>{
+    v = Math.min(40, Math.max(1, Math.round(v) || 1));
+    comensalesPorReceta[r.id] = v;
+    const y = window.scrollY;
+    renderRecetas();
+    window.scrollTo(0, y);
+  };
+  const [menos, mas] = com.querySelectorAll(".item-qty-step");
+  menos.addEventListener("click", ()=> setN(n - 1));
+  mas.addEventListener("click", ()=> setN(n + 1));
+  inp.addEventListener("change", ()=> setN(parseInt(inp.value, 10)));
+  bd.appendChild(com);
+
+  // ingredientes de la pescadería
+  if(nuestros.length){
+    const t = document.createElement("h4");
+    t.textContent = "De nuestra pescadería";
+    bd.appendChild(t);
+    nuestros.forEach(({ i, idx, prod })=>{
+      const row = document.createElement("label");
+      const fotoP = fotoDeProducto(prod.ref);
+      row.className = "rec-ing" + (fotoP ? "" : " sin-foto");
+      row.innerHTML = '<input type="checkbox">' + (fotoP ? '<img alt="" referrerpolicy="no-referrer">' : "") +
+        "<span><span class=\"n\"></span><small></small></span><b></b>";
+      const chk = row.querySelector("input");
+      chk.checked = !destildados.has(idx);
+      chk.addEventListener("change", ()=>{ if(chk.checked) destildados.delete(idx); else destildados.add(idx); actualizarBoton(); });
+      if(fotoP) row.querySelector("img").src = fotoP;
+      row.querySelector(".n").textContent = i.nombre || prod.ref.nombre;
+      row.querySelector("small").textContent = prod.ref.nombre + " · " + displayPrice(prod.ref.precioTexto);
+      row.querySelector("b").textContent = textoCant(cantEscalada(i.cant, escala, i.unidad), i.unidad);
+      bd.appendChild(row);
+    });
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "rec-btn";
+    function actualizarBoton(){
+      const k = nuestros.filter(x => !destildados.has(x.idx)).length;
+      btn.disabled = k === 0;
+      btn.textContent = k === 0 ? "Tildá lo que querés pedir" : "Agregar " + k + (k === 1 ? " producto" : " productos") + " al pedido";
+    }
+    actualizarBoton();
+    btn.addEventListener("click", ()=>{
+      nuestros.filter(x => !destildados.has(x.idx)).forEach(({ i, prod })=>{
+        addToCart(prod.key, cantPedido(i, prod.ref, escala));
+      });
+      btn.textContent = "✓ Agregado al pedido";
+      setTimeout(actualizarBoton, 1800);
+    });
+    bd.appendChild(btn);
+    const nota = document.createElement("p");
+    nota.className = "rec-nota";
+    nota.textContent = "Los productos por kilo se agregan con la cantidad de la receta; los envasados, por unidad. Lo podés ajustar en el pedido.";
+    bd.appendChild(nota);
+  }
+
+  // lo que se consigue en otro lado
+  if(otros.length){
+    const t = document.createElement("h4");
+    t.textContent = "Para conseguir en otro lado";
+    bd.appendChild(t);
+    const ayuda = document.createElement("p");
+    ayuda.className = "rec-nota";
+    ayuda.style.margin = "0 0 4px";
+    ayuda.textContent = "Tildá lo que te falta y mandate la lista por WhatsApp para el súper.";
+    bd.appendChild(ayuda);
+    otros.forEach(({ i, idx })=>{
+      const row = document.createElement("label");
+      row.className = "rec-ing sin-foto";
+      row.innerHTML = '<input type="checkbox"><span></span><b></b>';
+      const chk = row.querySelector("input");
+      chk.checked = faltan.has(idx);
+      chk.addEventListener("change", ()=>{ if(chk.checked) faltan.add(idx); else faltan.delete(idx); actualizarWa(); });
+      row.querySelector("span").textContent = i.nombre || i.cod;
+      row.querySelector("b").textContent = textoCant(cantEscalada(i.cant, escala, i.unidad), i.unidad);
+      bd.appendChild(row);
+    });
+    const wa = document.createElement("button");
+    wa.type = "button";
+    wa.className = "rec-btn wa";
+    function actualizarWa(){
+      const k = faltan.size;
+      wa.disabled = k === 0;
+      wa.textContent = k === 0 ? "Tildá lo que te falta" : "Mandarme la lista por WhatsApp (" + k + ")";
+    }
+    actualizarWa();
+    wa.addEventListener("click", ()=>{
+      const lineas = otros.filter(x => faltan.has(x.idx))
+        .map(({ i }) => "• " + (i.nombre || i.cod) + " — " + textoCant(cantEscalada(i.cant, escala, i.unidad), i.unidad));
+      const texto = "🛒 Me falta comprar para «" + r.nombre + "» (" + n + (n === 1 ? " comensal" : " comensales") + "):\n\n" +
+        lineas.join("\n") + "\n\nReceta de RIOMAR Pescadería";
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+    });
+    bd.appendChild(wa);
+  }
+
+  // paso a paso
+  if(r.pasos.length){
+    const t = document.createElement("h4");
+    t.textContent = "Paso a paso";
+    bd.appendChild(t);
+    const ol = document.createElement("ol");
+    ol.className = "rec-pasos";
+    r.pasos.forEach(p=>{ const li = document.createElement("li"); li.textContent = p; ol.appendChild(li); });
+    bd.appendChild(ol);
+  }
+  recetasView.appendChild(det);
+}
+
+/* ---------------- recetas y nutrientes ---------------- */
+// Categorías donde no tiene sentido buscar recetas
+const SIN_RECETAS = ["utensilios", "vinos", "bebidas", "suplemento"];
+function admiteRecetas(categoria){
+  const k = norm(categoria);
+  return !SIN_RECETAS.some(x => k.includes(x));
+}
+// "FILET DE MERLUZA X KG" -> "filet de merluza" (sin unidades ni marcas)
+function nombreParaReceta(nombre){
+  return String(nombre || "").toLowerCase()
+    .replace(/\s+x\s*(\d+([.,]\d+)?\s*)?(kg|kgs|g|gr|grs|ml|cc|lt|lts|u|un|unid|unidades|laminas)\.?\b.*$/i, "")
+    .replace(/\b(cultivo dorado|teko|oferta|premium|superbe|al vacio|c\/piel|con pollera|sin cabeza|1\/2 valva|enter[oa]s?|eviscerad[oa]s?|despinad[oa]s?|mariposa|pelad[oa]s?|devenad[oa]s?|tiernizad[oa]s?|trozad[oa]s?|feteado|mediano|grande|chico)\b/g, "")
+    .replace(/[()]/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+function linkRecetas(nombre){
+  return "https://www.google.com/search?q=" + encodeURIComponent("recetas con " + nombreParaReceta(nombre));
+}
+
+const ICONO_RECETA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 13.9A4 4 0 1 1 8.1 6.4a5 5 0 0 1 7.8 0A4 4 0 1 1 18 13.9V20H6z"/><path d="M6 17h12"/></svg>';
+const ICONO_NUTRI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.2-6"/></svg>';
+
+function agregarBotonesExtra(li, p, categoriaOriginal){
+  const conReceta = admiteRecetas(categoriaOriginal);
+  const datos = p.nutri ? nutrientesDe(p.nombre, categoriaOriginal) : null;
+  if(!conReceta && !datos) return;
+  const fila = document.createElement("div");
+  fila.className = "item-extras";
+  if(conReceta){
+    const a = document.createElement("button");
+    a.type = "button";
+    a.className = "item-chip";
+    a.innerHTML = ICONO_RECETA + "<span>Recetas</span>";
+    a.setAttribute("aria-label", "Ver recetas con " + nombreParaReceta(p.nombre));
+    a.addEventListener("click", ()=> irRecetasDe(p));
+    fila.appendChild(a);
+  }
+  if(datos){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "item-chip";
+    b.innerHTML = ICONO_NUTRI + "<span>Nutrientes</span>";
+    b.addEventListener("click", ()=> abrirNutrientes(p, datos));
+    fila.appendChild(b);
+  }
+  li.querySelector(".item-name").after(fila);
+}
+
+// Arma los apartados "Nutrientes" y "Recetas" con copias de productos
+// que ya están en sus categorías, y los ubica después de Mariscos.
+function agregarApartados(categories){
+  const reales = categories.filter(c => !c.apartado);
+  const copia = (p, cat) => Object.assign({}, p, { origen: cat.nombre });
+  const nutri = [];
+  reales.forEach(cat => cat.productos.forEach(p=>{ if(p.nutri && nutrientesDe(p.nombre, cat.nombre)) nutri.push(copia(p, cat)); }));
+  // fotos de las fichas del pre-menú, tomadas de productos reales
+  const todos = [];
+  reales.forEach(cat => cat.productos.forEach(p => todos.push(p)));
+  const fotoDe = (lista, preferido) => {
+    const p = lista.find(x => x.foto && preferido.test(norm(x.nombre))) || lista.find(x => x.foto);
+    return p ? photoUrl(p.foto, 400) : null;
+  };
+  MODO_FOTOS.nutrientes = fotoDe(nutri.length ? nutri : todos, /salmon rosado filet/);
+  MODO_FOTOS.recetasProducto = fotoDe(todos, /langostino entero|pulpo/);
+  if(!nutri.length) return reales;
+  // el apartado no figura entre las categorías: se ve desde "Nutrientes"
+  return reales.concat([{ nombre: "Nutrientes", apartado: true, productos: nutri,
+    intro: "Buscá un nutriente o una vitamina y te mostramos qué pescados y mariscos aportan más, de mayor a menor. Tocá «Nutrientes» en cada uno para ver su ficha completa." }]);
+}
+
+/* Tabla de nutrientes por especie, por 100 g de porción comestible cruda.
+   Fuentes: Tabla de Composición de Alimentos ARGENFOODS (Universidad
+   Nacional de Luján) para especies locales, y USDA FoodData Central (SR
+   Legacy) para las importadas o de criadero. Cada especie usa una sola
+   fuente: no se mezclan datos de especies distintas. */
+const FUENTE_ARG = "Tabla de Composición de Alimentos ARGENFOODS, Universidad Nacional de Luján";
+const FUENTE_USDA = "USDA FoodData Central (SR Legacy)";
+const NUTRI_DB = {
+  merluza:   { f: FUENTE_ARG, ref: "Merluza, fresca, cruda, carne", v: { kcal:81, prot:17.1, grasa:1.3, carb:0.1, na:91, k:262, ca:21, p:216, fe:1.9, b1:0.1, b2:0.3, niacina:1.2, vitC:1.1 } },
+  abadejo:   { f: FUENTE_ARG, ref: "Abadejo, fresco, crudo, carne", v: { kcal:72, prot:15.8, grasa:0.9, carb:0.2 } },
+  lenguado:  { f: FUENTE_ARG, ref: "Lenguado, fresco, crudo, carne", v: { kcal:78, prot:17.5, grasa:0.8, carb:0.2, b1:0.1, b2:0.3, niacina:3.5, vitC:1.8 } },
+  mero:      { f: FUENTE_ARG, ref: "Mero, fresco, crudo, carne", v: { kcal:83, prot:17.9, grasa:1.0, carb:0.5 } },
+  besugo:    { f: FUENTE_ARG, ref: "Besugo, fresco, crudo, carne", v: { kcal:100, prot:20.4, grasa:2.0, carb:0, na:84, k:264, ca:17, p:228, fe:1.8, zn:3.3, b1:0.1, b2:0.4, niacina:8.0 } },
+  corvina:   { f: FUENTE_ARG, ref: "Corvina blanca, fresca, cruda, carne", v: { kcal:97, prot:19.5, grasa:1.9, carb:0.4, b1:0.1, b2:0.2, niacina:3.1, vitC:2.9 } },
+  pejerrey:  { f: FUENTE_ARG, ref: "Pejerrey de agua dulce, fresco, crudo, carne", v: { kcal:77, prot:18.3, grasa:0.4, na:68, k:256, ca:20, p:210, fe:1.9 } },
+  surubi:    { f: FUENTE_ARG, ref: "Surubí, fresco, crudo, carne", v: { kcal:110, prot:18.2, grasa:4.0, carb:0.2, na:72, k:276, ca:20, p:203, fe:1.9 } },
+  sabalo:    { f: FUENTE_ARG, ref: "Sábalo, fresco, crudo, músculo dorsal", v: { kcal:145, prot:18.0, grasa:8.1, sat:2.1, mono:2.4, poli:0.6, ca:10, fe:0.6 } },
+  boga:      { f: FUENTE_ARG, ref: "Boga, fresca, cruda, músculo ventral", v: { kcal:180, prot:18.5, grasa:11.8 } },
+  gallo:     { f: FUENTE_ARG, ref: "Pez gallo, fresco, crudo, carne", v: { kcal:84, prot:20.2, grasa:0.4 } },
+  anchoita:  { f: FUENTE_ARG, ref: "Anchoíta, fresca, cruda, carne", v: { kcal:129, prot:19.2, grasa:5.4, carb:0.8 } },
+  anchoa:    { f: FUENTE_ARG, ref: "Anchoa, fresca, cruda, carne", v: { kcal:92, prot:21.5, grasa:0.4, carb:0.5, na:80, k:266, ca:20, p:220, fe:1.4, b1:0.2, b2:0.5, niacina:15.8 } },
+  cornalito: { f: FUENTE_ARG, ref: "Cornalito, fresco, crudo, entero", v: { kcal:86, prot:16.0, grasa:2.2, carb:0.6, na:90, k:296, ca:680, p:590, fe:2.0 } },
+  caballa:   { f: FUENTE_ARG, ref: "Caballa, fresca, cruda, carne", v: { kcal:232, prot:22.0, grasa:15.8, carb:0.4 } },
+  calamar:   { f: FUENTE_ARG, ref: "Calamar, fresco, crudo (tubo, aletas y tentáculos)", v: { kcal:79, prot:18.4, grasa:0.6 } },
+  langostino:{ f: FUENTE_ARG, ref: "Langostino, fresco, crudo, carne de cola", v: { kcal:97, prot:22.0, grasa:0.9, carb:0.2 } },
+  camaron:   { f: FUENTE_ARG, ref: "Camarón, fresco, crudo, carne de cola", v: { kcal:91, prot:21.0, grasa:0.8, carb:0 } },
+  mejillon:  { f: FUENTE_ARG, ref: "Mejillón, fresco, crudo, carne", v: { kcal:64, prot:11.9, grasa:1.1, carb:1.7, na:289, k:315, ca:88, p:236, fe:5.8, b1:0, b2:0.3, niacina:2.9 } },
+  centolla:  { f: FUENTE_ARG, ref: "Centolla, fresca (carne de pata)", v: { kcal:83, prot:18.8, grasa:0.8, carb:0 } },
+  salmon:    { f: FUENTE_USDA, ref: "Salmón del Atlántico de criadero, crudo (FDC 175167)", v: { kcal:208, prot:20.4, grasa:13.4, carb:0, sat:3.05, mono:3.77, poli:3.89, epa:0.862, dha:1.1, colest:55, na:59, k:363, ca:9, p:240, mg:27, fe:0.34, zn:0.36, se:24, vitA:58, vitD:11, vitE:3.55, b1:0.207, b2:0.155, niacina:8.67, b6:0.636, b12:3.23, vitC:3.9 } },
+  salmonAhumado: { f: FUENTE_USDA, ref: "Salmón ahumado (chinook) (FDC 173687)", v: { kcal:117, prot:18.3, grasa:4.32, carb:0, sat:0.929, mono:2.02, poli:0.995, epa:0.183, dha:0.267, colest:23, na:672, k:175, ca:11, p:164, mg:18, fe:0.85, zn:0.31, se:32.4, vitA:26, vitD:17.1, vitE:1.35, b1:0.023, b2:0.101, niacina:4.72, b6:0.278, b12:3.26, vitC:0 } },
+  trucha:    { f: FUENTE_USDA, ref: "Trucha arcoíris de criadero, cruda (FDC 173717)", v: { kcal:141, prot:19.9, grasa:6.18, carb:0, sat:1.38, mono:1.98, poli:1.51, epa:0.217, dha:0.516, colest:59, na:51, k:377, ca:25, p:226, mg:25, fe:0.31, zn:0.45, se:23.6, vitA:84, vitD:15.9, vitE:2.34, b1:0.12, b2:0.09, niacina:5.57, b6:0.34, b12:4.3, vitC:2.9 } },
+  atun:      { f: FUENTE_USDA, ref: "Atún rojo, fresco, crudo (FDC 173706)", v: { kcal:144, prot:23.3, grasa:4.9, carb:0, sat:1.26, mono:1.6, poli:1.43, epa:0.283, dha:0.89, colest:38, na:39, k:252, ca:8, p:254, mg:50, fe:1.02, zn:0.6, se:36.5, vitA:655, vitD:5.7, vitE:1, b1:0.241, b2:0.251, niacina:8.65, b6:0.455, b12:9.43, vitC:0 } },
+  bacalao:   { f: FUENTE_USDA, ref: "Bacalao del Atlántico, crudo (FDC 171955)", v: { kcal:82, prot:17.8, grasa:0.67, carb:0, sat:0.131, mono:0.094, poli:0.231, epa:0.064, dha:0.12, colest:43, na:54, k:413, ca:16, p:203, mg:32, fe:0.38, zn:0.45, se:33.1, vitA:12, vitD:0.9, vitE:0.64, b1:0.076, b2:0.065, niacina:2.06, b6:0.245, b12:0.91, vitC:1 } },
+  tilapia:   { f: FUENTE_USDA, ref: "Tilapia, cruda (FDC 175176)", v: { kcal:96, prot:20.1, grasa:1.7, carb:0, sat:0.585, mono:0.498, poli:0.363, epa:0.005, dha:0.086, colest:50, na:52, k:302, ca:10, p:170, mg:27, fe:0.56, zn:0.33, se:41.8, vitA:0, vitD:3.1, vitE:0.4, b1:0.041, b2:0.063, niacina:3.9, b6:0.162, b12:1.58, vitC:0 } },
+  pulpo:     { f: FUENTE_USDA, ref: "Pulpo común, crudo (FDC 174218)", v: { kcal:82, prot:14.9, grasa:1.04, carb:2.2, sat:0.227, mono:0.162, poli:0.239, epa:0.076, dha:0.081, colest:48, na:230, k:350, ca:53, p:186, mg:30, fe:5.3, zn:1.68, se:44.8, vitA:45, vitD:0, vitE:1.2, b1:0.03, b2:0.04, niacina:2.1, b6:0.36, b12:20, vitC:5 } },
+  vieyra:    { f: FUENTE_USDA, ref: "Vieiras, crudas (FDC 174220)", v: { kcal:69, prot:12.1, grasa:0.49, carb:3.18, sat:0.128, mono:0.048, poli:0.13, epa:0.042, dha:0.061, colest:24, na:392, k:205, ca:6, p:334, mg:22, fe:0.38, zn:0.91, se:12.8, vitA:1, vitD:0, vitE:0, b1:0.007, b2:0.015, niacina:0.703, b6:0.073, b12:1.41, vitC:0 } },
+  almeja:    { f: FUENTE_USDA, ref: "Almejas, crudas (FDC 174214)", v: { kcal:86, prot:14.7, grasa:0.96, carb:3.57, sat:0.187, mono:0.12, poli:0.192, epa:0.043, dha:0.064, colest:30, na:601, k:46, ca:39, p:198, mg:19, fe:1.62, zn:0.51, se:30.6, vitA:90, vitD:0, vitE:0.68, b1:0.015, b2:0.04, niacina:0.35, b6:0.01, b12:11.3, vitC:0 } },
+  ostra:     { f: FUENTE_USDA, ref: "Ostras, crudas (FDC 171978)", v: { kcal:51, prot:5.71, grasa:1.71, carb:2.72, sat:0.474, mono:0.253, poli:0.528, epa:0.177, dha:0.136, colest:40, na:85, k:156, ca:59, p:97, mg:18, fe:4.61, zn:39.3, se:19.7, vitA:13, vitD:0, vitE:0.85, b1:0.018, b2:0.09, niacina:0.925, b6:0.031, b12:8.75, vitC:0 } },
+  kanikama:  { f: FUENTE_USDA, ref: "Surimi (FDC 173702)", v: { kcal:99, prot:15.2, grasa:0.9, carb:6.85, sat:0.191, mono:0.149, poli:0.443, epa:0.157, dha:0.241, colest:30, na:143, k:112, ca:9, p:282, mg:43, fe:0.26, zn:0.33, se:28.1, vitA:20, vitE:0.63, b1:0.02, b2:0.021, niacina:0.22, b6:0.03, b12:1.6, vitC:0 } }
+};
+// Qué especie corresponde a cada producto (el primer patrón que coincide).
+// Los que no tienen datos confiables (pacú, salmón blanco, salmón de río,
+// pangasius, pollo de mar, sardinas, productos procesados) no se informan.
+const NUTRI_MATCH = [
+  [/pasta de|molida|bocadito|simil|tinta|mix|rebozad|romana|medallon|formita|hamburgues|vizcain|escabeche|en aceite|al natural|lata/, null],
+  [/salmon blanco|salmon de rio/, null],
+  [/salmon.*ahumad|ahumad.*salmon/, "salmonAhumado"],
+  [/salmon/, "salmon"], [/trucha/, "trucha"], [/atun/, "atun"], [/bacalao/, "bacalao"], [/tilapia/, "tilapia"],
+  [/merluza/, "merluza"], [/abadejo/, "abadejo"], [/lenguado/, "lenguado"], [/\bmero\b/, "mero"], [/besugo/, "besugo"],
+  [/corvina/, "corvina"], [/pejerrey/, "pejerrey"], [/surubi/, "surubi"], [/sabalo/, "sabalo"], [/\bboga\b/, "boga"],
+  [/\bgallo\b/, "gallo"], [/anchoit/, "anchoita"], [/anchoa/, "anchoa"], [/cornalito/, "cornalito"], [/caballa/, "caballa"],
+  [/calamar/, "calamar"], [/pulp/, "pulpo"], [/langostino/, "langostino"], [/camaron/, "camaron"], [/mejillon/, "mejillon"],
+  [/almeja/, "almeja"], [/vieyra/, "vieyra"], [/ostra/, "ostra"], [/centolla/, "centolla"], [/kanikama/, "kanikama"]
+];
+function nutrientesDe(nombre, categoria){
+  // los valores son de pescado crudo: no sirven para rebozados ni elaborados
+  if(categoria && /rebozad|conserva/.test(norm(categoria))) return null;
+  const n = norm(nombre);
+  for(const [re, clave] of NUTRI_MATCH){ if(re.test(n)) return clave ? NUTRI_DB[clave] : null; }
+  return null;
+}
+const NUTRI_FILAS = [
+  ["Macronutrientes", [
+    ["prot", "Proteínas", "g"], ["grasa", "Grasas totales", "g"],
+    ["sat", "Saturadas", "g", 1], ["mono", "Monoinsaturadas", "g", 1], ["poli", "Poliinsaturadas", "g", 1],
+    ["omega3", "Omega-3 (EPA + DHA)", "g", 1], ["carb", "Carbohidratos", "g"], ["colest", "Colesterol", "mg"]]],
+  ["Minerales", [
+    ["na", "Sodio", "mg"], ["k", "Potasio", "mg"], ["ca", "Calcio", "mg"], ["p", "Fósforo", "mg"],
+    ["mg", "Magnesio", "mg"], ["fe", "Hierro", "mg"], ["zn", "Zinc", "mg"], ["se", "Selenio", "µg"]]],
+  ["Vitaminas", [
+    ["vitA", "Vitamina A", "µg"], ["vitD", "Vitamina D", "µg"], ["vitE", "Vitamina E", "mg"],
+    ["b1", "Tiamina (B1)", "mg"], ["b2", "Riboflavina (B2)", "mg"], ["niacina", "Niacina (B3)", "mg"],
+    ["b6", "Vitamina B6", "mg"], ["b12", "Vitamina B12", "µg"], ["vitC", "Vitamina C", "mg"]]]
+];
+function numNutri(x){
+  const d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
+  return Number(x.toFixed(d)).toLocaleString("es-AR", { maximumFractionDigits: d });
+}
+/* ---------- buscador de nutrientes ----------
+   Ordena los productos del apartado de mayor a menor según cuánto
+   aportan del nutriente elegido (por cada 100 g). Los que no tienen ese
+   dato en su fuente quedan afuera de la lista mientras se filtra. */
+const NUTRI_BUSCABLES = [
+  ["kcal", "Calorías", "kcal", "calorias energia kcal"],
+  ["prot", "Proteínas", "g", "proteina proteinas"],
+  ["grasa", "Grasas totales", "g", "grasa grasas lipidos"],
+  ["omega3", "Omega-3 (EPA + DHA)", "g", "omega omega 3 omega-3 epa dha"],
+  ["poli", "Grasas poliinsaturadas", "g", "poliinsaturadas"],
+  ["mono", "Grasas monoinsaturadas", "g", "monoinsaturadas"],
+  ["sat", "Grasas saturadas", "g", "saturadas"],
+  ["carb", "Carbohidratos", "g", "carbohidratos hidratos"],
+  ["colest", "Colesterol", "mg", "colesterol"],
+  ["na", "Sodio", "mg", "sodio sal"],
+  ["k", "Potasio", "mg", "potasio"],
+  ["ca", "Calcio", "mg", "calcio"],
+  ["p", "Fósforo", "mg", "fosforo"],
+  ["mg", "Magnesio", "mg", "magnesio"],
+  ["fe", "Hierro", "mg", "hierro"],
+  ["zn", "Zinc", "mg", "zinc"],
+  ["se", "Selenio", "µg", "selenio"],
+  ["vitA", "Vitamina A", "µg", "vitamina a retinol"],
+  ["vitD", "Vitamina D", "µg", "vitamina d"],
+  ["vitE", "Vitamina E", "mg", "vitamina e"],
+  ["b1", "Tiamina (B1)", "mg", "tiamina b1 vitamina b1"],
+  ["b2", "Riboflavina (B2)", "mg", "riboflavina b2 vitamina b2"],
+  ["niacina", "Niacina (B3)", "mg", "niacina b3 vitamina b3"],
+  ["b6", "Vitamina B6", "mg", "b6 vitamina b6"],
+  ["b12", "Vitamina B12", "µg", "b12 vitamina b12 cobalamina"],
+  ["vitC", "Vitamina C", "mg", "vitamina c"]
+];
+const NUTRI_RAPIDOS = ["prot", "omega3", "vitD", "b12", "fe", "ca", "se", "zn"];
+function valorNutri(datos, clave){
+  const v = datos && datos.v;
+  if(!v) return null;
+  if(clave === "omega3") return (v.epa != null && v.dha != null) ? v.epa + v.dha : null;
+  return v[clave] != null ? v[clave] : null;
+}
+function buscarNutriente(q){
+  const n = norm(q).trim();
+  if(!n) return [];
+  return NUTRI_BUSCABLES.filter(([, nombre, , sin]) => norm(nombre).includes(n) || sin.split(" ").some(w => w.startsWith(n)) || norm(sin).includes(n));
+}
+let nutrienteElegido = null;
+function crearBuscadorNutrientes(){
+  const box = document.createElement("div");
+  box.className = "nb";
+  box.innerHTML =
+    '<div class="search-box">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>' +
+      '<input type="text" placeholder="Buscar un nutriente: omega 3, hierro, vitamina D…" autocomplete="off" aria-label="Buscar un nutriente">' +
+    '</div>' +
+    '<div class="nb-chips"></div>' +
+    '<p class="nb-info" hidden></p>';
+  const input = box.querySelector("input");
+  const chips = box.querySelector(".nb-chips");
+  const info = box.querySelector(".nb-info");
+  function pintarChips(lista){
+    chips.innerHTML = "";
+    lista.forEach(([clave, nombre])=>{
+      const c = document.createElement("button");
+      c.type = "button";
+      c.className = "item-chip" + (clave === nutrienteElegido ? " on" : "");
+      c.textContent = nombre;
+      c.addEventListener("click", ()=>{
+        if(nutrienteElegido === clave){ elegir(null); return; }
+        input.value = nombre;
+        elegir(clave);
+      });
+      chips.appendChild(c);
+    });
+  }
+  function rapidos(){ return NUTRI_RAPIDOS.map(k => NUTRI_BUSCABLES.find(x => x[0] === k)); }
+  function elegir(clave){
+    nutrienteElegido = clave;
+    if(!clave) input.value = "";
+    ordenarPorNutriente(box, clave, info);
+    pintarChips(clave ? [NUTRI_BUSCABLES.find(x => x[0] === clave)] : rapidos());
+  }
+  input.addEventListener("input", ()=>{
+    const res = buscarNutriente(input.value);
+    if(!input.value.trim()){ elegir(null); return; }
+    if(res.length === 1){ nutrienteElegido = null; elegir(res[0][0]); input.value = input.value; return; }
+    nutrienteElegido = null;
+    ordenarPorNutriente(box, null, info);
+    pintarChips(res.length ? res : []);
+    if(!res.length){ info.hidden = false; info.textContent = "No encontramos ese nutriente. Probá con: proteínas, omega 3, hierro, calcio, vitamina D o B12."; }
+  });
+  input.addEventListener("keydown", e=>{
+    if(e.key !== "Enter") return;
+    e.preventDefault();
+    const res = buscarNutriente(input.value);
+    if(res.length){ input.value = res[0][1]; elegir(res[0][0]); }
+    input.blur();
+  });
+  pintarChips(rapidos());
+  return box;
+}
+function ordenarPorNutriente(box, clave, info){
+  const ul = box.parentElement && box.parentElement.querySelector("ul.items");
+  if(!ul) return;
+  const items = [...ul.children];
+  items.forEach(li=>{
+    if(li.__ordenOriginal === undefined) li.__ordenOriginal = items.indexOf(li);
+    const v = li.querySelector(".item-nutri-val");
+    if(v) v.remove();
+  });
+  if(!clave){
+    items.sort((a, b) => a.__ordenOriginal - b.__ordenOriginal).forEach(li=>{ li.hidden = false; ul.appendChild(li); });
+    info.hidden = true;
+    return;
+  }
+  const def = NUTRI_BUSCABLES.find(x => x[0] === clave);
+  const conValor = [], sinValor = [];
+  items.forEach(li=>{
+    const ref = Object.values(itemRefs).find(r => r.li === li);
+    const origen = ref && ref.copiaDe ? ref.copiaDe.split("||")[0] : "";
+    const val = ref ? valorNutri(nutrientesDe(ref.nombre, origen), clave) : null;
+    (val === null || val <= 0 ? sinValor : conValor).push({ li, val });
+  });
+  conValor.sort((a, b) => b.val - a.val);
+  const max = conValor.length ? conValor[0].val : 0;
+  conValor.forEach(({ li, val }, i)=>{
+    li.hidden = false;
+    const row = document.createElement("div");
+    row.className = "item-nutri-val";
+    row.innerHTML = '<span class="item-nutri-rank"></span><b></b><i></i>';
+    row.querySelector(".item-nutri-rank").textContent = (i + 1) + "º";
+    row.querySelector("b").textContent = numNutri(val) + " " + def[2] + " cada 100 g";
+    row.querySelector("i").style.setProperty("--pct", (max > 0 ? Math.max(4, val / max * 100) : 0) + "%");
+    li.querySelector(".item-name").after(row);
+    ul.appendChild(li);
+  });
+  sinValor.forEach(({ li })=>{ li.hidden = true; ul.appendChild(li); });
+  info.hidden = false;
+  info.innerHTML = "";
+  const b = document.createElement("b");
+  b.textContent = def[1];
+  info.append("Ordenados por ", b, ", de mayor a menor (cada 100 g de producto crudo).");
+  if(sinValor.length) info.append(" No se muestran " + sinValor.length + (sinValor.length === 1 ? " producto que no lo aporta" : " productos que no lo aportan") + " o no tienen el dato en su fuente.");
+  if(!conValor.length){ info.textContent = "Ninguno de los productos tiene el dato de " + def[1] + " en su fuente."; }
+}
+
+const nutriOverlay = document.getElementById("nutriOverlay");
+const nutriBox = document.getElementById("nutriBox");
+function abrirNutrientes(p, datos){
+  const v = Object.assign({}, datos.v);
+  if(v.epa != null && v.dha != null) v.omega3 = v.epa + v.dha;
+  nutriBox.innerHTML = "";
+  const head = document.createElement("div");
+  head.className = "nutri-head";
+  head.innerHTML = '<h3></h3><button type="button" class="nutri-close" aria-label="Cerrar">&times;</button>';
+  head.querySelector("h3").textContent = p.nombre;
+  head.querySelector(".nutri-close").addEventListener("click", cerrarNutrientes);
+  nutriBox.appendChild(head);
+  const sub = document.createElement("p");
+  sub.className = "nutri-sub";
+  sub.textContent = "Valores por cada 100 g de producto crudo";
+  nutriBox.appendChild(sub);
+  if(v.kcal != null){
+    const k = document.createElement("div");
+    k.className = "nutri-kcal";
+    k.innerHTML = "<b></b><span>kcal de energía</span>";
+    k.querySelector("b").textContent = numNutri(v.kcal);
+    nutriBox.appendChild(k);
+  }
+  NUTRI_FILAS.forEach(([titulo, filas])=>{
+    const presentes = filas.filter(f => v[f[0]] != null);
+    if(!presentes.length) return;
+    const g = document.createElement("div");
+    g.className = "nutri-group";
+    const h = document.createElement("h4");
+    h.textContent = titulo;
+    g.appendChild(h);
+    presentes.forEach(([clave, etiqueta, unidad, esSub])=>{
+      const row = document.createElement("div");
+      row.className = "nutri-row" + (esSub ? " sub" : "");
+      row.innerHTML = "<span></span><b></b>";
+      row.querySelector("span").textContent = etiqueta;
+      row.querySelector("b").textContent = numNutri(v[clave]) + " " + unidad;
+      g.appendChild(row);
+    });
+    nutriBox.appendChild(g);
+  });
+  const src = document.createElement("p");
+  src.className = "nutri-src";
+  src.textContent = "Fuente: " + datos.f + " · " + datos.ref + ". Valores orientativos de referencia: pueden variar según el origen, la temporada y la preparación.";
+  nutriBox.appendChild(src);
+  const acciones = document.createElement("div");
+  acciones.className = "nutri-actions";
+  const receta = document.createElement("button");
+  receta.type = "button";
+  receta.className = "item-chip";
+  receta.innerHTML = ICONO_RECETA + "<span>Ver recetas</span>";
+  receta.addEventListener("click", ()=>{ cerrarNutrientes(); irRecetasDe(p); });
+  acciones.appendChild(receta);
+  nutriBox.appendChild(acciones);
+  nutriOverlay.hidden = false;
+  nutriBox.scrollTop = 0;
+  requestAnimationFrame(()=> nutriOverlay.classList.add("open"));
+}
+function cerrarNutrientes(){
+  if(nutriOverlay.hidden) return;
+  nutriOverlay.classList.remove("open");
+  setTimeout(()=>{ nutriOverlay.hidden = true; }, 200);
+}
+nutriOverlay.addEventListener("click", (e)=>{ if(e.target === nutriOverlay) cerrarNutrientes(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") cerrarNutrientes(); });
+window.addEventListener("popstate", cerrarNutrientes);
+
 const photoViewer = document.getElementById("photoViewer");
 const photoViewerImg = document.getElementById("photoViewerImg");
 const photoViewerName = document.getElementById("photoViewerName");
@@ -6734,13 +7799,17 @@ function parseSheetJson(json){
   const priceIdx = findColumn(cols, ["precio", "pcio"]);
   const codIdx = findColumn(cols, ["cod"]);
   const fotoIdx = findColumn(cols, ["foto", "imagen"]);
+  // Columnas opcionales: "Nutrición" (una X = se muestran sus nutrientes)
+  // y "Receta" (una X = aparece en el apartado Recetas).
+  const nutriIdx = findColumn(cols, ["nutri"]);
+  const recetaIdx = findColumn(cols, ["receta"]);
 
   // Si no encontramos la columna de categoría por su encabezado (por
   // ejemplo porque esa celda está vacía en la planilla), pero las otras
   // tres sí se identificaron, y queda exactamente una columna sin usar:
   // es casi seguro que esa es la de categoría, aunque no tenga título.
   if(catIdx === -1 && prodIdx !== -1 && priceIdx !== -1){
-    const used = new Set([prodIdx, priceIdx, codIdx, fotoIdx].filter(i => i !== -1));
+    const used = new Set([prodIdx, priceIdx, codIdx, fotoIdx, nutriIdx, recetaIdx].filter(i => i !== -1));
     const sinUsar = [];
     for(let i = 0; i < cols.length; i++){
       if(!used.has(i)) sinUsar.push(i);
@@ -6776,7 +7845,8 @@ function parseSheetJson(json){
     // estático de respaldo).
     const precioNum = parsePrice(precio);
     const precioFinal = (precioNum === null || precioNum === 0) ? "Consultar" : precio;
-    byName[categoria].productos.push({ cod, nombre: producto, precio: precioFinal, foto });
+    const marcado = idx => idx !== -1 && /^\s*x\s*$/i.test(cellText(cells[idx]));
+    byName[categoria].productos.push({ cod, nombre: producto, precio: precioFinal, foto, nutri: marcado(nutriIdx), receta: marcado(recetaIdx) });
   });
 
   if(grouped.length === 0) throw new Error("La planilla no devolvió filas");
@@ -6808,7 +7878,7 @@ function fetchLiveCatalog(){
 /* Lee una pestaña pública de Google Sheets (mismo mecanismo de abajo) y
    devuelve lo que arme "parse" con la respuesta. Como Google siempre
    llama a la misma función global, se usa de a una planilla por vez. */
-function fetchGvizSheet(sheetId, gid, parse){
+function fetchGvizSheet(sheetId, gid, parse, sheetName){
   return new Promise((resolve, reject)=>{
     let settled = false;
     let script = null;
@@ -6845,7 +7915,7 @@ function fetchGvizSheet(sheetId, gid, parse){
 
     script = document.createElement("script");
     script.src = "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(sheetId) +
-      "/gviz/tq?tqx=out:json&gid=" + encodeURIComponent(gid) + "&headers=1";
+      "/gviz/tq?tqx=out:json&" + (sheetName ? "sheet=" + encodeURIComponent(sheetName) : "gid=" + encodeURIComponent(gid)) + "&headers=1";
     script.onerror = function(){
       if(settled) return;
       settled = true;
@@ -7574,7 +8644,8 @@ window.addEventListener("popstate", ()=> cerrarMapa(true));
 
 // Primero el catálogo (precios) y después los puntos de venta: las dos
 // planillas usan la misma función global de Google, de a una por vez.
-loadLiveData().finally(cargarPuntosDeVenta);
+// De a una planilla por vez (Google responde siempre a la misma función)
+loadLiveData().finally(()=> cargarRecetas().finally(cargarPuntosDeVenta));
 </script>
 </body>
 </html>
