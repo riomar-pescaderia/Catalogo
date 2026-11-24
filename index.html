@@ -7519,7 +7519,11 @@ const NUTRI_DB = {
   salmonAhumado: { f: FUENTE_USDA, ref: "Salmón ahumado (chinook) (FDC 173687)", v: { kcal:117, prot:18.3, grasa:4.32, carb:0, sat:0.929, mono:2.02, poli:0.995, epa:0.183, dha:0.267, colest:23, na:672, k:175, ca:11, p:164, mg:18, fe:0.85, zn:0.31, se:32.4, vitA:26, vitD:17.1, vitE:1.35, b1:0.023, b2:0.101, niacina:4.72, b6:0.278, b12:3.26, vitC:0 } },
   trucha:    { f: FUENTE_USDA, ref: "Trucha arcoíris de criadero, cruda (FDC 173717)", v: { kcal:141, prot:19.9, grasa:6.18, carb:0, sat:1.38, mono:1.98, poli:1.51, epa:0.217, dha:0.516, colest:59, na:51, k:377, ca:25, p:226, mg:25, fe:0.31, zn:0.45, se:23.6, vitA:84, vitD:15.9, vitE:2.34, b1:0.12, b2:0.09, niacina:5.57, b6:0.34, b12:4.3, vitC:2.9 } },
   atun:      { f: FUENTE_USDA, ref: "Atún rojo, fresco, crudo (FDC 173706)", v: { kcal:144, prot:23.3, grasa:4.9, carb:0, sat:1.26, mono:1.6, poli:1.43, epa:0.283, dha:0.89, colest:38, na:39, k:252, ca:8, p:254, mg:50, fe:1.02, zn:0.6, se:36.5, vitA:655, vitD:5.7, vitE:1, b1:0.241, b2:0.251, niacina:8.65, b6:0.455, b12:9.43, vitC:0 } },
-  bacalao:   { f: FUENTE_USDA, ref: "Bacalao del Atlántico, crudo (FDC 171955)", v: { kcal:82, prot:17.8, grasa:0.67, carb:0, sat:0.131, mono:0.094, poli:0.231, epa:0.064, dha:0.12, colest:43, na:54, k:413, ca:16, p:203, mg:32, fe:0.38, zn:0.45, se:33.1, vitA:12, vitD:0.9, vitE:0.64, b1:0.076, b2:0.065, niacina:2.06, b6:0.245, b12:0.91, vitC:1 } },
+  // Riomar vende bacalao de Noruega salado: se usa la ficha de BEDCA del bacalao
+  // salado (tal como se vende, antes de desalar)
+  bacalao:   { f: FUENTE_BEDCA, ref: "Bacalao, salado, crudo (Gadus morhua), antes de desalar", v: {kcal:322,grasa:1.75,prot:75,carb:0,mono:0.2,poli:0.59,sat:0.71,colest:50,vitA:15,vitD:5,vitE:1.3,folato:14,niacina:1.1,b2:0.45,b1:0.08,b12:5,b6:0.6,vitC:0.1,ca:50,fe:3.6,k:160,mg:28,na:8100,p:891,iodo:60,se:28,zn:1}, soloBedca: true,
+    trazas: [],
+    nota: "Valores del bacalao salado tal como se vende, antes de desalar. Al desalarlo en agua fría (24 a 48 h, cambiando el agua) recupera humedad y pierde la mayor parte de la sal: por eso, ya desalado y cocido, el sodio y las calorías por cada 100 g son mucho menores." },
   tilapia:   { f: FUENTE_USDA, ref: "Tilapia, cruda (FDC 175176)", v: { kcal:96, prot:20.1, grasa:1.7, carb:0, sat:0.585, mono:0.498, poli:0.363, epa:0.005, dha:0.086, colest:50, na:52, k:302, ca:10, p:170, mg:27, fe:0.56, zn:0.33, se:41.8, vitA:0, vitD:3.1, vitE:0.4, b1:0.041, b2:0.063, niacina:3.9, b6:0.162, b12:1.58, vitC:0 } },
   pulpo:     { f: FUENTE_USDA, ref: "Pulpo común, crudo (FDC 174218)", v: { kcal:82, prot:14.9, grasa:1.04, carb:2.2, sat:0.227, mono:0.162, poli:0.239, epa:0.076, dha:0.081, colest:48, na:230, k:350, ca:53, p:186, mg:30, fe:5.3, zn:1.68, se:44.8, vitA:45, vitD:0, vitE:1.2, b1:0.03, b2:0.04, niacina:2.1, b6:0.36, b12:20, vitC:5 } },
   vieyra:    { f: FUENTE_USDA, ref: "Vieiras, crudas (FDC 174220)", v: { kcal:69, prot:12.1, grasa:0.49, carb:3.18, sat:0.128, mono:0.048, poli:0.13, epa:0.042, dha:0.061, colest:24, na:392, k:205, ca:6, p:334, mg:22, fe:0.38, zn:0.91, se:12.8, vitA:1, vitD:0, vitE:0, b1:0.007, b2:0.015, niacina:0.703, b6:0.073, b12:1.41, vitC:0 } },
@@ -7578,7 +7582,7 @@ function combinarNutri(datos){
   const muchas = Object.keys(difiere).filter(k => !["epa", "dha", "mono", "poli", "sat"].includes(k)).length > 6;
   Object.keys(v).forEach(k => { if(v[k] === undefined) delete v[k]; });
   const trazas = {};
-  const tb = datos.soloBedca ? (BEDCA_DB[clave] || {}).trazas : (b ? b.trazas : null);
+  const tb = datos.soloBedca ? (datos.trazas || (BEDCA_DB[clave] || {}).trazas) : (b ? b.trazas : null);
   (tb || []).forEach(k => { if(v[k] === 0 && (datos.soloBedca || completado[k])) trazas[k] = true; });
   datos.__comb = { v, completado, trazas, difiere: muchas ? {} : difiere, difiereMucho: muchas, bedca: b || null };
   return datos.__comb;
@@ -7726,18 +7730,19 @@ function ordenarPorNutriente(box, clave, info){
   items.forEach(li=>{
     const ref = Object.values(itemRefs).find(r => r.li === li);
     const origen = ref && ref.copiaDe ? ref.copiaDe.split("||")[0] : "";
-    const val = ref ? valorNutri(nutrientesDe(ref.nombre, origen), clave) : null;
-    (val === null || val <= 0 ? sinValor : conValor).push({ li, val });
+    const dat = ref ? nutrientesDe(ref.nombre, origen) : null;
+    const val = dat ? valorNutri(dat, clave) : null;
+    (val === null || val <= 0 ? sinValor : conValor).push({ li, val, salado: !!(dat && dat.nota) });
   });
   conValor.sort((a, b) => b.val - a.val);
   const max = conValor.length ? conValor[0].val : 0;
-  conValor.forEach(({ li, val }, i)=>{
+  conValor.forEach(({ li, val, salado }, i)=>{
     li.hidden = false;
     const row = document.createElement("div");
     row.className = "item-nutri-val";
     row.innerHTML = '<span class="item-nutri-rank"></span><b></b><i></i>';
     row.querySelector(".item-nutri-rank").textContent = (i + 1) + "º";
-    row.querySelector("b").textContent = numNutri(val) + " " + def[2] + " cada 100 g";
+    row.querySelector("b").textContent = numNutri(val) + " " + def[2] + " cada 100 g" + (salado ? " (salado, antes de desalar)" : "");
     row.querySelector("i").style.setProperty("--pct", (max > 0 ? Math.max(4, val / max * 100) : 0) + "%");
     li.querySelector(".item-name").after(row);
     ul.appendChild(li);
@@ -7815,6 +7820,13 @@ function abrirNutrientes(p, datos){
   sub.className = "nutri-sub";
   sub.textContent = "Valores por cada 100 g de producto crudo";
   nutriBox.appendChild(sub);
+  if(datos.nota){
+    const nt = document.createElement("p");
+    nt.className = "nutri-difiere";
+    nt.style.cssText = "border:1px solid var(--accent); border-radius:10px; padding:8px 10px; margin:0 0 12px; color:var(--ink-soft);";
+    nt.textContent = datos.nota;
+    nutriBox.appendChild(nt);
+  }
   if(comb.difiereMucho){
     const av = document.createElement("p");
     av.className = "nutri-difiere";
