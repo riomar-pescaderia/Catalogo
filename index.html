@@ -883,6 +883,19 @@
   .nb-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .nb-chips .item-chip.on{ background:var(--accent); color:var(--accent-ink); }
   .nb-info{ margin:10px 0 0; font-size:.78rem; color:var(--ink-soft); line-height:1.45; }
+  /* "¿De dónde salen estos datos?" */
+  .fuentes{ margin:6px 16px 10px; border:1px solid var(--line); border-radius:12px; background:var(--surface-alt); }
+  .fuentes summary{ cursor:pointer; padding:11px 14px; font-weight:700; font-size:.86rem; color:var(--accent); list-style:none; display:flex; justify-content:space-between; gap:10px; }
+  .fuentes summary::-webkit-details-marker{ display:none; }
+  .fuentes summary::after{ content:"⌄"; transition:transform .15s ease; }
+  .fuentes[open] summary::after{ transform:rotate(180deg); }
+  .fuentes-body{ padding:0 14px 12px; font-size:.8rem; line-height:1.5; color:var(--ink-soft); }
+  .fuentes-body h5{ margin:10px 0 4px; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink); }
+  .fuentes-body ul{ margin:0; padding-left:18px; }
+  .fuentes-body li + li{ margin-top:4px; }
+  .fuentes-body a{ color:var(--accent); }
+  .fuentes-body b{ color:var(--ink); }
+  .nutri-src a{ color:var(--accent); }
   .nb-info b{ color:var(--ink); }
   .item-nutri-val{ grid-column:2; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:.8rem; color:var(--ink-soft); }
   .item-nutri-val b{ color:var(--accent); font-variant-numeric:tabular-nums; }
@@ -6688,7 +6701,7 @@ function renderCategories(categories){
       intro.textContent = cat.intro;
       card.appendChild(intro);
     }
-    if(cat.apartado) card.appendChild(crearBuscadorNutrientes());
+    if(cat.apartado){ card.appendChild(crearFuentesNutrientes()); card.appendChild(crearBuscadorNutrientes()); }
     const ul = document.createElement("ul");
     ul.className = "items";
     productosOrdenados.forEach((p, idx)=>{
@@ -7685,6 +7698,48 @@ function ordenarPorNutriente(box, clave, info){
   if(!conValor.length){ info.textContent = "Ninguno de los productos tiene el dato de " + def[1] + " en su fuente."; }
 }
 
+/* Transparencia: de dónde salen los valores nutricionales publicados */
+function crearFuentesNutrientes(){
+  const d = document.createElement("details");
+  d.className = "fuentes";
+  d.innerHTML =
+    '<summary>¿De dónde salen estos datos?</summary>' +
+    '<div class="fuentes-body">' +
+      '<p style="margin:0">Los valores no los inventamos ni los medimos nosotros: salen de <b>tablas oficiales de composición de alimentos</b>, elaboradas por laboratorios e instituciones públicas.</p>' +
+      '<h5>Fuentes</h5>' +
+      '<ul>' +
+        '<li><b>ARGENFOODS</b> · Tabla de Composición de Alimentos de la Universidad Nacional de Luján (Argentina), parte de la red internacional INFOODS de la FAO. ' +
+          '<a href="https://www.argenfood.unlu.edu.ar/" target="_blank" rel="noopener">argenfood.unlu.edu.ar</a></li>' +
+        '<li><b>USDA FoodData Central</b> · Base de datos del Departamento de Agricultura de los Estados Unidos (SR Legacy). ' +
+          '<a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">fdc.nal.usda.gov</a></li>' +
+      '</ul>' +
+      '<h5>Cómo los usamos</h5>' +
+      '<ul>' +
+        '<li>Valores <b>cada 100 g de producto crudo</b> (porción comestible, sin espinas ni piel).</li>' +
+        '<li>Priorizamos la <b>tabla argentina</b> para las especies locales; usamos la de EE.UU. para las importadas o de criadero que no figuran en ella.</li>' +
+        '<li>Cada pescado usa <b>una sola fuente</b>, la de su misma especie. No mezclamos datos de especies distintas.</li>' +
+        '<li>Si no hay un dato confiable de esa especie, o es un producto elaborado (rebozados, conservas, medallones), <b>no mostramos información</b>.</li>' +
+        '<li>En cada ficha figura la fuente exacta del dato.</li>' +
+      '</ul>' +
+      '<h5>Tené en cuenta</h5>' +
+      '<p style="margin:0">Son valores de referencia: pueden variar según el origen, la temporada de pesca y la forma de cocción. Es información general y no reemplaza el consejo de un profesional de la salud o de la nutrición.</p>' +
+    '</div>';
+  return d;
+}
+function irANutrientes(){
+  // igual que irRecetasDe: cerramos la categoría sin tocar el historial
+  const wasSuppressed = suppressHistorySync;
+  suppressHistorySync = true;
+  if(activeCategoryId) closeCategory(activeCategoryId);
+  if(searchInput.value.trim()){ searchInput.value = ""; searchInput.dispatchEvent(new Event("input")); }
+  suppressHistorySync = wasSuppressed;
+  const enHistorial = history.state && (history.state.riomarView === "modo" || history.state.riomarView === "category");
+  modo = "nutrientes";
+  recetaAbierta = null;
+  if(enHistorial) replaceNavState("modo", { modo: "nutrientes" }); else pushNavState("modo", { modo: "nutrientes" });
+  renderModo();
+}
+
 const nutriOverlay = document.getElementById("nutriOverlay");
 const nutriBox = document.getElementById("nutriBox");
 function abrirNutrientes(p, datos){
@@ -7728,7 +7783,21 @@ function abrirNutrientes(p, datos){
   });
   const src = document.createElement("p");
   src.className = "nutri-src";
-  src.textContent = "Fuente: " + datos.f + " · " + datos.ref + ". Valores orientativos de referencia: pueden variar según el origen, la temporada y la preparación.";
+  src.textContent = "Fuente: " + datos.f + " · " + datos.ref + ". Valores orientativos de referencia: pueden variar según el origen, la temporada y la preparación. ";
+  const masInfo = document.createElement("a");
+  masInfo.href = "#";
+  masInfo.textContent = "¿De dónde salen estos datos?";
+  masInfo.addEventListener("click", e=>{
+    e.preventDefault();
+    cerrarNutrientes();
+    const f = document.querySelector(".fuentes");
+    if(f){
+      if(modo !== "nutrientes" || activeCategoryId) irANutrientes();
+      f.open = true;
+      setTimeout(()=> f.scrollIntoView({ behavior: "smooth", block: "center" }), 250);
+    }
+  });
+  src.appendChild(masInfo);
   nutriBox.appendChild(src);
   const acciones = document.createElement("div");
   acciones.className = "nutri-actions";
