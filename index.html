@@ -879,6 +879,18 @@
 
   /* buscador de nutrientes */
   .nb{ padding:12px 16px 6px; }
+  /* torta interactiva: cada porción abre su grupo de nutrientes */
+  .nb-torta{ position:relative; width:min(100%, 340px); margin:0 auto 6px; aspect-ratio:800 / 650; border-radius:16px; overflow:hidden; background:#000; }
+  .nb-torta img{ width:100%; height:auto; display:block; margin-top:-4%; }
+  .nb-torta svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .nb-torta path{ cursor:pointer; fill:transparent; stroke:none; transition:fill .18s ease; -webkit-tap-highlight-color:transparent; }
+  .nb-torta.elegida path{ fill:rgba(0,0,0,.55); }
+  .nb-torta.elegida path.on{ fill:rgba(255,255,255,.08); }
+  .nb-torta path:focus{ outline:none; }
+  .nb-torta path:focus-visible{ fill:rgba(255,255,255,.18); }
+  .nb-torta-ayuda{ text-align:center; margin:0 0 10px; font-size:.8rem; color:var(--ink-soft); }
+  .nb-grupo{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:12px 0 0; font-size:.78rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); }
+  .nb-grupo button{ border:0; background:none; color:var(--ink-soft); font:inherit; font-size:.75rem; letter-spacing:0; text-transform:none; font-weight:700; cursor:pointer; padding:4px; }
   .nb .search-box{ box-shadow:none; }
   .nb-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
   .nb-chips .item-chip.on{ background:var(--accent); color:var(--accent-ink); }
@@ -7645,6 +7657,38 @@ const NUTRI_BUSCABLES = [
   ["b12", "Vitamina B12", "µg", "b12 vitamina b12 cobalamina"],
   ["vitC", "Vitamina C", "mg", "vitamina c"]
 ];
+const NUTRI_GRUPOS = [
+  { nombre: "Proteínas", claves: ["prot"] },
+  { nombre: "Grasas", claves: ["grasa", "omega3", "poli", "mono", "sat", "colest"] },
+  { nombre: "Minerales", claves: ["fe", "ca", "zn", "se", "iodo", "k", "mg", "p", "na"] },
+  { nombre: "Vitaminas", claves: ["vitA", "vitD", "vitE", "b1", "b2", "niacina", "b6", "folato", "b12", "vitC"] },
+  { nombre: "Carbohidratos y energía", claves: ["carb", "kcal"] }
+];
+// Zonas tocables de cada porción, calculadas con la misma geometría con la que
+// se dibujó img/nutrientes.png (800 x 800): cara de arriba + costado visible.
+function tortaPaths(){
+  const cx = 400, cy = 330, rx = 335, ry = 200, depth = 96, exp = 18;
+  const start = -Math.PI / 2 - Math.PI / 5, paso = 2 * Math.PI / 5;
+  const f = n => n.toFixed(1);
+  return NUTRI_GRUPOS.map((g, i)=>{
+    const a1 = start + i * paso, a2 = a1 + paso, am = (a1 + a2) / 2;
+    const ox = exp * Math.cos(am), oy = exp * .6 * Math.sin(am);
+    const pt = (a, dy) => [cx + ox + rx * Math.cos(a), cy + oy + ry * Math.sin(a) + (dy || 0)];
+    let d = "M" + f(cx + ox) + " " + f(cy + oy);
+    for(let j = 0; j <= 40; j++){ const [x, y] = pt(a1 + paso * j / 40); d += "L" + f(x) + " " + f(y); }
+    d += "Z";
+    // costado: la parte del arco que da al frente (seno > 0)
+    for(let base = -2 * Math.PI; base <= 2 * Math.PI; base += 2 * Math.PI){
+      const b1 = Math.max(a1, base), b2 = Math.min(a2, base + Math.PI);
+      if(b2 <= b1) continue;
+      let w = "";
+      for(let j = 0; j <= 30; j++){ const [x, y] = pt(b1 + (b2 - b1) * j / 30); w += (j ? "L" : "M") + f(x) + " " + f(y); }
+      for(let j = 30; j >= 0; j--){ const [x, y] = pt(b1 + (b2 - b1) * j / 30, depth); w += "L" + f(x) + " " + f(y); }
+      d += w + "Z";
+    }
+    return d;
+  });
+}
 const NUTRI_RAPIDOS = ["prot", "omega3", "vitD", "b12", "fe", "ca", "se", "zn"];
 function valorNutri(datos, clave){
   const c = combinarNutri(datos);
@@ -7661,15 +7705,48 @@ function crearBuscadorNutrientes(){
   const box = document.createElement("div");
   box.className = "nb";
   box.innerHTML =
+    '<div class="nb-torta"><img src="img/nutrientes.png?v=3" alt="Proteínas, grasas, minerales, vitaminas y carbohidratos">' +
+      '<svg viewBox="0 32 800 650" preserveAspectRatio="xMidYMin meet" role="group" aria-label="Elegí un grupo de nutrientes"></svg></div>' +
+    '<p class="nb-torta-ayuda">Tocá una porción para ver sus nutrientes, o buscá uno:</p>' +
     '<div class="search-box">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>' +
       '<input type="text" placeholder="Buscar un nutriente: omega 3, hierro, vitamina D…" autocomplete="off" aria-label="Buscar un nutriente">' +
     '</div>' +
+    '<div class="nb-grupo" hidden><span></span><button type="button">✕ Ver todos</button></div>' +
     '<div class="nb-chips"></div>' +
     '<p class="nb-info" hidden></p>';
   const input = box.querySelector("input");
   const chips = box.querySelector(".nb-chips");
   const info = box.querySelector(".nb-info");
+  const torta = box.querySelector(".nb-torta");
+  const grupoBar = box.querySelector(".nb-grupo");
+  let grupo = null; // índice de la porción elegida
+  const svgNS = "http://www.w3.org/2000/svg";
+  const zonas = tortaPaths().map((d, i)=>{
+    const p = document.createElementNS(svgNS, "path");
+    p.setAttribute("d", d);
+    p.setAttribute("role", "button");
+    p.setAttribute("tabindex", "0");
+    p.setAttribute("aria-label", NUTRI_GRUPOS[i].nombre);
+    p.addEventListener("click", ()=> elegirGrupo(grupo === i ? null : i));
+    p.addEventListener("keydown", e=>{ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); elegirGrupo(grupo === i ? null : i); } });
+    torta.querySelector("svg").appendChild(p);
+    return p;
+  });
+  function listaGrupo(i){ return NUTRI_GRUPOS[i].claves.map(k => NUTRI_BUSCABLES.find(x => x[0] === k)).filter(Boolean); }
+  function elegirGrupo(i){
+    grupo = i;
+    input.value = "";
+    torta.classList.toggle("elegida", i !== null);
+    zonas.forEach((z, j)=> z.classList.toggle("on", j === i));
+    grupoBar.hidden = i === null;
+    if(i !== null) grupoBar.querySelector("span").textContent = NUTRI_GRUPOS[i].nombre;
+    // un solo nutriente en el grupo (proteínas): se ordena directo
+    if(i !== null && NUTRI_GRUPOS[i].claves.length === 1){ elegir(NUTRI_GRUPOS[i].claves[0]); return; }
+    elegir(null);
+    if(i !== null){ info.hidden = false; info.textContent = "Elegí un nutriente de " + NUTRI_GRUPOS[i].nombre.toLowerCase() + " para ver qué pescados y mariscos aportan más."; }
+  }
+  grupoBar.querySelector("button").addEventListener("click", ()=> elegirGrupo(null));
   function pintarChips(lista){
     chips.innerHTML = "";
     lista.forEach(([clave, nombre])=>{
@@ -7678,8 +7755,12 @@ function crearBuscadorNutrientes(){
       c.className = "item-chip" + (clave === nutrienteElegido ? " on" : "");
       c.textContent = nombre;
       c.addEventListener("click", ()=>{
-        if(nutrienteElegido === clave){ elegir(null); return; }
-        input.value = nombre;
+        if(nutrienteElegido === clave){
+          elegir(null);
+          if(grupo !== null){ info.hidden = false; info.textContent = "Elegí un nutriente de " + NUTRI_GRUPOS[grupo].nombre.toLowerCase() + " para ver qué pescados y mariscos aportan más."; }
+          return;
+        }
+        if(grupo === null) input.value = nombre;
         elegir(clave);
       });
       chips.appendChild(c);
@@ -7690,9 +7771,10 @@ function crearBuscadorNutrientes(){
     nutrienteElegido = clave;
     if(!clave) input.value = "";
     ordenarPorNutriente(box, clave, info);
-    pintarChips(clave ? [NUTRI_BUSCABLES.find(x => x[0] === clave)] : rapidos());
+    pintarChips(grupo !== null ? listaGrupo(grupo) : clave ? [NUTRI_BUSCABLES.find(x => x[0] === clave)] : rapidos());
   }
   input.addEventListener("input", ()=>{
+    if(grupo !== null){ const t = input.value; elegirGrupo(null); input.value = t; }
     const res = buscarNutriente(input.value);
     if(!input.value.trim()){ elegir(null); return; }
     if(res.length === 1){ nutrienteElegido = null; elegir(res[0][0]); input.value = input.value; return; }
