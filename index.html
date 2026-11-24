@@ -1009,6 +1009,7 @@
   }
   .nutri-row.sub{ padding-left:14px; font-size:.8rem; color:var(--ink-soft); }
   .nutri-row b{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .nutri-difiere{ padding:2px 0 7px; font-size:.72rem; color:var(--ink-faint); line-height:1.35; border-bottom:1px solid var(--line); margin-top:-1px; }
   .nutri-src{ margin:12px 0 0; font-size:.7rem; color:var(--ink-faint); line-height:1.45; }
   .nutri-actions{ display:flex; gap:8px; margin-top:14px; }
   .nutri-actions .item-chip{ flex:1; justify-content:center; padding:10px; font-size:.82rem; }
@@ -7483,7 +7484,17 @@ function agregarApartados(categories){
    fuente: no se mezclan datos de especies distintas. */
 const FUENTE_ARG = "Tabla de Composición de Alimentos ARGENFOODS, Universidad Nacional de Luján";
 const FUENTE_USDA = "USDA FoodData Central (SR Legacy)";
+const FUENTE_BEDCA = "BEDCA, Base de Datos Española de Composición de Alimentos (AESAN)";
+/* Valores de BEDCA cada 100 g de porción comestible cruda, para comparar con la
+   fuente principal y completar los nutrientes que le falten. "trazas" = BEDCA
+   informa solo trazas (se toma como 0). */
+const BEDCA_DB = {almeja:{ref:"Almeja (Tapes decussata)",v:{kcal:48,grasa:1.61,prot:10.7,carb:0,dha:0.206,mono:0.24,poli:0.59,sat:0.34,colest:40,epa:0.024,vitA:90,vitD:0,vitE:0.4,folato:16,niacina:4.1,b2:0.14,b1:0.04,b12:0,b6:0.14,vitC:0,ca:75,fe:24,k:314,mg:51,na:56,p:130,iodo:160,se:24.3,zn:1.3},trazas:["vitD","b12","vitC"]},atun:{ref:"Atún, crudo (Thunnus thynnus)",v:{kcal:119,grasa:3.3,prot:22,carb:0,dha:0.648,mono:0.65,poli:1.32,sat:0.96,colest:28,epa:0.101,vitA:26,vitD:7.2,vitE:1,folato:15,niacina:12.8,b2:0.13,b1:0.1,b12:4,b6:0.4,vitC:0,ca:16,fe:1.3,k:400,mg:33,na:47,p:230,iodo:8,se:82,zn:0.7},trazas:["vitC"]},caballa:{ref:"Caballa, cruda (Scomber scombrus)",v:{kcal:182,grasa:11.9,prot:18.7,carb:0,dha:0.796,mono:2.36,poli:2.47,sat:3.45,colest:76,epa:0.267,vitA:45,vitD:4,vitE:1.3,folato:1.2,niacina:12.5,b2:0.36,b1:0.13,b12:9,b6:0.63,vitC:0,ca:12,fe:1.2,k:386,mg:30,na:84,p:244,iodo:51,se:39,zn:0.519},trazas:[]},merluza:{ref:"Merluza, congelada, cruda",v:{kcal:85,grasa:1.88,prot:16.7,carb:0,mono:0.518,poli:0.772,sat:0.427,colest:59.6,vitA:0,vitD:0,vitE:0.42,folato:14.3,niacina:3.2,b2:0.12,b1:0.05,b12:1,b6:0.16,vitC:0,ca:25.4,fe:0.77,k:270,mg:19.4,na:100,p:190,iodo:4,se:42.6,zn:0.27},trazas:["vitA","vitD"]},mejillon:{ref:"Mejillon (Mytilus galloprovincialis)",v:{kcal:61,grasa:1.9,prot:10.8,carb:0,dha:0.7,mono:0.35,poli:0.52,sat:0.41,colest:58,epa:0.71,vitA:0,vitD:0,vitE:0.9,folato:33,niacina:3,b2:0.14,b1:0.1,b12:8,b6:0.08,vitC:0,ca:80,fe:4.5,k:92,mg:23,na:210,p:236,iodo:35,se:56,zn:1.8},trazas:["vitA","vitD","vitC"]},pulpo:{ref:"Pulpo (Octopus vulgaris)",v:{kcal:91,grasa:1.4,prot:17.9,carb:1.4,dha:0.14,mono:0.2,poli:0.5,sat:0.3,colest:48,epa:0.09,vitA:70,vitD:0,vitE:2.1,folato:13,niacina:6.8,b2:0.04,b1:0.07,b12:3,b6:0.36,vitC:0,ca:144,fe:1.2,k:230,mg:28,na:363,p:170,iodo:64,se:44.8,zn:1.7},trazas:["vitD"]},salmon:{ref:"Salmón (Salmo salar)",v:{kcal:182,grasa:12,prot:18.4,carb:0,dha:0.956,mono:5.43,poli:3.1,sat:2.16,colest:50,epa:0.524,vitA:13,vitD:8,vitE:2,folato:26,niacina:10.4,b2:0.15,b1:0.2,b12:5,b6:0.75,vitC:0,ca:27,fe:0.7,k:310,mg:26,na:98,p:250,iodo:28.3,se:20,zn:0.8},trazas:[]},ostra:{ref:"Ostra, cruda",v:{kcal:64,grasa:2.21,prot:8.14,carb:2.76,dha:0.159,mono:0.31,poli:0.876,sat:0.374,colest:53.5,epa:0.12,vitA:75,vitD:3,vitE:0.85,folato:8,niacina:1.85,b2:0.195,b1:0.14,b12:16.8,b6:0.135,vitC:0,ca:116,fe:6,k:240,mg:43,na:395,p:188,iodo:20,se:63.7,zn:59.2},trazas:["vitC"]},vieyra:{ref:"Vieira (Pecten sp)",v:{kcal:86,grasa:0.9,prot:19,carb:0,mono:0.09,poli:0.23,sat:0.23,colest:40,vitA:0,vitD:0,vitE:0.4,folato:17,niacina:6.4,b2:0.1,b1:0.04,b12:1.8,b6:0.14,vitC:0,ca:120,fe:2.4,k:480,mg:38,na:270,p:315,iodo:58,se:51,zn:1.3},trazas:["vitA","vitD","vitC"]},calamar:{ref:"Calamar, crudo",v:{kcal:72,grasa:1.47,prot:14,carb:1.09,dha:0.37,mono:0.18,poli:0.66,sat:0.46,colest:188,epa:0.17,vitA:15,vitD:0,vitE:1.2,folato:5,niacina:2.8,b2:0.16,b1:0.06,b12:2.15,b6:0.375,vitC:0,ca:20.3,fe:3.9,k:316,mg:31.7,na:137,p:159,se:44.8,zn:2.1},trazas:["vitD"]},langostino:{ref:"Langostino",v:{kcal:112,grasa:0.8,prot:24.3,carb:1.5,mono:0.1,poli:0.2,sat:0.2,colest:185,vitA:18,vitD:18,vitE:1.5,folato:2,niacina:3.2,b2:0.02,b1:0.02,b12:1.9,b6:0.06,vitC:0,ca:115,fe:3.3,k:221,mg:69,na:305,p:215,iodo:90,se:24.3,zn:1.1},trazas:[]},sardina:{ref:"Sardina (Sardina pilchardus)",v:{kcal:140,grasa:7.5,prot:18.1,carb:0,dha:0.676,mono:1.8,poli:2.28,sat:2.64,colest:100,epa:0.254,vitA:64,vitD:8,vitE:1.6,folato:8,niacina:6.4,b2:0.38,b1:0.12,b12:8.5,b6:0.96,vitC:0,ca:43,fe:1.1,k:24,mg:29,na:100,p:475,iodo:16,se:30,zn:0.5},trazas:[]},panga:{ref:"Panga, cruda (Pangasius hypophthalmus)",v:{kcal:67,grasa:1.2,prot:13.4,carb:0.3,mono:0.44,poli:0.17,sat:0.47,colest:29.8,vitA:1.99,vitD:0.05,vitE:0.16,niacina:0.35,b2:0.04,b1:0.04,b12:0.3,b6:0.1,vitC:0,ca:36.7,fe:0.21,k:200,mg:17.6,na:274,p:107,iodo:8,se:9.6,zn:0.24},trazas:[]},berberecho:{ref:"Berberechos (Cerastoderma edule)",v:{kcal:48,grasa:0.5,prot:10.7,carb:0,mono:0.03,poli:0.13,sat:0.05,colest:40,vitA:250,vitD:0,vitE:0.4,folato:17,niacina:4.1,b2:0.14,b1:0.04,b12:0,b6:0.1,vitC:0,ca:128,fe:24,k:314,mg:51,na:56,p:130,iodo:160,se:24.3,zn:1.3},trazas:["vitD","b12","vitC"]}};
 const NUTRI_DB = {
+  // potasio de la sardina excluido: BEDCA informa 24 mg, valor fuera de rango para
+  // un pescado (250-450 mg), probablemente un error de carga de la tabla
+  sardina:   { f: FUENTE_BEDCA, ref: BEDCA_DB.sardina.ref, v: Object.assign({}, BEDCA_DB.sardina.v, { k: undefined }), soloBedca: true },
+  panga:     { f: FUENTE_BEDCA, ref: BEDCA_DB.panga.ref, v: BEDCA_DB.panga.v, soloBedca: true },
+  berberecho:{ f: FUENTE_BEDCA, ref: BEDCA_DB.berberecho.ref, v: BEDCA_DB.berberecho.v, soloBedca: true },
   merluza:   { f: FUENTE_ARG, ref: "Merluza, fresca, cruda, carne", v: { kcal:81, prot:17.1, grasa:1.3, carb:0.1, na:91, k:262, ca:21, p:216, fe:1.9, b1:0.1, b2:0.3, niacina:1.2, vitC:1.1 } },
   abadejo:   { f: FUENTE_ARG, ref: "Abadejo, fresco, crudo, carne", v: { kcal:72, prot:15.8, grasa:0.9, carb:0.2 } },
   lenguado:  { f: FUENTE_ARG, ref: "Lenguado, fresco, crudo, carne", v: { kcal:78, prot:17.5, grasa:0.8, carb:0.2, b1:0.1, b2:0.3, niacina:3.5, vitC:1.8 } },
@@ -7523,13 +7534,55 @@ const NUTRI_MATCH = [
   [/pasta de|molida|bocadito|simil|tinta|mix|rebozad|romana|medallon|formita|hamburgues|vizcain|escabeche|en aceite|al natural|lata/, null],
   [/salmon blanco|salmon de rio/, null],
   [/salmon.*ahumad|ahumad.*salmon/, "salmonAhumado"],
-  [/salmon/, "salmon"], [/trucha/, "trucha"], [/atun/, "atun"], [/bacalao/, "bacalao"], [/tilapia/, "tilapia"],
+  [/salmon/, "salmon"], [/sardina/, "sardina"], [/pangasius|\bpanga\b/, "panga"], [/berberecho/, "berberecho"], [/trucha/, "trucha"], [/atun/, "atun"], [/bacalao/, "bacalao"], [/tilapia/, "tilapia"],
   [/merluza/, "merluza"], [/abadejo/, "abadejo"], [/lenguado/, "lenguado"], [/\bmero\b/, "mero"], [/besugo/, "besugo"],
   [/corvina/, "corvina"], [/pejerrey/, "pejerrey"], [/surubi/, "surubi"], [/sabalo/, "sabalo"], [/\bboga\b/, "boga"],
   [/\bgallo\b/, "gallo"], [/anchoit/, "anchoita"], [/anchoa/, "anchoa"], [/cornalito/, "cornalito"], [/caballa/, "caballa"],
   [/calamar/, "calamar"], [/pulp/, "pulpo"], [/langostino/, "langostino"], [/camaron/, "camaron"], [/mejillon/, "mejillon"],
   [/almeja/, "almeja"], [/vieyra/, "vieyra"], [/ostra/, "ostra"], [/centolla/, "centolla"], [/kanikama/, "kanikama"]
 ];
+/* Combina la fuente principal con BEDCA:
+   - lo que la principal no tiene, se completa con BEDCA (marcado);
+   - si las dos difieren mucho (más del 50%), se avisa el valor de BEDCA. */
+function combinarNutri(datos){
+  if(!datos) return null;
+  if(datos.__comb) return datos.__comb;
+  const clave = Object.keys(NUTRI_DB).find(k => NUTRI_DB[k] === datos);
+  const b = !datos.soloBedca && clave && BEDCA_DB[clave];
+  const v = Object.assign({}, datos.v), completado = {}, difiere = {};
+  // control de coherencia: el omega-3 (EPA + DHA) no puede superar a las
+  // grasas poliinsaturadas ni a la grasa total de la misma tabla
+  const omegaOk = bv => !bv || ((bv.epa || 0) + (bv.dha || 0) <= (bv.poli != null ? bv.poli : Infinity) &&
+                                (bv.epa || 0) + (bv.dha || 0) <= (bv.grasa != null ? bv.grasa * 0.9 : Infinity));
+  const IMPORTANTES = ["b12", "vitD", "fe", "omega3", "prot"];
+  if(b){
+    const bOk = omegaOk(b.v);
+    for(const [k, bv] of Object.entries(b.v)){
+      if(!bOk && (k === "epa" || k === "dha")) continue;
+      if(v[k] == null){ v[k] = bv; completado[k] = true; continue; }
+      const pv = v[k], mx = Math.max(pv, bv), mn = Math.min(pv, bv);
+      // una "traza" frente a un valor bajo no es una diferencia que valga la pena avisar
+      const dif = mn === 0 ? (IMPORTANTES.includes(k) && mx >= 0.5) : mx / mn > 1.5;
+      if(mx > 0 && dif) difiere[k] = bv;
+    }
+  }
+  if(v.epa != null && v.dha != null) v.omega3 = v.epa + v.dha;
+  if(b && completado.epa && completado.dha) completado.omega3 = true;
+  if(b && difiere.epa !== undefined || b && difiere.dha !== undefined){
+    const bo = (b.v.epa || 0) + (b.v.dha || 0);
+    const po = (datos.v.epa || 0) + (datos.v.dha || 0);
+    if(datos.v.epa != null && Math.max(bo, po) / Math.max(0.001, Math.min(bo, po)) > 1.5) difiere.omega3 = bo;
+  }
+  // si difieren en muchos nutrientes, es probable que sean especies distintas:
+  // en vez de un aviso por renglón, va una sola aclaración general
+  const muchas = Object.keys(difiere).filter(k => !["epa", "dha", "mono", "poli", "sat"].includes(k)).length > 6;
+  Object.keys(v).forEach(k => { if(v[k] === undefined) delete v[k]; });
+  const trazas = {};
+  const tb = datos.soloBedca ? (BEDCA_DB[clave] || {}).trazas : (b ? b.trazas : null);
+  (tb || []).forEach(k => { if(v[k] === 0 && (datos.soloBedca || completado[k])) trazas[k] = true; });
+  datos.__comb = { v, completado, trazas, difiere: muchas ? {} : difiere, difiereMucho: muchas, bedca: b || null };
+  return datos.__comb;
+}
 function nutrientesDe(nombre, categoria){
   // los valores son de pescado crudo: no sirven para rebozados ni elaborados
   if(categoria && /rebozad|conserva/.test(norm(categoria))) return null;
@@ -7544,11 +7597,11 @@ const NUTRI_FILAS = [
     ["omega3", "Omega-3 (EPA + DHA)", "g", 1], ["carb", "Carbohidratos", "g"], ["colest", "Colesterol", "mg"]]],
   ["Minerales", [
     ["na", "Sodio", "mg"], ["k", "Potasio", "mg"], ["ca", "Calcio", "mg"], ["p", "Fósforo", "mg"],
-    ["mg", "Magnesio", "mg"], ["fe", "Hierro", "mg"], ["zn", "Zinc", "mg"], ["se", "Selenio", "µg"]]],
+    ["mg", "Magnesio", "mg"], ["fe", "Hierro", "mg"], ["zn", "Zinc", "mg"], ["se", "Selenio", "µg"], ["iodo", "Yodo", "µg"]]],
   ["Vitaminas", [
     ["vitA", "Vitamina A", "µg"], ["vitD", "Vitamina D", "µg"], ["vitE", "Vitamina E", "mg"],
     ["b1", "Tiamina (B1)", "mg"], ["b2", "Riboflavina (B2)", "mg"], ["niacina", "Niacina (B3)", "mg"],
-    ["b6", "Vitamina B6", "mg"], ["b12", "Vitamina B12", "µg"], ["vitC", "Vitamina C", "mg"]]]
+    ["b6", "Vitamina B6", "mg"], ["folato", "Folato (B9)", "µg"], ["b12", "Vitamina B12", "µg"], ["vitC", "Vitamina C", "mg"]]]
 ];
 function numNutri(x){
   const d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
@@ -7576,6 +7629,7 @@ const NUTRI_BUSCABLES = [
   ["fe", "Hierro", "mg", "hierro"],
   ["zn", "Zinc", "mg", "zinc"],
   ["se", "Selenio", "µg", "selenio"],
+  ["iodo", "Yodo", "µg", "yodo iodo"],
   ["vitA", "Vitamina A", "µg", "vitamina a retinol"],
   ["vitD", "Vitamina D", "µg", "vitamina d"],
   ["vitE", "Vitamina E", "mg", "vitamina e"],
@@ -7583,15 +7637,15 @@ const NUTRI_BUSCABLES = [
   ["b2", "Riboflavina (B2)", "mg", "riboflavina b2 vitamina b2"],
   ["niacina", "Niacina (B3)", "mg", "niacina b3 vitamina b3"],
   ["b6", "Vitamina B6", "mg", "b6 vitamina b6"],
+  ["folato", "Folato (B9)", "µg", "folato acido folico b9 vitamina b9"],
   ["b12", "Vitamina B12", "µg", "b12 vitamina b12 cobalamina"],
   ["vitC", "Vitamina C", "mg", "vitamina c"]
 ];
 const NUTRI_RAPIDOS = ["prot", "omega3", "vitD", "b12", "fe", "ca", "se", "zn"];
 function valorNutri(datos, clave){
-  const v = datos && datos.v;
-  if(!v) return null;
-  if(clave === "omega3") return (v.epa != null && v.dha != null) ? v.epa + v.dha : null;
-  return v[clave] != null ? v[clave] : null;
+  const c = combinarNutri(datos);
+  if(!c) return null;
+  return c.v[clave] != null ? c.v[clave] : null;
 }
 function buscarNutriente(q){
   const n = norm(q).trim();
@@ -7712,12 +7766,17 @@ function crearFuentesNutrientes(){
           '<a href="https://www.argenfood.unlu.edu.ar/" target="_blank" rel="noopener">argenfood.unlu.edu.ar</a></li>' +
         '<li><b>USDA FoodData Central</b> · Base de datos del Departamento de Agricultura de los Estados Unidos (SR Legacy). ' +
           '<a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">fdc.nal.usda.gov</a></li>' +
+        '<li><b>BEDCA</b> · Base de Datos Española de Composición de Alimentos, de la Agencia Española de Seguridad Alimentaria y Nutrición (AESAN). ' +
+          '<a href="https://www.bedca.net/" target="_blank" rel="noopener">bedca.net</a></li>' +
       '</ul>' +
       '<h5>Cómo los usamos</h5>' +
       '<ul>' +
         '<li>Valores <b>cada 100 g de producto crudo</b> (porción comestible, sin espinas ni piel).</li>' +
         '<li>Priorizamos la <b>tabla argentina</b> para las especies locales; usamos la de EE.UU. para las importadas o de criadero que no figuran en ella.</li>' +
-        '<li>Cada pescado usa <b>una sola fuente</b>, la de su misma especie. No mezclamos datos de especies distintas.</li>' +
+        '<li>Cada pescado tiene una <b>fuente principal</b> de su misma especie, y lo <b>comparamos con BEDCA</b> cuando la tabla española tiene esa especie o ese mismo producto.</li>' +
+        '<li>Si a la fuente principal le falta un dato (por ejemplo, vitaminas u omega-3), lo <b>completamos con BEDCA</b> y lo marcamos con un asterisco (*).</li>' +
+        '<li>Si las tablas <b>difieren mucho</b> en un nutriente, lo avisamos debajo de ese valor. No promediamos ni elegimos el número más conveniente.</li>' +
+        '<li>No usamos datos de <b>especies distintas</b> aunque se llamen igual (por ejemplo, el besugo o la trucha de las tablas europeas son otras especies).</li>' +
         '<li>Si no hay un dato confiable de esa especie, o es un producto elaborado (rebozados, conservas, medallones), <b>no mostramos información</b>.</li>' +
         '<li>En cada ficha figura la fuente exacta del dato.</li>' +
       '</ul>' +
@@ -7743,8 +7802,8 @@ function irANutrientes(){
 const nutriOverlay = document.getElementById("nutriOverlay");
 const nutriBox = document.getElementById("nutriBox");
 function abrirNutrientes(p, datos){
-  const v = Object.assign({}, datos.v);
-  if(v.epa != null && v.dha != null) v.omega3 = v.epa + v.dha;
+  const comb = combinarNutri(datos);
+  const v = comb.v;
   nutriBox.innerHTML = "";
   const head = document.createElement("div");
   head.className = "nutri-head";
@@ -7756,6 +7815,13 @@ function abrirNutrientes(p, datos){
   sub.className = "nutri-sub";
   sub.textContent = "Valores por cada 100 g de producto crudo";
   nutriBox.appendChild(sub);
+  if(comb.difiereMucho){
+    const av = document.createElement("p");
+    av.className = "nutri-difiere";
+    av.style.cssText = "border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin:0 0 12px;";
+    av.textContent = "Las tablas consultadas informan valores bastante distintos para este producto (pueden ser especies o zonas de pesca diferentes). Tomá estos datos como orientativos.";
+    nutriBox.appendChild(av);
+  }
   if(v.kcal != null){
     const k = document.createElement("div");
     k.className = "nutri-kcal";
@@ -7776,14 +7842,26 @@ function abrirNutrientes(p, datos){
       row.className = "nutri-row" + (esSub ? " sub" : "");
       row.innerHTML = "<span></span><b></b>";
       row.querySelector("span").textContent = etiqueta;
-      row.querySelector("b").textContent = numNutri(v[clave]) + " " + unidad;
+      row.querySelector("b").textContent = (comb.trazas[clave] ? "trazas" : numNutri(v[clave]) + " " + unidad) + (comb.completado[clave] ? " *" : "");
       g.appendChild(row);
+      if(comb.difiere[clave] !== undefined){
+        const nota = document.createElement("div");
+        nota.className = "nutri-difiere";
+        nota.textContent = "La tabla española BEDCA informa " + numNutri(comb.difiere[clave]) + " " + unidad + ": el valor puede variar según la especie y el origen.";
+        g.appendChild(nota);
+      }
     });
     nutriBox.appendChild(g);
   });
   const src = document.createElement("p");
   src.className = "nutri-src";
-  src.textContent = "Fuente: " + datos.f + " · " + datos.ref + ". Valores orientativos de referencia: pueden variar según el origen, la temporada y la preparación. ";
+  src.textContent = "Fuente: " + datos.f + " · " + datos.ref + ". ";
+  if(comb.bedca){
+    const hayCompletados = Object.keys(comb.completado).length > 0;
+    src.textContent += "Comparado con " + FUENTE_BEDCA + " · " + comb.bedca.ref + "." +
+      (hayCompletados ? " * Dato completado con BEDCA." : "") + " ";
+  }
+  src.textContent += "Valores orientativos de referencia: pueden variar según el origen, la temporada y la preparación. ";
   const masInfo = document.createElement("a");
   masInfo.href = "#";
   masInfo.textContent = "¿De dónde salen estos datos?";
