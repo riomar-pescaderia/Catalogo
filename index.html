@@ -7129,6 +7129,13 @@ function parseRecetasJson(json){
     if(!actual.tiempo) actual.tiempo = val(cells, c.tiempo);
     if(!actual.foto) actual.foto = val(cells, c.foto);
     if(!actual.video) actual.video = linkVideo(val(cells, c.video));
+    // sin columna "Video": se toma cualquier link de Instagram, YouTube, TikTok o Facebook de la fila
+    if(!actual.video && c.video === -1){
+      for(let i = 0; i < cells.length && !actual.video; i++){
+        const l = linkVideo(cellText(cells[i]));
+        if(l && nombreVideo(l)) actual.video = l;
+      }
+    }
     const pasos = val(cells, c.pasos);
     if(pasos) actual.pasos = actual.pasos.concat(pasos.split(/\n|\|/).map(t => t.trim().replace(/^\d+[.)-]\s*/, "")).filter(Boolean));
     const ing = val(cells, c.ing);
