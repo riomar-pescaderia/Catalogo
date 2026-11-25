@@ -952,6 +952,8 @@
   .rec-det .bd{ padding:14px 16px 18px; }
   .rec-det h3{ margin:0 0 4px; font-size:1.18rem; line-height:1.3; }
   .rec-meta{ font-size:.8rem; color:var(--ink-soft); }
+  .rec-video{ display:flex; align-items:center; justify-content:center; gap:6px; margin:12px 0 2px; padding:10px 12px; border-radius:12px; background:var(--accent); color:#1a1408; font-weight:800; font-size:.86rem; text-decoration:none; transition:transform .12s ease; }
+  .rec-video:active{ transform:scale(.97); }
   .rec-det h4{ margin:16px 0 6px; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
   .rec-comensales{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -7079,6 +7081,21 @@ function numReceta(t){
   const v = parseFloat(String(t || "").replace(",", "."));
   return isFinite(v) && v > 0 ? v : null;
 }
+// Link a un video de la receta (Instagram, YouTube, TikTok...): solo direcciones https
+function linkVideo(t){
+  try{
+    const u = new URL(String(t || "").trim());
+    return u.protocol === "https:" ? u.href : "";
+  }catch(err){ return ""; }
+}
+function nombreVideo(link){
+  const h = new URL(link).hostname.replace(/^www./, "");
+  if(/instagram.com$/.test(h)) return "Instagram";
+  if(/youtube.com$|youtu.be$/.test(h)) return "YouTube";
+  if(/tiktok.com$/.test(h)) return "TikTok";
+  if(/facebook.com$|fb.watch$/.test(h)) return "Facebook";
+  return "";
+}
 function parseRecetasJson(json){
   if(!json || json.status === "error") throw new Error("No hay pestaña de recetas");
   const cols = (json.table && json.table.cols) || [];
@@ -7088,6 +7105,7 @@ function parseRecetasJson(json){
     porciones: findColumn(cols, ["porcion", "comensal"]),
     tiempo: findColumn(cols, ["tiempo"]),
     foto: findColumn(cols, ["foto", "imagen"]),
+    video: findColumn(cols, ["video"]),
     ing: findColumn(cols, ["ingred"]),
     cod: findColumn(cols, ["cod"]),
     cant: findColumn(cols, ["cant"]),
@@ -7102,7 +7120,7 @@ function parseRecetasJson(json){
     const cells = r.c || [];
     const nombre = val(cells, c.nombre);
     if(nombre && (!actual || norm(nombre) !== norm(actual.nombre))){
-      actual = { id: "r-" + slug(nombre) + "-" + lista.length, nombre, porciones: 2, tiempo: "", foto: "", pasos: [], ingredientes: [] };
+      actual = { id: "r-" + slug(nombre) + "-" + lista.length, nombre, porciones: 2, tiempo: "", foto: "", video: "", pasos: [], ingredientes: [] };
       lista.push(actual);
     }
     if(!actual) return;
@@ -7110,6 +7128,7 @@ function parseRecetasJson(json){
     if(porc) actual.porciones = porc;
     if(!actual.tiempo) actual.tiempo = val(cells, c.tiempo);
     if(!actual.foto) actual.foto = val(cells, c.foto);
+    if(!actual.video) actual.video = linkVideo(val(cells, c.video));
     const pasos = val(cells, c.pasos);
     if(pasos) actual.pasos = actual.pasos.concat(pasos.split(/\n|\|/).map(t => t.trim().replace(/^\d+[.)-]\s*/, "")).filter(Boolean));
     const ing = val(cells, c.ing);
@@ -7347,6 +7366,16 @@ function renderDetalleReceta(r){
     m.className = "rec-meta";
     m.textContent = "⏱ " + r.tiempo;
     bd.appendChild(m);
+  }
+  if(r.video){
+    const a = document.createElement("a");
+    a.className = "rec-video";
+    a.href = r.video;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    const red = nombreVideo(r.video);
+    a.textContent = "▶ Ver el video de la receta" + (red ? " en " + red : "");
+    bd.appendChild(a);
   }
 
   // comensales
