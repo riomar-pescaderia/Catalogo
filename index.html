@@ -7175,9 +7175,19 @@ function tarjetaReceta(x, chica){
   const card = document.createElement("button");
   card.type = "button";
   card.className = "rec-card";
-  const foto = x.foto ? photoUrl(x.foto, 500) : fotoDeProducto((x.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
+  // la foto de la receta; si falta, es el link de una carpeta o no carga, va la del producto
+  const fotoProd = fotoDeProducto((x.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
+  const propia = x.foto && !x.foto.includes("/folders/") ? photoUrl(x.foto, 500) : "";
+  const foto = propia || fotoProd;
   card.innerHTML = (foto ? '<img class="ph" alt="" referrerpolicy="no-referrer">' : '<span class="ph"></span>') + "<b></b>" + (chica ? "" : "<span></span>");
-  if(foto) card.querySelector("img").src = foto;
+  if(foto){
+    const img = card.querySelector("img");
+    img.addEventListener("error", ()=>{
+      if(propia && fotoProd && img.src !== fotoProd) img.src = fotoProd;
+      else { const ph = document.createElement("span"); ph.className = "ph"; img.replaceWith(ph); }
+    });
+    img.src = foto;
+  }
   card.querySelector("b").textContent = x.nombre;
   if(!chica) card.querySelector("span:last-child").textContent = [x.tiempo, x.porciones + (x.porciones === 1 ? " porción" : " porciones")].filter(Boolean).join(" · ");
   return card;
