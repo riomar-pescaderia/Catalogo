@@ -938,6 +938,13 @@
   .rec-card .ph{ display:block; width:100%; aspect-ratio:4/3; object-fit:cover; background:var(--surface-alt); }
   .rec-card b{ display:block; padding:9px 10px 2px; font-size:.88rem; line-height:1.3; }
   .rec-card span{ display:block; padding:0 10px 10px; font-size:.72rem; color:var(--ink-soft); }
+  /* tira de recetas arriba de la receta abierta, para pasar de una a otra */
+  .rec-tira{ display:flex; gap:8px; overflow-x:auto; margin:10px -16px 0; padding:2px 16px 6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .rec-tira::-webkit-scrollbar{ display:none; }
+  .rec-tira .rec-card{ flex:0 0 112px; }
+  .rec-tira .rec-card .ph{ aspect-ratio:1; }
+  .rec-tira .rec-card b{ padding:6px 7px 7px; font-size:.72rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .rec-tira .rec-card.actual{ outline:3px solid var(--accent); outline-offset:-3px; }
   .rec-vacio{ text-align:center; color:var(--ink-soft); padding:22px 8px; font-size:.9rem; line-height:1.5; }
   .rec-vacio .item-chip{ margin-top:12px; }
   .rec-det{ background:var(--surface); border:1px solid var(--line); border-radius:18px; overflow:hidden; margin-top:12px; }
@@ -7163,12 +7170,24 @@ function botonGoogle(nombre, texto){
   return a;
 }
 
+function listaRecetas(){ return filtroReceta ? recetas.filter(x => recetaUsa(x, filtroReceta)) : recetas; }
+function tarjetaReceta(x, chica){
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "rec-card";
+  const foto = x.foto ? photoUrl(x.foto, 500) : fotoDeProducto((x.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
+  card.innerHTML = (foto ? '<img class="ph" alt="" referrerpolicy="no-referrer">' : '<span class="ph"></span>') + "<b></b>" + (chica ? "" : "<span></span>");
+  if(foto) card.querySelector("img").src = foto;
+  card.querySelector("b").textContent = x.nombre;
+  if(!chica) card.querySelector("span:last-child").textContent = [x.tiempo, x.porciones + (x.porciones === 1 ? " porción" : " porciones")].filter(Boolean).join(" · ");
+  return card;
+}
 function renderRecetas(){
   recetasView.innerHTML = "";
   const r = recetaAbierta && recetas.find(x => x.id === recetaAbierta);
   if(r){ renderDetalleReceta(r); return; }
   recetaAbierta = null;
-  const lista = filtroReceta ? recetas.filter(x => recetaUsa(x, filtroReceta)) : recetas;
+  const lista = listaRecetas();
   if(filtroReceta){
     const f = document.createElement("div");
     f.className = "rec-filtro";
@@ -7195,14 +7214,7 @@ function renderRecetas(){
   const grid = document.createElement("div");
   grid.className = "rec-grid";
   lista.forEach(x=>{
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "rec-card";
-    const foto = x.foto ? photoUrl(x.foto, 500) : fotoDeProducto((x.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
-    card.innerHTML = (foto ? '<img class="ph" alt="" referrerpolicy="no-referrer">' : '<span class="ph"></span>') + "<b></b><span></span>";
-    if(foto) card.querySelector("img").src = foto;
-    card.querySelector("b").textContent = x.nombre;
-    card.querySelector("span:last-child").textContent = [x.tiempo, x.porciones + (x.porciones === 1 ? " porción" : " porciones")].filter(Boolean).join(" · ");
+    const card = tarjetaReceta(x);
     card.addEventListener("click", ()=>{
       recetaAbierta = x.id;
       pushNavState("modo", { modo: "recetas", receta: x.id });
@@ -7272,6 +7284,39 @@ function renderDetalleReceta(r){
     else { recetaAbierta = null; renderRecetas(); }
   });
   recetasView.appendChild(volver);
+
+  const otras = listaRecetas();
+  if(otras.length > 1){
+    const tira = document.createElement("div");
+    tira.className = "rec-tira";
+    otras.forEach(x=>{
+      const card = tarjetaReceta(x, true);
+      if(x.id === r.id){ card.classList.add("actual"); card.setAttribute("aria-current", "true"); }
+      card.addEventListener("click", ()=>{
+        if(x.id === r.id) return;
+        recetaAbierta = x.id;
+        // se reemplaza la entrada del historial: "atrás" sigue volviendo a la lista
+        replaceNavState("modo", { modo: "recetas", receta: x.id });
+        const izq = tira.scrollLeft;
+        renderRecetas();
+        const nueva = recetasView.querySelector(".rec-tira");
+        if(nueva) nueva.scrollLeft = izq;
+        // que la tira quede justo debajo del buscador y el menú fijos
+        const fijos = [...document.querySelectorAll(".search-wrap, .cat-strip-wrap, .cat-grid-wrap")].filter(e => e.offsetParent !== null).reduce((t, e)=> t + e.offsetHeight, 0);
+        const top = recetasView.getBoundingClientRect().top + window.scrollY - fijos - 8;
+        if(window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
+      });
+      tira.appendChild(card);
+    });
+    recetasView.appendChild(tira);
+    requestAnimationFrame(()=>{
+      const act = tira.querySelector(".actual");
+      // si la receta abierta no se ve entera en la tira, se centra
+      if(!act) return;
+      const x = act.getBoundingClientRect().left - tira.getBoundingClientRect().left;
+      if(x < 0 || x + act.offsetWidth > tira.clientWidth) tira.scrollLeft += x - (tira.clientWidth - act.offsetWidth) / 2;
+    });
+  }
 
   const det = document.createElement("div");
   det.className = "rec-det";
