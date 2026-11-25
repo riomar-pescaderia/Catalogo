@@ -7280,12 +7280,7 @@ function renderDetalleReceta(r){
     const prod = productoPorCod(i.cod);
     if(prod) nuestros.push({ i, idx, prod }); else otros.push({ i, idx });
   });
-  const foto = r.foto ? photoUrl(r.foto, 900) : (nuestros[0] ? fotoDeProducto(nuestros[0].prod.ref) : "");
-  if(foto){
-    const img = document.createElement("img");
-    img.className = "ph"; img.alt = ""; img.referrerPolicy = "no-referrer"; img.src = foto;
-    det.appendChild(img);
-  }
+  // la foto grande solo va en la tarjeta de la lista, no en la receta abierta
   const bd = document.createElement("div");
   bd.className = "bd";
   det.appendChild(bd);
