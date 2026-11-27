@@ -1179,13 +1179,14 @@
     background:var(--accent);
     color:var(--accent-ink);
   }
+  /* en el celular: cantidad un poco más grande y "Agregar" (como siempre) debajo */
   @media (max-width:699px){
-    .item-bottom{ flex-wrap:wrap; row-gap:8px; }
-    .item-cart-row{ flex:1 1 100%; gap:8px; }
-    .item-qty-stepper{ gap:5px; }
-    .item-qty-step{ width:42px; height:42px; font-size:1.2rem; border-radius:10px; }
-    .item-qty{ width:58px; height:42px; font-size:1rem; font-weight:700; border-radius:10px; }
-    .item-add{ flex:1; height:42px; font-size:.95rem; border-radius:10px; }
+    .item-bottom{ align-items:flex-start; }
+    .item-cart-row{ flex-direction:column; align-items:stretch; gap:6px; }
+    .item-qty-stepper{ gap:4px; }
+    .item-qty-step{ width:34px; height:36px; font-size:1.15rem; }
+    .item-qty{ width:48px; height:36px; font-size:.95rem; font-weight:700; }
+    .item-price{ line-height:36px; }
     .item-consultar{ padding:10px 16px; font-size:.9rem; }
   }
   .no-results{
