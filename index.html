@@ -228,16 +228,6 @@
   /* menú de inicio con 4 opciones: grilla de 2 x 2 */
   #modoGrid.cuatro{ grid-template-columns:repeat(2, 1fr); max-width:360px; margin-left:auto; margin-right:auto; }
   @media (min-width:700px){ #modoGrid.cuatro{ grid-template-columns:repeat(4, 1fr); max-width:none; } }
-  /* ícono de "Dónde encontrarnos": un pedacito de mapa con el pin */
-  .modo-mapa{
-    display:flex; align-items:center; justify-content:center; width:100%; height:100%;
-    background-color:#e8ecef;
-    background-image:
-      repeating-linear-gradient(32deg, transparent 0 13px, #ffffff 13px 17px),
-      repeating-linear-gradient(-58deg, transparent 0 19px, #ffffff 19px 22px),
-      linear-gradient(135deg, #cfe3d0 0 30%, transparent 30%);
-  }
-  .modo-mapa svg{ width:46%; height:46%; filter:drop-shadow(0 3px 3px rgba(0,0,0,.35)); }
   .cat-card-btn{
     display:flex;
     flex-direction:column;
@@ -7074,15 +7064,11 @@ const nutriVacio = document.getElementById("nutriVacio");
 
 function fotoModo(id){
   if(id === "catalogo") return "img/catalogo.jpg?v=1"; // pescados y mariscos sobre hielo (Unsplash, tHjXXy1kk_Q)
+  if(id === "mapa") return "img/local-noche.jpg?v=1"; // el local de noche, con el cartel encendido
   if(id === "recetas") return "img/recetas-plato.jpg?v=1"; // salmón grillado servido (Unsplash, GFzirrq7J0k)
   return "img/nutrientes-menu.jpg?v=1"; // salmón, palta, aceite de oliva, semillas y frutos secos
 }
 function iconoModo(el, m){
-  if(m.id === "mapa"){
-    el.innerHTML = '<span class="modo-mapa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s-7-6-7-12a7 7 0 0 1 14 0c0 6-7 12-7 12z" fill="#dcaa54" stroke="#7a5418" stroke-width="1.2"/><circle cx="12" cy="10" r="2.6" fill="#fff"/></svg></span>';
-    el.classList.add("has-photo");
-    return;
-  }
   const foto = fotoModo(m.id);
   el.innerHTML = "";
   el.classList.toggle("has-photo", !!foto);
