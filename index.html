@@ -847,6 +847,9 @@
     overflow:hidden;
     box-shadow:0 20px 50px rgba(0,0,0,.6);
   }
+  .photo-viewer-acciones{ display:flex; gap:8px; padding:0 14px 14px; background:var(--surface); }
+  .photo-viewer-acciones .item-chip{ flex:1; justify-content:center; padding:11px 10px; font-size:.86rem; }
+  .photo-viewer-acciones .item-chip svg{ width:17px; height:17px; }
   .photo-viewer-box img{ width:100%; aspect-ratio:1; object-fit:contain; display:block; background:#fff; }
   .photo-viewer-box figcaption{
     background:var(--surface);
@@ -863,6 +866,10 @@
     background:var(--surface-alt); color:var(--ink);
     font-size:1.4rem; line-height:1; cursor:pointer;
   }
+  .rec-volver{ margin-bottom:10px; }
+  /* resalta el producto al volver a él */
+  .item.volvi{ animation:volviItem 1.6s ease; }
+  @keyframes volviItem{ 0%, 40%{ background:var(--accent-soft); border-left-color:var(--accent); } 100%{ background:transparent; } }
   .item.in-cart{
     background:var(--accent-soft);
     border-left-color:var(--accent);
@@ -1171,6 +1178,15 @@
   .item.in-cart .item-add{
     background:var(--accent);
     color:var(--accent-ink);
+  }
+  @media (max-width:699px){
+    .item-bottom{ flex-wrap:wrap; row-gap:8px; }
+    .item-cart-row{ flex:1 1 100%; gap:8px; }
+    .item-qty-stepper{ gap:5px; }
+    .item-qty-step{ width:42px; height:42px; font-size:1.2rem; border-radius:10px; }
+    .item-qty{ width:58px; height:42px; font-size:1rem; font-weight:700; border-radius:10px; }
+    .item-add{ flex:1; height:42px; font-size:.95rem; border-radius:10px; }
+    .item-consultar{ padding:10px 16px; font-size:.9rem; }
   }
   .no-results{
     text-align:center;
@@ -1786,6 +1802,7 @@
     <figure class="photo-viewer-box">
       <img id="photoViewerImg" alt="" referrerpolicy="no-referrer">
       <figcaption id="photoViewerName"></figcaption>
+      <div class="photo-viewer-acciones" id="photoViewerAcc" hidden></div>
     </figure>
     <button type="button" class="photo-viewer-close" aria-label="Cerrar">&times;</button>
   </div>
@@ -5817,6 +5834,12 @@ function popNavStateIfNeeded(expectedView){
 
 window.addEventListener("popstate", (e)=>{
   if(typeof saltarPop !== "undefined" && saltarPop) return;
+  // volviendo de las recetas a las que se llegó desde un producto
+  if(typeof volverAlItem !== "undefined" && volverAlItem && !(e.state && e.state.volver === volverAlItem.token)){
+    if(cartOverlay.classList.contains("open")) closeCart();
+    restaurarItem();
+    return;
+  }
   suppressHistorySync = true;
   const view = e.state && e.state.riomarView;
   if(view === "cart"){
@@ -6600,6 +6623,7 @@ function openCategory(id, scrollTo, exclusive){
     });
     suppressHistorySync = wasSuppressed;
   }
+  if(exclusive && !suppressHistorySync) volverAlItem = null; // entró a otra categoría por su cuenta
   section.hidden = false;
   section.classList.add("open");
   section.querySelector(".cat-head").setAttribute("aria-expanded", "true");
@@ -7012,7 +7036,7 @@ function setupItemThumb(btn, p){
   btn.removeAttribute("aria-hidden");
   btn.removeAttribute("tabindex");
   btn.setAttribute("aria-label", "Ver foto de " + p.nombre);
-  btn.addEventListener("click", ()=> openPhotoViewer(photoUrl(p.foto, 900), p.nombre));
+  btn.addEventListener("click", ()=> openPhotoViewer(photoUrl(p.foto, 900), p.nombre, { p, li: btn.closest(".item") }));
 }
 
 /* ---------------- pre-menú: Catálogo · Recetas · Nutrientes ----------------
@@ -7106,6 +7130,7 @@ function sinRecetaEnHistorial(fn){
 }
 function abrirModo(id){
   if(history.state && history.state.receta){ sinRecetaEnHistorial(()=> abrirModo(id)); return; }
+  volverAlItem = null; // eligió otro menú: ya no se vuelve al producto
   const desdeInicio = modo === null;
   modo = id;
   recetaAbierta = null;
@@ -7272,6 +7297,70 @@ function irRecetasDe(p){
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+/* Ir a las recetas de un producto recordando dónde estaba, para que
+   "volver" (botón o atrás del celular) deje al cliente en ese mismo producto. */
+let volverAlItem = null;
+function irRecetasDesdeItem(p, li){
+  volverAlItem = { token: Date.now(), li, catId: activeCategoryId, modo, busqueda: searchInput.value, nombre: p.nombre };
+  const wasSuppressed = suppressHistorySync;
+  suppressHistorySync = true;
+  if(activeCategoryId) closeCategory(activeCategoryId);
+  if(searchInput.value.trim()){ searchInput.value = ""; searchInput.dispatchEvent(new Event("input")); }
+  suppressHistorySync = wasSuppressed;
+  modo = "recetas";
+  filtroReceta = { cod: p.cod || "", nombre: p.nombre };
+  recetaAbierta = null;
+  pushNavState("modo", { modo: "recetas", volver: volverAlItem.token });
+  renderModo();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+// marca de "vengo de un producto" para las entradas del historial dentro de recetas
+function conVolver(extra){
+  return (volverAlItem && modo === "recetas") ? Object.assign({ volver: volverAlItem.token }, extra) : extra;
+}
+function restaurarItem(){
+  const v = volverAlItem;
+  volverAlItem = null;
+  if(!v) return;
+  const wasSuppressed = suppressHistorySync;
+  suppressHistorySync = true;
+  modo = v.modo;
+  recetaAbierta = null;
+  filtroReceta = null;
+  if(v.catId) openCategory(v.catId, false, true);
+  else if(v.busqueda){ searchInput.value = v.busqueda; searchInput.dispatchEvent(new Event("input")); }
+  if(modo !== null) armarModoStrip();
+  aplicarVista();
+  suppressHistorySync = wasSuppressed;
+  if(v.li && v.li.isConnected){
+    requestAnimationFrame(()=>{
+      // que quede justo debajo del buscador y la tira fijos de arriba
+      v.li.scrollIntoView({ block: "start", behavior: "auto" });
+      // ya con los menús pegados arriba, se corre lo que tapan
+      // (otra vez cuando termina de achicarse el encabezado, que corre el contenido)
+      const acomodar = ()=>{
+        const tope = [...document.querySelectorAll(".search-wrap, .cat-strip-wrap")].filter(e => e.offsetParent !== null)
+          .reduce((t, e)=> Math.max(t, e.getBoundingClientRect().bottom), 0);
+        window.scrollBy({ top: v.li.getBoundingClientRect().top - tope - 12, behavior: "auto" });
+      };
+      requestAnimationFrame(acomodar);
+      setTimeout(acomodar, 320);
+      v.li.classList.remove("volvi");
+      void v.li.offsetWidth;
+      v.li.classList.add("volvi");
+    });
+  }
+}
+// botón "Volver a ..." en las recetas
+function volverAlProducto(){
+  if(history.state && history.state.volver && volverAlItem && history.state.volver === volverAlItem.token && !history.state.receta){
+    history.back();
+  } else {
+    const v = volverAlItem;
+    restaurarItem();
+    if(v && v.catId) replaceNavState("category", { id: v.catId });
+  }
+}
 function botonGoogle(nombre, texto){
   const a = document.createElement("a");
   a.className = "item-chip";
@@ -7322,6 +7411,14 @@ function renderRecetas(){
     todas.textContent = "✕ Ver todas";
     todas.addEventListener("click", ()=>{ filtroReceta = null; renderRecetas(); });
     f.appendChild(todas);
+    if(volverAlItem){
+      const vb = document.createElement("button");
+      vb.type = "button";
+      vb.className = "item-chip rec-volver";
+      vb.textContent = "‹ Volver al producto";
+      vb.addEventListener("click", volverAlProducto);
+      recetasView.appendChild(vb);
+    }
     recetasView.appendChild(f);
   }
   if(!lista.length){
@@ -7340,7 +7437,7 @@ function renderRecetas(){
     const card = tarjetaReceta(x);
     card.addEventListener("click", ()=>{
       recetaAbierta = x.id;
-      pushNavState("modo", { modo: "recetas", receta: x.id });
+      pushNavState("modo", conVolver({ modo: "recetas", receta: x.id }));
       renderRecetas();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
@@ -7419,7 +7516,7 @@ function renderDetalleReceta(r){
         if(x.id === r.id) return;
         recetaAbierta = x.id;
         // se reemplaza la entrada del historial: "atrás" sigue volviendo a la lista
-        replaceNavState("modo", { modo: "recetas", receta: x.id });
+        replaceNavState("modo", conVolver({ modo: "recetas", receta: x.id }));
         const izq = tira.scrollLeft;
         renderRecetas();
         const nueva = recetasView.querySelector(".rec-tira");
@@ -7617,6 +7714,7 @@ const ICONO_NUTRI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 function agregarBotonesExtra(li, p, categoriaOriginal){
   const conReceta = admiteRecetas(categoriaOriginal);
   const datos = p.nutri ? nutrientesDe(p.nombre, categoriaOriginal) : null;
+  li._extras = { conReceta, datos };
   if(!conReceta && !datos) return;
   const fila = document.createElement("div");
   fila.className = "item-extras";
@@ -8224,9 +8322,32 @@ window.addEventListener("popstate", cerrarNutrientes);
 const photoViewer = document.getElementById("photoViewer");
 const photoViewerImg = document.getElementById("photoViewerImg");
 const photoViewerName = document.getElementById("photoViewerName");
-function openPhotoViewer(src, name){
+function openPhotoViewer(src, name, item){
   photoViewerImg.src = src;
   photoViewerName.textContent = name;
+  // desde la foto de un producto: ir a sus recetas o a su ficha de nutrientes
+  const acc = document.getElementById("photoViewerAcc");
+  acc.innerHTML = "";
+  const ex = item && item.li && item.li._extras;
+  if(ex && (ex.conReceta || ex.datos)){
+    if(ex.conReceta){
+      const r = document.createElement("button");
+      r.type = "button";
+      r.className = "item-chip";
+      r.innerHTML = ICONO_RECETA + "<span>Recetas</span>";
+      r.addEventListener("click", e=>{ e.stopPropagation(); closePhotoViewer(); irRecetasDesdeItem(item.p, item.li); });
+      acc.appendChild(r);
+    }
+    if(ex.datos){
+      const n = document.createElement("button");
+      n.type = "button";
+      n.className = "item-chip";
+      n.innerHTML = ICONO_NUTRI + "<span>Nutrientes</span>";
+      n.addEventListener("click", e=>{ e.stopPropagation(); closePhotoViewer(); abrirNutrientes(item.p, ex.datos); });
+      acc.appendChild(n);
+    }
+  }
+  acc.hidden = !acc.children.length;
   photoViewer.hidden = false;
   requestAnimationFrame(()=> photoViewer.classList.add("open"));
 }
