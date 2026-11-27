@@ -7071,7 +7071,9 @@ const MODOS = [
   { id: "nutrientes", nombre: "Nutrientes", sub: "Info nutricional", icono: "🥗" },
   { id: "mapa", nombre: "Dónde encontrarnos", sub: "Local y puntos de venta", icono: "📍" }
 ];
-let mapaDisponible = false;
+// el local de RIOMAR está fijo en MAPA_CONFIG: el mapa siempre tiene algo que mostrar,
+// así que la opción aparece desde el principio, junto con las otras tres
+let mapaDisponible = true;
 function modosVisibles(){ return MODOS.filter(m => m.id !== "mapa" || mapaDisponible); }
 function elegirModo(m){
   if(m.id !== modo) abrirModo(m.id);
@@ -8637,19 +8639,19 @@ function parsePuntosJson(json){
     Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180);
 }
 
+let puntosCargados = false;
 async function cargarPuntosDeVenta(){
-  if(!MAPA_CONFIG.googleMapsKey || !MAPA_CONFIG.sheetId) return;
+  if(!MAPA_CONFIG.googleMapsKey || !MAPA_CONFIG.sheetId){ puntosCargados = true; return; }
   try{
     puntosDeVenta = await fetchGvizSheet(MAPA_CONFIG.sheetId, MAPA_CONFIG.gid, parsePuntosJson);
   } catch(e){
     console.warn("No se pudo leer la planilla de puntos de venta:", e);
     puntosDeVenta = [];
   }
-  mapaDisponible = puntosDeVenta.length > 0 || !!localRiomar();
-  armarModoHome();
-  if(modo !== null) armarModoStrip();
-  // el mapa se abre desde el menú (ya no hay lomo al costado)
+  puntosCargados = true;
   armarSugerenciasMapa();
+  // si alguien abrió el mapa mientras cargaban los comercios, se arma ahora
+  if(modo === "mapa") prepararMapa();
 }
 
 /* Reinicia el latido + brillo (5 veces y queda quieto) */
@@ -9123,6 +9125,10 @@ function abrirMapa(){
   if(modo !== "mapa") abrirModo("mapa"); else prepararMapa();
 }
 async function prepararMapa(){
+  if(!puntosCargados){
+    document.getElementById("mapaSub").textContent = "Cargando los comercios…";
+    return;
+  }
   document.getElementById("mapaSub").textContent =
     (localRiomar() ? "Nuestro local y " : "") +
     puntosDeVenta.length + (puntosDeVenta.length === 1 ? " comercio" : " comercios") + " con productos RIOMAR";
