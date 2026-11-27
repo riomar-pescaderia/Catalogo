@@ -717,6 +717,16 @@
     background:var(--bg);
     display:flex; flex-direction:column;
   }
+  /* dentro de la página, como los otros menús */
+  .mapa-overlay.mapa-en-pagina{
+    position:relative; inset:auto; z-index:auto;
+    height:72vh; min-height:440px;
+    margin:12px 16px 20px;
+    border:1px solid var(--line); border-radius:16px; overflow:hidden;
+  }
+  .mapa-overlay.mapa-en-pagina[hidden]{ display:none; }
+  .mapa-en-pagina .mapa-head{ padding-top:12px; }
+  @media (min-width:900px){ .mapa-overlay.mapa-en-pagina{ margin:12px 40px 24px; height:75vh; } }
   .mapa-head{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:12px 16px calc(10px);
@@ -7052,9 +7062,7 @@ const MODOS = [
 ];
 let mapaDisponible = false;
 function modosVisibles(){ return MODOS.filter(m => m.id !== "mapa" || mapaDisponible); }
-// el mapa no es una vista: abre el mapa encima de la página
 function elegirModo(m){
-  if(m.id === "mapa"){ abrirMapa(); return; }
   if(m.id !== modo) abrirModo(m.id);
 }
 const modoHome = document.getElementById("modoHome");
@@ -7065,8 +7073,8 @@ const recetasView = document.getElementById("recetasView");
 const nutriVacio = document.getElementById("nutriVacio");
 
 function fotoModo(id){
-  if(id === "catalogo") return catPhoto("Pescados") || (currentCategoryOrder[0] && catPhoto(currentCategoryOrder[0].nombre));
-  if(id === "recetas") return "img/recetas.jpg?v=1"; // foto de ingredientes (img/recetas.jpg)
+  if(id === "catalogo") return "img/catalogo.jpg?v=1"; // pescados y mariscos sobre hielo (Unsplash, tHjXXy1kk_Q)
+  if(id === "recetas") return "img/recetas-plato.jpg?v=1"; // salmón grillado servido (Unsplash, GFzirrq7J0k)
   return "img/nutrientes.png?v=3"; // torta de nutrientes (img/nutrientes.png)
 }
 function iconoModo(el, m){
@@ -7143,6 +7151,7 @@ function renderModo(){
   armarModoStrip();
   if(modo === "recetas") renderRecetas();
   aplicarVista();
+  if(modo === "mapa") prepararMapa();
 }
 document.getElementById("modoStripBack").addEventListener("click", ()=>{
   sinRecetaEnHistorial(()=>{
@@ -7162,6 +7171,12 @@ function aplicarVista(){
   modoStripWrap.hidden = !libre || modo === null;
   document.getElementById("catGridWrap").hidden = !libre || modo !== "catalogo";
   recetasView.hidden = !libre || modo !== "recetas";
+  const mapaVista = document.getElementById("mapaOverlay");
+  if(mapaVista){
+    const verMapa = libre && modo === "mapa";
+    if(!verMapa && !mapaVista.hidden) ocultarFicha();
+    mapaVista.hidden = !verMapa;
+  }
   const nutriSec = document.querySelector("section.category[data-apartado]");
   if(nutriSec && !q){
     const ver = libre && modo === "nutrientes";
@@ -9096,18 +9111,11 @@ function cargarGoogleMaps(){
 }
 
 let mapaGoogle = null;
-async function abrirMapa(){
-  const overlay = document.getElementById("mapaOverlay");
-  // Igual que el carrito: abrir el mapa agrega un paso al historial, así
-  // el botón "atrás" del celular cierra el mapa en vez de salir del sitio.
-  if(overlay.hidden){
-    pushNavState("mapa");
-    recortar(overlay, "polygon(0 0, 0 0, 0 0)"); // arranca tapado
-    overlay.hidden = false;
-    animarFilm(overlay, true, ()=>{});
-  }
-  overlay.classList.remove("cerrando");
-  document.body.style.overflow = "hidden";
+// "Dónde encontrarnos" se abre como los otros menús (con la tira de arriba)
+function abrirMapa(){
+  if(modo !== "mapa") abrirModo("mapa"); else prepararMapa();
+}
+async function prepararMapa(){
   document.getElementById("mapaSub").textContent =
     (localRiomar() ? "Nuestro local y " : "") +
     puntosDeVenta.length + (puntosDeVenta.length === 1 ? " comercio" : " comercios") + " con productos RIOMAR";
@@ -9162,21 +9170,9 @@ async function abrirMapa(){
   }
 }
 
-function cerrarMapa(desdeHistorial){
-  const overlay = document.getElementById("mapaOverlay");
-  if(overlay.hidden || overlay.classList.contains("cerrando")) return;
+// el mapa ya no es una ventana encima: "cerrar" solo oculta la ficha abierta
+function cerrarMapa(){
   ocultarFicha();
-  if(desdeHistorial !== true) popNavStateIfNeeded("mapa");
-  const terminar = ()=>{
-    overlay.classList.remove("cerrando");
-    overlay.hidden = true;
-    recortar(overlay, "");
-    document.body.style.overflow = "";
-  };
-  // Se vuelve a "pegar" el film, de la esquina inferior izquierda hacia la
-  // superior derecha (sin animación si el celular pide reducir movimiento)
-  overlay.classList.add("cerrando");
-  animarFilm(overlay, false, terminar);
 }
 
 function armarSugerenciasMapa(){
@@ -9210,14 +9206,22 @@ document.getElementById("mapaBtn").addEventListener("click", abrirMapa);
 document.getElementById("mapaBtn").addEventListener("mouseenter", ()=>{
   if(window.matchMedia("(hover: hover) and (pointer: fine)").matches) reanimarLomo();
 });
-document.getElementById("mapaClose").addEventListener("click", ()=> cerrarMapa());
+// el mapa vive dentro de la página, debajo de la tira de menús
+(function(){
+  const v = document.getElementById("mapaOverlay");
+  v.classList.add("mapa-en-pagina");
+  v.removeAttribute("role");
+  document.getElementById("mapaClose").remove();
+  const nv = document.getElementById("nutriVacio");
+  nv.parentNode.insertBefore(v, nv.nextSibling);
+})();
 document.getElementById("mapaCardClose").addEventListener("click", ocultarFicha);
 document.addEventListener("keydown", (e)=>{
   if(e.key !== "Escape") return;
   if(!document.getElementById("mapaCard").hidden) ocultarFicha();
   else cerrarMapa();
 });
-window.addEventListener("popstate", ()=> cerrarMapa(true));
+
 
 // Primero el catálogo (precios) y después los puntos de venta: las dos
 // planillas usan la misma función global de Google, de a una por vez.
