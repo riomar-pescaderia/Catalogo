@@ -869,6 +869,28 @@
   }
   /* botones chicos de "Recetas" y "Nutrientes" debajo del nombre */
   .item-extras{ grid-column:2; display:flex; flex-wrap:wrap; gap:6px; }
+  .item-chip.on{ background:var(--accent); color:#1a1408; }
+  /* ventanita de Recetas / Nutrientes dentro del producto */
+  .item-panel{
+    grid-column:2; margin-top:4px;
+    border:1px solid var(--accent); border-radius:12px;
+    background:var(--surface); overflow:hidden;
+    animation:panelAbre .18s ease;
+  }
+  @keyframes panelAbre{ from{ opacity:0; transform:translateY(-4px); } to{ opacity:1; transform:none; } }
+  .item-panel-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 8px 8px 12px; border-bottom:1px solid var(--line); }
+  .item-panel-head b{ font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); }
+  .item-panel-head button{ border:0; background:none; color:var(--ink-soft); font-size:1.3rem; line-height:1; padding:2px 6px; cursor:pointer; }
+  .item-panel-body{ max-height:300px; overflow-y:auto; overscroll-behavior:contain; padding:8px 12px 12px; }
+  .item-panel-body .nutri-sub{ margin:0 0 8px; }
+  .item-panel-body .nutri-kcal{ margin-bottom:8px; }
+  .item-panel-vacio{ margin:4px 0 10px; font-size:.82rem; color:var(--ink-soft); }
+  .item-panel-rec{ display:flex; align-items:center; gap:10px; width:100%; padding:7px 0; border:0; border-bottom:1px solid var(--line); background:none; color:var(--ink); font:inherit; text-align:left; cursor:pointer; }
+  .item-panel-rec:last-of-type{ border-bottom:0; }
+  .item-panel-rec .ph{ width:44px; height:44px; flex:none; border-radius:8px; object-fit:cover; background:var(--surface-alt); }
+  .item-panel-rec b{ display:block; font-size:.84rem; line-height:1.3; }
+  .item-panel-rec small{ display:block; font-size:.72rem; color:var(--ink-soft); }
+  .item-panel-rec::after{ content:"›"; margin-left:auto; font-size:1.3rem; color:var(--accent); }
   .item-chip{
     display:inline-flex; align-items:center; gap:5px;
     padding:4px 9px;
@@ -1061,12 +1083,23 @@
   }
   .item-price{
     font-family:'Manrope', sans-serif;
-    font-weight:500;
-    font-size:.82rem;
+    font-weight:800;
+    font-size:1rem;
     font-variant-numeric:tabular-nums;
     color:var(--accent);
     white-space:nowrap;
   }
+  /* sin precio: en lugar de cantidad + Agregar, un botón para consultar */
+  .item-consultar{
+    margin-left:auto; flex:none;
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:10px;
+    border:1.5px solid var(--accent); background:transparent; color:var(--accent);
+    font:inherit; font-size:.82rem; font-weight:800; text-decoration:none;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .item-consultar svg{ width:15px; height:15px; }
+  .item-consultar:active{ transform:scale(.96); background:var(--accent-soft); }
   .item-cart-row{
     display:flex;
     align-items:center;
@@ -1601,7 +1634,7 @@
     .item-name{ font-size:.95rem; }
     .item{ grid-template-columns:64px minmax(0, 1fr); column-gap:14px; }
     .item-thumb{ width:64px; height:64px; }
-    .item-price{ font-size:.9rem; }
+    .item-price{ font-size:1.08rem; }
 
     .foot{ padding:30px 40px 8px; }
 
@@ -5915,6 +5948,14 @@ function formatMoney(n){
   return "$ " + n.toLocaleString("es-AR", { maximumFractionDigits: 0 });
 }
 
+const ICONO_WHATSAPP_CHICO = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 2.9 2.9 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.5-.3z"/></svg>';
+// WhatsApp para consultar un producto sin precio, con su nombre ya escrito
+function linkConsultar(nombre){
+  const prod = String(nombre || "").toLowerCase()
+    .replace(/\s+x\s*(\d+([.,]\d+)?\s*)?(kg|kgs|g|gr|grs|ml|cc|lt|lts|u|un|unid|unidades|laminas)\.?\s*$/i, "")
+    .replace(/\s+/g, " ").trim();
+  return BUSINESS.whatsapp + "?text=" + encodeURIComponent("Hola! Quisiera consultar el precio y la disponibilidad de " + prod + ". Gracias!");
+}
 function displayPrice(raw){
   const n = parsePrice(raw);
   if(n !== null) return formatMoney(n);
@@ -6765,6 +6806,20 @@ function renderCategories(categories){
         '</div>';
       li.querySelector(".item-name").textContent = p.nombre;
       li.querySelector(".item-price").textContent = displayPrice(p.precio);
+      if(!parsePrice(p.precio)){
+        // sin precio cargado: botón "Consultar" que abre WhatsApp con el producto
+        li.classList.add("sin-precio");
+        li.querySelector(".item-price").remove();
+        li.querySelector(".item-cart-row").hidden = true;
+        const c = document.createElement("a");
+        c.className = "item-consultar";
+        c.href = linkConsultar(p.nombre);
+        c.target = "_blank";
+        c.rel = "noopener";
+        c.innerHTML = ICONO_WHATSAPP_CHICO + "<span>Consultar</span>";
+        c.setAttribute("aria-label", "Consultar por WhatsApp el precio de " + p.nombre);
+        li.querySelector(".item-bottom").appendChild(c);
+      }
       setupItemThumb(li.querySelector(".item-thumb"), p);
       agregarBotonesExtra(li, p, p.origen || cat.nombre);
 
@@ -7565,24 +7620,76 @@ function agregarBotonesExtra(li, p, categoriaOriginal){
   if(!conReceta && !datos) return;
   const fila = document.createElement("div");
   fila.className = "item-extras";
+  const chips = {};
+  let abierto = null;
+  // abre (o cierra, si ya estaba abierta) la ventanita dentro del producto
+  function panel(tipo){
+    const viejo = li.querySelector(".item-panel");
+    if(viejo) viejo.remove();
+    Object.values(chips).forEach(c=>{ c.classList.remove("on"); c.setAttribute("aria-expanded", "false"); });
+    if(abierto === tipo || !tipo){ abierto = null; return; }
+    abierto = tipo;
+    chips[tipo].classList.add("on");
+    chips[tipo].setAttribute("aria-expanded", "true");
+    const box = document.createElement("div");
+    box.className = "item-panel";
+    box.innerHTML = '<div class="item-panel-head"><b></b><button type="button" aria-label="Cerrar">&times;</button></div><div class="item-panel-body"></div>';
+    box.querySelector("b").textContent = tipo === "recetas" ? "Recetas" : "Nutrientes";
+    box.querySelector("button").addEventListener("click", ()=> panel(null));
+    const body = box.querySelector(".item-panel-body");
+    if(tipo === "recetas") armarRecetasDe(body, p);
+    else armarFichaNutri(body, p, datos, ()=>{ if(conReceta) panel("recetas"); else irRecetasDe(p); });
+    li.appendChild(box);
+  }
   if(conReceta){
     const a = document.createElement("button");
     a.type = "button";
     a.className = "item-chip";
     a.innerHTML = ICONO_RECETA + "<span>Recetas</span>";
     a.setAttribute("aria-label", "Ver recetas con " + nombreParaReceta(p.nombre));
-    a.addEventListener("click", ()=> irRecetasDe(p));
-    fila.appendChild(a);
+    a.setAttribute("aria-expanded", "false");
+    a.addEventListener("click", ()=> panel("recetas"));
+    fila.appendChild(chips.recetas = a);
   }
   if(datos){
     const b = document.createElement("button");
     b.type = "button";
     b.className = "item-chip";
     b.innerHTML = ICONO_NUTRI + "<span>Nutrientes</span>";
-    b.addEventListener("click", ()=> abrirNutrientes(p, datos));
-    fila.appendChild(b);
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", ()=> panel("nutrientes"));
+    fila.appendChild(chips.nutrientes = b);
   }
   li.querySelector(".item-name").after(fila);
+}
+// Lista chica de las recetas que usan un producto (dentro de la ventanita)
+function armarRecetasDe(cont, p){
+  const lista = recetas.filter(r => recetaUsa(r, p));
+  if(!lista.length){
+    const v = document.createElement("p");
+    v.className = "item-panel-vacio";
+    v.textContent = "Todavía no tenemos recetas propias con este producto.";
+    cont.appendChild(v);
+    cont.appendChild(botonGoogle(p.nombre, "Buscar ideas en Google"));
+    return;
+  }
+  lista.forEach(r=>{
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "item-panel-rec";
+    const foto = r.foto && !r.foto.includes("/folders/") ? photoUrl(r.foto, 200) : fotoDeProducto((r.ingredientes.map(i => productoPorCod(i.cod)).find(Boolean) || {}).ref);
+    b.innerHTML = (foto ? '<img class="ph" alt="" referrerpolicy="no-referrer">' : '<span class="ph"></span>') + "<span><b></b><small></small></span>";
+    if(foto){ const img = b.querySelector("img"); img.addEventListener("error", ()=>{ const ph = document.createElement("span"); ph.className = "ph"; img.replaceWith(ph); }); img.src = foto; }
+    b.querySelector("b").textContent = r.nombre;
+    b.querySelector("small").textContent = [r.tiempo, r.porciones + (r.porciones === 1 ? " porción" : " porciones")].filter(Boolean).join(" · ");
+    b.addEventListener("click", ()=>{
+      irRecetasDe(p);
+      recetaAbierta = r.id;
+      pushNavState("modo", { modo: "recetas", receta: r.id });
+      renderRecetas();
+    });
+    cont.appendChild(b);
+  });
 }
 
 // Arma los apartados "Nutrientes" y "Recetas" con copias de productos
@@ -8007,8 +8114,6 @@ function irANutrientes(){
 const nutriOverlay = document.getElementById("nutriOverlay");
 const nutriBox = document.getElementById("nutriBox");
 function abrirNutrientes(p, datos){
-  const comb = combinarNutri(datos);
-  const v = comb.v;
   nutriBox.innerHTML = "";
   const head = document.createElement("div");
   head.className = "nutri-head";
@@ -8016,6 +8121,14 @@ function abrirNutrientes(p, datos){
   head.querySelector("h3").textContent = p.nombre;
   head.querySelector(".nutri-close").addEventListener("click", cerrarNutrientes);
   nutriBox.appendChild(head);
+  armarFichaNutri(nutriBox, p, datos, ()=>{ cerrarNutrientes(); irRecetasDe(p); });
+  nutriOverlay.hidden = false;
+  nutriBox.scrollTop = 0;
+  requestAnimationFrame(()=> nutriOverlay.classList.add("open"));
+}
+function armarFichaNutri(nutriBox, p, datos, verRecetas){
+  const comb = combinarNutri(datos);
+  const v = comb.v;
   const sub = document.createElement("p");
   sub.className = "nutri-sub";
   sub.textContent = "Valores por cada 100 g de producto crudo";
@@ -8095,12 +8208,9 @@ function abrirNutrientes(p, datos){
   receta.type = "button";
   receta.className = "item-chip";
   receta.innerHTML = ICONO_RECETA + "<span>Ver recetas</span>";
-  receta.addEventListener("click", ()=>{ cerrarNutrientes(); irRecetasDe(p); });
+  receta.addEventListener("click", verRecetas);
   acciones.appendChild(receta);
   nutriBox.appendChild(acciones);
-  nutriOverlay.hidden = false;
-  nutriBox.scrollTop = 0;
-  requestAnimationFrame(()=> nutriOverlay.classList.add("open"));
 }
 function cerrarNutrientes(){
   if(nutriOverlay.hidden) return;
